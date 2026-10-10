@@ -122,7 +122,7 @@ angewiesen ist, die erst das Studio erzeugt.
 
 ## Lizenz
 
-Zwei Wege, ausführlich in [`LICENSE.md`](LICENSE.md):
+Zwei Wege, ausführlich in [`LICENSE.md`](LICENSE.md) (English: [`LICENSE.en.md`](LICENSE.en.md)):
 
 - **Kommerziell** — einmalig je Domain, beliebiger Zweck, ohne Namensnennung.
 - **Frei** — unbegrenzt viele Webseiten, aber nur nichtkommerzielle, bei denen

@@ -13,12 +13,12 @@
     "authors": [
         {
             "name": "Ulrich Braun",
-            "email": "office@avando-labs.de",
+            "email": "themes@avando-labs.de",
             "homepage": "https://avando-labs.de"
         }
     ],
     "support": {
-        "email": "office@avando-labs.de",
+        "email": "themes@avando-labs.de",
         "docs": "https://ave-theme.avando-labs.de/docs/"
     },
     "require": {

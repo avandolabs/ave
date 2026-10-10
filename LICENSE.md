@@ -2,8 +2,8 @@
 
 **Fassung 1.0 · Stand 1. September 2026**
 
-Lizenzgeber: **Dipl.-Ing. (FH) Ulrich Braun, Berthelsdorfer Str. 7i, 09661 Hainichen** (nachfolgend „Lizenzgeber“)
-Kontakt: **office@avando-labs.de** · **avando-labs.de**
+Lizenzgeber: **Dipl.-Ing. (FH) Ulrich Braun (Avando Labs)** (nachfolgend „Lizenzgeber“), ladungsfähige Anschrift im Impressum unter **avando-labs.de/impressum**
+Kontakt: **themes@avando-labs.de** · **avando-labs.de**
 
 > **Kurzfassung** (nicht Vertragsbestandteil, sondern Lesehilfe — im Zweifel gilt
 > der Text der §§):
@@ -322,7 +322,7 @@ wirtschaftlichen Zweck am nächsten kommt.
 ## Kontakt
 
 Fragen zur Lizenz, Bestellung einer kommerziellen Lizenz, Anfragen zu
-Mehrfach- oder Agenturlizenzen: **office@avando-labs.de**
+Mehrfach- oder Agenturlizenzen: **themes@avando-labs.de**
 
 ---
 
