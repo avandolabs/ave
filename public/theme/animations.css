@@ -1,0 +1,170 @@
+/*
+ * Avando AVE — Scroll Animations
+ * Layer av.animations — IntersectionObserver adds .is-visible.
+ *
+ * Usage (Contao CSS class field):
+ *   animate            → fade + slide up (default)
+ *   animate animate--fade   → fade only
+ *   animate animate--left   → slide from left
+ *   animate animate--right  → slide from right
+ *   animate--stagger   → on a wrapper: children animate in sequence
+ */
+
+@layer av.animations {
+
+  @media (prefers-reduced-motion: no-preference) {
+
+    /* ── Base state: hidden ──────────────────────────────────────────── */
+    .animate {
+      opacity: 0;
+      translate: 0 var(--animate-distance, 2.5rem);
+      transition:
+        opacity  var(--animate-duration, var(--av-animate-duration)) var(--animate-ease, var(--av-animate-ease)),
+        translate var(--animate-duration, var(--av-animate-duration)) var(--animate-ease, var(--av-animate-ease));
+      transition-delay: var(--animate-delay, var(--av-animate-delay));
+    }
+
+    /* ── Modifier: direction ────────────────────────────────────────── */
+    .animate--fade  { --animate-distance: 0px; }
+    .animate--left  { translate: -2rem 0; }
+    .animate--right { translate:  2rem 0; }
+
+    /* ── Visible state ──────────────────────────────────────────────── */
+    .animate.is-visible {
+      opacity: 1;
+      translate: 0 0;
+    }
+
+    /* ── Stagger delays (CSS, no JS math needed) ──────────────────────
+       Vielfache EINER Stufe, und die haengt am Dauer-Regler: eine langsamere
+       Seite darf die Kette nicht im alten Takt abfeuern, sonst ueberholen sich
+       Nachbarn, die nacheinander kommen sollten. */
+    .animate--stagger .animate:nth-child(2) { --animate-delay: calc(1 * var(--av-animate-stagger)); }
+    .animate--stagger .animate:nth-child(3) { --animate-delay: calc(2 * var(--av-animate-stagger)); }
+    .animate--stagger .animate:nth-child(4) { --animate-delay: calc(3 * var(--av-animate-stagger)); }
+    .animate--stagger .animate:nth-child(5) { --animate-delay: calc(4 * var(--av-animate-stagger)); }
+    .animate--stagger .animate:nth-child(6) { --animate-delay: calc(5 * var(--av-animate-stagger)); }
+
+    /* ── Hero Sequence ────────────────────────────────────────────────
+     *
+     * .animate--hero on a wrapper CE: all direct children animate in on load
+     * with a staggered delay — no scroll trigger needed.
+     */
+    @keyframes av-hero-enter {
+      from { opacity: 0; translate: 0 2rem; }
+      to   { opacity: 1; translate: 0 0; }
+    }
+
+    .animate--hero > * {
+      opacity: 0;
+      animation: av-hero-enter calc(var(--av-duration-scale) * 800ms) var(--av-animate-ease) forwards;
+    }
+
+    .animate--hero > *:nth-child(1) { animation-delay: calc(var(--av-duration-scale) * 100ms); }
+    .animate--hero > *:nth-child(2) { animation-delay: calc(var(--av-duration-scale) * 250ms); }
+    .animate--hero > *:nth-child(3) { animation-delay: calc(var(--av-duration-scale) * 400ms); }
+    .animate--hero > *:nth-child(4) { animation-delay: calc(var(--av-duration-scale) * 550ms); }
+    .animate--hero > *:nth-child(5) { animation-delay: calc(var(--av-duration-scale) * 700ms); }
+
+    /* ── Counter ──────────────────────────────────────────────────────
+     *
+     * .animate--count-up on a CE: the first number in a heading counts up
+     * from zero when the element enters the viewport.
+     */
+    .animate--count-up {
+      font-variant-numeric: tabular-nums;
+    }
+
+  }
+
+  /* ── Interaktive Karte ───────────────────────────────────────────────
+     Ihr Uebergang steht hier und nicht bei ihrer Gestaltung in layout.css —
+     aus demselben Grund wie bei .style-pop darunter, nur war es dort von
+     Anfang an bedacht und hier nicht.
+
+     `transition` ist EINE Liste pro Element. Zwei Regeln addieren sich nicht,
+     die spaetere ersetzt die fruehere ganz. `.animate` liegt in av.animations
+     und damit hinter av.layout — eine Karte mit beiden Klassen bekam also die
+     Liste von .animate (opacity, translate) und hatte fuer ihren Hover GAR
+     KEINEN Uebergang mehr. Gemessen auf der Startseite am 07.08.2026:
+
+       .animate.style-interactive-card   transition-property: opacity, translate
+       .style-interactive-card           transition-property: box-shadow, transform
+
+     Schatten und Hub sprangen dort also, statt zu laufen. Das sah aus wie „der
+     Dauer-Regler wirkt auf Karten nicht" — er wirkte, nur auf die falschen
+     zwei Eigenschaften.
+
+     Vier Eigenschaften in einer Liste loesen beides: Einblenden UND Hover.
+     Die Einblend-Haelfte nennt dieselben Token wie .animate, damit eine Karte
+     nicht anders einblendet als ihre Nachbarn. */
+  .style-interactive-card {
+    transition:
+      box-shadow var(--av-duration-base) var(--av-ease-out),
+      transform  var(--av-duration-base) var(--av-ease-out),
+      opacity    var(--animate-duration, var(--av-animate-duration)) var(--animate-ease, var(--av-animate-ease)) var(--animate-delay, 0s),
+      translate  var(--animate-duration, var(--av-animate-duration)) var(--animate-ease, var(--av-animate-ease)) var(--animate-delay, 0s);
+  }
+
+  /* Dieselbe Sache wie bei der interaktiven Karte darueber, und sie ist mir
+     beim Umzug der Media-Karte ins Bundle prompt noch einmal passiert: dort
+     war sie unlayered und gewann gegen `.animate`, hier liegt sie in
+     av.layout und verlor. Gemessen auf /demos — die Karten tragen `animate
+     content-element-group media-card`, und ihr Hover-Uebergang war weg.
+
+     Der Waechter kennt sie jetzt (AnimateCoexistenceTest::KOMBINIERBAR). */
+  .media-card {
+    transition:
+      box-shadow var(--av-duration-base) var(--av-ease-out),
+      transform  var(--av-duration-base) var(--av-ease-out),
+      opacity    var(--animate-duration, var(--av-animate-duration)) var(--animate-ease, var(--av-animate-ease)) var(--animate-delay, 0s),
+      translate  var(--animate-duration, var(--av-animate-duration)) var(--animate-ease, var(--av-animate-ease)) var(--animate-delay, 0s);
+  }
+
+  /* ── style-pop ──────────────────────────────────────────────────────
+     Opt-in springy hover (à la open-props.style colour swatches): a subtle
+     elastic scale-up — fast + bouncy in, slower "squish" settle out. Composable
+     via the CSS-class field onto a card, image, button, etc.
+     Lives here (layer av.animations, after .animate) and uses the independent
+     `scale:` property so it COEXISTS with the .animate scroll-in (which uses
+     `translate:` + opacity). The transition lists all four properties, so the
+     entrance AND the hover pop both run when combined. Tune with
+     --av-pop-scale / --av-pop-return. Honours reduced-motion. */
+  .style-pop {
+    transition:
+      scale      var(--av-pop-return) var(--ease-squish-3),
+      box-shadow var(--av-pop-return) var(--av-ease-out),
+      filter     var(--av-pop-return) var(--av-ease-out),
+      opacity    var(--animate-duration, var(--av-animate-duration)) var(--animate-ease, var(--av-animate-ease)) var(--animate-delay, 0s),
+      translate  var(--animate-duration, var(--av-animate-duration)) var(--animate-ease, var(--av-animate-ease)) var(--animate-delay, 0s);
+  }
+  .style-pop:hover,
+  .style-pop:focus-visible {
+    scale: var(--av-pop-scale);
+    box-shadow: var(--av-shadow-lg);
+    transition-duration: var(--av-pop-in);                     /* scale-up speed on hover-in */
+    transition-timing-function: var(--ease-elastic-out-5);     /* bouncy overshoot */
+  }
+  .style-pop:active {
+    scale: calc(1 + (var(--av-pop-scale) - 1) * .4);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .style-pop { transition: none; }
+    .style-pop:hover,
+    .style-pop:focus-visible,
+    .style-pop:active { scale: none; }
+  }
+
+  /* Image CE: .style-pop lands on the full-width wrapper, so a box-shadow would
+     be a column-wide rectangle that ignores the image's shape. Swap it for a
+     filter: drop-shadow, which follows the image's actual silhouette — rounded,
+     squircle, blob, circle, even transparent PNGs — with zero per-shape code.
+     (The transition already lists `filter`; the :hover pop timing carries over.) */
+  .content-image.style-pop:hover,
+  .content-image.style-pop:focus-visible {
+    box-shadow: none;
+    filter: drop-shadow(0 14px 22px oklch(0% 0 0 / 0.22));
+  }
+
+}

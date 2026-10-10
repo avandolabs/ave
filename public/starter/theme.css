@@ -1,0 +1,1180 @@
+/*
+ * Avando AVE — Theme
+ * ────────────────────
+ * Opinionated component styles for the Avando AVE starter theme.
+ * Shipped by the bundle (public/starter/). To fork it, copy it to
+ * files/theme/CSS/theme.css, which then replaces this one.
+ *
+ * Cascade order:
+ *   bundle layers  <  av.theme (this file)  <  av.layout  <  unlayered custom.css
+ *
+ * Unlayered section at the top overrides third-party CSS (handorgel) that is
+ * itself unlayered and would otherwise beat @layer av.theme.
+ */
+
+/* ── Knopf-Verhalten beim Überfahren ────────────────────────────────────────
+ * Hier steht die MEINUNG, im Bundle nur die Mechanik. `--av-btn-shadow-hover`
+ * ist dort auf `var(--av-btn-shadow-rest)` gesetzt: ein Knopf behält beim
+ * Überfahren, was er hat, und ein Knopf ohne Schatten bekommt keinen. Das ist
+ * die neutrale Haltung des freien Themes.
+ *
+ * Wer will, dass Knöpfe abheben, ändert genau EINE Zeile — hier, ohne Studio,
+ * ohne Klassen zu vergeben:
+ *
+ *     :root { --av-btn-shadow-hover: var(--av-btn-shadow-sm); }
+ *
+ * Drei Ebenen, jede überstimmt die darüber: dieser Wert gilt für die ganze
+ * Website; `btn--hover-shadow-sm/-md/-lg` heben einen einzelnen Knopf (oder
+ * alles in einem Bereich) hervor; `btn--hover-flat` nimmt es einem wieder.
+ * Das Design Studio schreibt denselben Wert nach theme-vars.css, das später
+ * lädt — mit Studio gewinnt also der Regler, ohne Studio diese Datei.
+ *
+ * Absichtlich NICHT eingeschaltet: das Verhalten aller vorhandenen Websites
+ * würde sich sonst mit einem Update ändern.
+ * ─────────────────────────────────────────────────────────────────────────── */
+
+/* ── Handorgel accordion overrides ──────────────────────────────────────────
+ * handorgel.css is unlayered and loads after our bundle, so it beats
+ * @layer av.components. These unlayered rules restore our token-based styles.
+ * ─────────────────────────────────────────────────────────────────────────── */
+/* handorgel setzt `.content-accordion { border-bottom: 1px solid #eee }` und ist
+ * unlayered — es schlägt damit unsere Layer, und ob unser `none` gewinnt, hing
+ * allein an der Ladereihenfolge. Auf Seiten, wo Contao handorgel.css NACH
+ * theme.css einhängt, stand deshalb ein hellgrauer Strich unter dem Akkordeon.
+ * Wir entfernen ihn jetzt nicht mehr, sondern ERSETZEN ihn durch unsere eigene
+ * Abschlusslinie. Der Klassenname steht dabei DOPPELT: gleiche Spezifität hätte
+ * wieder die Reihenfolge entscheiden lassen — gemessen blieb der Container bei
+ * 1px #eee, sobald handorgel danach geladen wurde. Mit (0,2,0) gegen (0,1,0)
+ * gewinnt unsere Linie unabhängig davon, wann handorgel kommt. */
+.content-accordion.content-accordion            { border-bottom: var(--av-border); }
+.content-accordion .handorgel__header__button   { display: flex; align-items: center; gap: var(--av-space-sm); background: none; border-top: none; padding: var(--av-space-md) 0; }
+.content-accordion .handorgel__content          { border-top: none; background: none; }
+.content-accordion .handorgel__content__inner   { padding: var(--av-space-md) 0; padding-inline-end: var(--av-space-2xl); opacity: 1; }
+.content-accordion .handorgel__content__inner p { max-inline-size: none; }
+
+/* ── Accordion variant: boxed cards ──────────────────────────────────────────
+ * handorgel renders each item as FLAT siblings (header, then content) with no
+ * per-item wrapper — so a per-item class can't frame one item. Instead, add
+ * "accordion--cards" as the ACCORDION ELEMENT's CSS class (Experten → CSS-Klasse
+ * am Accordion-CE). This turns every header+content pair into one card via the
+ * adjacent-sibling of the open header. Tunable: --av-accordion-bg / -radius.
+ * ─────────────────────────────────────────────────────────────────────────── */
+.content-accordion.accordion--cards                             { border: none; }
+.accordion--cards .handorgel__header                            { border: var(--av-border); border-radius: var(--av-accordion-radius, var(--av-radius-md)); background: var(--av-accordion-bg, var(--av-color-surface-2)); margin-block-start: var(--av-space-sm); }
+.accordion--cards .handorgel__header:first-child                { margin-block-start: 0; }
+.accordion--cards .handorgel__header__button                    { padding: var(--av-space-md); }
+/* Open item: square the header bottom and connect the content into one box */
+.accordion--cards .handorgel__header--open                      { border-block-end: none; border-end-start-radius: 0; border-end-end-radius: 0; }
+.accordion--cards .handorgel__header--open + .handorgel__content{ border: var(--av-border); border-block-start: none; border-end-start-radius: var(--av-accordion-radius, var(--av-radius-md)); border-end-end-radius: var(--av-accordion-radius, var(--av-radius-md)); background: var(--av-accordion-bg, var(--av-color-surface-2)); }
+.accordion--cards .handorgel__content__inner                    { padding: var(--av-space-md); }
+
+/* Variant: filled bars — each header a coloured pill, content indented below.
+ * Robust (no open/close border logic). Tunable: --av-accordion-bg / -radius. */
+.content-accordion.accordion--filled                            { border: none; }
+.accordion--filled .handorgel__header                           { border: none; margin-block-start: var(--av-space-xs); }
+.accordion--filled .handorgel__header:first-child               { margin-block-start: 0; }
+.accordion--filled .handorgel__header__button                   { background: var(--av-accordion-bg, var(--av-color-surface-2)); border-radius: var(--av-accordion-radius, var(--av-radius-md)); padding: var(--av-space-md); }
+.accordion--filled .handorgel__content__inner                   { padding: var(--av-space-md); }
+
+/* Variant: accent stripe — a coloured bar down the inline-start edge of every
+ * item (continues through the open content). Tunable: --av-accordion-accent. */
+.content-accordion.accordion--accent                            { border: none; }
+.accordion--accent .handorgel__header                           { border-block-end: var(--av-border); border-inline-start: 3px solid var(--av-accordion-accent, var(--av-color-primary)); }
+.accordion--accent .handorgel__header__button                   { padding-inline-start: var(--av-space-md); }
+.accordion--accent .handorgel__header--open + .handorgel__content { border-inline-start: 3px solid var(--av-accordion-accent, var(--av-color-primary)); }
+.accordion--accent .handorgel__content__inner                   { padding-inline-start: var(--av-space-md); }
+
+
+@layer av.theme {
+
+  /* ── Section index (kicker) ──────────────────────────────────────────
+   * Louder alternative to .eyebrow (typography.css): a large display kicker
+   * above a section heading. Pair with a .display-* heading. Font and colour
+   * follow the persona tokens, so it re-themes automatically. Colour flows
+   * through the --av-el-color bridge (falls back to primary). */
+  .section-index {
+    font-family: var(--av-font-display);
+    font-size: var(--av-text-md);
+    font-weight: var(--av-weight-light);
+    letter-spacing: var(--av-tracking-wide);
+    text-transform: uppercase;
+    color: var(--av-el-color, var(--av-color-primary));
+    margin-block-end: var(--av-space-sm);
+  }
+
+  /* ── Pull quote ───────────────────────────────────────────────────────
+   * Oversized statement quote (testimonials, editorial breaks) — distinct
+   * from the base <blockquote> (base.css). Token-driven display type; the
+   * max-inline-size + auto margins centre it inside a centred section. */
+  .pull-quote {
+    font-family: var(--av-font-display);
+    font-size: clamp(1.6rem, 4.5vw, 3rem);
+    font-weight: var(--av-weight-semi);
+    line-height: var(--av-leading-tight);
+    text-wrap: balance;
+    max-inline-size: 24ch;
+    margin-inline: auto;
+  }
+
+  /* ── Hero display ─────────────────────────────────────────────────────
+   * Oversized hero headline — one clear step above .display-1 (×1.5), driven
+   * by the same display token, so the Design Studio type-scale sliders scale it
+   * too. Sets the --av-el-* bridge vars (like .display-1), so it works on a
+   * heading or its CE wrapper; font/weight/tracking inherit the persona heading
+   * defaults. .is-accent tints a highlighted word with the secondary colour. */
+  .display-hero {
+    /* Liest als DISPLAY (eine Stufe ueber .display-1), folgt also dem
+       Display-Schalter fuer Versalien — wie .display-1/2/3 im Bundle. */
+    text-transform: var(--av-display-transform);
+    --av-el-font-size:   calc(var(--av-text-display-1) * 1.5);
+    --av-el-line-height: 0.96;
+  }
+  .display-hero .is-accent { color: var(--av-color-secondary); }
+
+  /* ── Gallery ──────────────────────────────────────────────────────── */
+  .content-gallery {
+    --gallery-cols: 3;
+
+    ul {
+      display: grid;
+      grid-template-columns: repeat(var(--gallery-cols), 1fr);
+      gap: var(--av-space-xs);
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    figure {
+      margin: 0;
+      overflow: hidden;
+      border-radius: var(--av-radius-md);
+      background: var(--av-color-surface-2);
+      aspect-ratio: 4 / 3;
+    }
+
+    a {
+      display: block;
+      height: 100%;
+    }
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform var(--av-duration-base) var(--av-ease-out);
+    }
+
+    li:hover img {
+      transform: scale(1.04);
+    }
+
+    &.content-gallery--cols-1 { --gallery-cols: 1; }
+    &.content-gallery--cols-2 { --gallery-cols: 2; }
+    &.content-gallery--cols-3 { --gallery-cols: 3; }
+    &.content-gallery--cols-4 { --gallery-cols: 4; }
+    &.content-gallery--cols-5 { --gallery-cols: 5; }
+    &.content-gallery--cols-6 { --gallery-cols: 6; }
+
+    @media (max-width: 480px) {
+      &.content-gallery--cols-2 { --gallery-cols: 1; }
+    }
+    @media (max-width: 768px) {
+      &.content-gallery--cols-3 { --gallery-cols: 2; }
+    }
+    @media (max-width: 480px) {
+      &.content-gallery--cols-3 { --gallery-cols: 1; }
+    }
+    @media (max-width: 900px) {
+      &.content-gallery--cols-4 { --gallery-cols: 3; }
+    }
+    @media (max-width: 600px) {
+      &.content-gallery--cols-4 { --gallery-cols: 2; }
+    }
+    @media (max-width: 480px) {
+      &.content-gallery--cols-4 { --gallery-cols: 1; }
+    }
+    @media (max-width: 1200px) {
+      &.content-gallery--cols-5 { --gallery-cols: 4; }
+    }
+    @media (max-width: 900px) {
+      &.content-gallery--cols-5 { --gallery-cols: 3; }
+    }
+    @media (max-width: 600px) {
+      &.content-gallery--cols-5 { --gallery-cols: 2; }
+    }
+    @media (max-width: 480px) {
+      &.content-gallery--cols-5 { --gallery-cols: 1; }
+    }
+    @media (max-width: 1200px) {
+      &.content-gallery--cols-6 { --gallery-cols: 5; }
+    }
+    @media (max-width: 1024px) {
+      &.content-gallery--cols-6 { --gallery-cols: 4; }
+    }
+    @media (max-width: 768px) {
+      &.content-gallery--cols-6 { --gallery-cols: 3; }
+    }
+    @media (max-width: 600px) {
+      &.content-gallery--cols-6 { --gallery-cols: 2; }
+    }
+    @media (max-width: 480px) {
+      &.content-gallery--cols-6 { --gallery-cols: 1; }
+    }
+  }
+
+  /* ── Downloads ───────────────────────────────────────────────────── */
+  .content-downloads ul {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--av-space-sm);
+  }
+
+  .download-element {
+    display: flex;
+    align-items: center;
+    gap: var(--av-space-xs);
+  }
+
+  .download-element:has(figure) {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    column-gap: var(--av-space-md);
+    align-items: center;
+  }
+
+  .download-element:has(figure) > a            { grid-column: 2; }
+  .download-element:has(figure) > .download-ext { grid-column: 3; }
+  .download-element:has(figure) > figure       {
+    grid-column: 1;
+    grid-row: 1;
+    width: 3.5rem;
+    margin: 0;
+    border-radius: var(--av-radius-sm);
+    overflow: hidden;
+
+    & a, & picture { display: block; width: 100%; line-height: 0; }
+    & img { width: 100%; height: auto; display: block; }
+  }
+
+  .download-element > a {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--av-space-xs);
+    text-decoration: none;
+    font-weight: var(--av-weight-medium);
+
+    &:hover { text-decoration: underline; }
+  }
+
+  .download-ext {
+    font-family: var(--av-font-mono);
+    font-size: var(--av-text-xs);
+    background: var(--av-color-surface-3);
+    color: var(--av-color-text-muted);
+    padding: .1em .4em;
+    border-radius: var(--av-radius-sm);
+    letter-spacing: var(--av-tracking-wide);
+  }
+
+  /* ── Modal ────────────────────────────────────────────────────────── */
+  .av-modal {
+    position: fixed;
+    inset: 0;
+    z-index: var(--av-z-modal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--av-duration-base) var(--av-ease-out);
+
+    &.is-open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    &__backdrop {
+      position: absolute;
+      inset: 0;
+      background: oklch(0% 0 0 / 82%);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+
+    &__img {
+      position: relative;
+      z-index: 1;
+      max-inline-size: 90vw;
+      max-block-size: 90vh;
+      object-fit: contain;
+      border-radius: var(--av-radius-md);
+      box-shadow: var(--av-shadow-lg);
+    }
+
+    &__close,
+    &__prev,
+    &__next {
+      position: absolute;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: oklch(100% 0 0 / 12%);
+      border: 1px solid oklch(100% 0 0 / 20%);
+      border-radius: var(--av-radius-full);
+      color: white;
+      cursor: pointer;
+      transition: background var(--av-duration-fast) var(--av-ease-out);
+      line-height: 1;
+
+      &:hover { background: oklch(100% 0 0 / 22%); }
+    }
+
+    &__close {
+      inset-block-start: var(--av-space-md);
+      inset-inline-end: var(--av-space-md);
+      inline-size: 2.5rem;
+      block-size: 2.5rem;
+      font-size: 1.25rem;
+    }
+
+    &__prev,
+    &__next {
+      top: 50%;
+      transform: translateY(-50%);
+      inline-size: 3rem;
+      block-size: 3rem;
+      font-size: 1.75rem;
+    }
+
+    &__prev { inset-inline-start: var(--av-space-md); }
+    &__next { inset-inline-end: var(--av-space-md); }
+  }
+
+  /* ── glightbox: SVG-Skalierung ─────────────────────────────────────
+   * Dimensionslose SVG (nur viewBox, kein width/height) skalieren im
+   * Lightbox sonst nicht hoch — glightbox setzt nur max-* (Obergrenze),
+   * kein festes Maß, daher bleibt das SVG bei ~Default/min-width:200px.
+   * Feste Box + object-fit:contain → SVG füllt den Lightbox seiten-
+   * verhältnis-treu. Höhere Spezifität als .gslide-image img (Attribut-
+   * selektor) → gewinnt unabhängig von der Ladereihenfolge. Nur SVG;
+   * Rasterbilder behalten das glightbox-Verhalten. */
+  .gslide-image img[src$=".svg" i] {
+    width: 92vw;
+    height: 92vh;
+    max-width: 92vw;
+    max-height: 92vh;
+    object-fit: contain;
+  }
+
+  .footer-tagline {
+    font-size: var(--av-text-xs);
+    color: var(--av-footer-muted, var(--av-color-text-muted));
+    line-height: var(--av-leading-body);
+    margin: 0;
+  }
+
+  .footer-contact address {
+    font-style: normal;
+    display: flex;
+    flex-direction: column;
+    gap: var(--av-space-xs);
+  }
+
+  .footer-contact p {
+    display: flex;
+    align-items: center;
+    gap: var(--av-space-xs);
+    font-size: var(--av-text-sm);
+    color: var(--av-footer-muted, var(--av-color-text-muted));
+    margin: 0;
+  }
+
+  .footer-contact .icon {
+    color: var(--av-footer-accent, var(--av-color-primary));
+    flex-shrink: 0;
+  }
+
+  /* Bottom bar */
+  .footer-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--av-space-md);
+    flex-wrap: wrap;
+  }
+
+  .footer-copy {
+    font-size: var(--av-text-xs);
+    color: var(--av-footer-muted, var(--av-color-text-muted));
+    margin: 0;
+  }
+
+  .footer-legal {
+    display: flex;
+    /* Mittig, damit auch etwas Hoeheres als ein Textlink in der Zeile stimmt —
+       etwa der Hell/Dunkel-Schalter des Themes, wenn er hier landet. Ohne das
+       streckt sich der Flex-Standard `stretch` ueber die ganze Zeilenhoehe und
+       das Element sitzt sichtbar zu hoch. */
+    align-items: center;
+    gap: var(--av-space-md);
+  }
+
+  .footer-legal a {
+    font-size: var(--av-text-xs);
+    color: var(--av-footer-muted, var(--av-color-text-muted));
+    text-decoration: none;
+  }
+
+  .footer-legal a:hover {
+    color: var(--av-footer-accent, var(--av-color-primary));
+  }
+
+  /* ── Trust strip (Marquee) ───────────────────────────────────────── */
+  .trust-strip {
+    overflow: hidden;
+    mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      black 8rem,
+      black calc(100% - 8rem),
+      transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      black 8rem,
+      black calc(100% - 8rem),
+      transparent 100%
+    );
+  }
+
+  .trust-strip__track {
+    display: flex;
+    gap: var(--av-space-2xl);
+    width: max-content;
+    animation: trust-marquee 32s linear infinite;
+  }
+
+  .trust-strip:hover .trust-strip__track {
+    animation-play-state: paused;
+  }
+
+  @keyframes trust-marquee {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+
+  .trust-item {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--av-space-sm);
+    white-space: nowrap;
+    font-size: var(--av-text-sm);
+    font-weight: var(--av-weight-medium);
+    color: var(--av-color-text-muted);
+    flex-shrink: 0;
+
+    &::before {
+      content: '';
+      display: inline-block;
+      width: .35rem;
+      height: .35rem;
+      border-radius: 50%;
+      background: var(--av-color-primary);
+      opacity: .6;
+      flex-shrink: 0;
+    }
+  }
+
+  /* ── Media-Karte: Bild zoomt beim Ueberfahren ─────────────────────
+     Die Karte selbst steht im Bundle (layout.css), diese Geste hier: sie ist
+     Geschmack, kein Geruest. Ein Theme ohne diese Datei zeigt dieselbe Karte,
+     nur ohne Zoom — genauso wie beim Knopf-Hub, dessen Meinung ebenfalls hier
+     oben steht und nicht im Bundle.
+
+     Der Zoom ist absichtlich klein. Er soll sagen „das ist anklickbar", nicht
+     das Bild vorfuehren; ueber 5 % wirkt er unruhig, und die Kanten des
+     Ausschnitts fangen an zu wandern. `overflow: hidden` an der Karte
+     beschneidet ihn sauber, das steht dort schon.
+
+     `scale` statt `transform`, damit eine Einblend-Bewegung auf `translate`
+     nicht ueberschrieben wird — dieselbe Aufteilung wie bei .style-pop.
+
+     Die Dauer ist --av-duration-slow, nicht -base. Ein Knopf, der die Farbe
+     wechselt, meldet einen Zustand und darf schnell sein; ein Bild, das
+     wandert, ist eine Bewegung und braucht Zeit, sonst ruckt es nur. Bei
+     Faktor 1 sind das 350ms statt 200ms.
+
+     Abschalten ohne eigene Klasse: --av-media-zoom auf 1 setzen, an der Karte,
+     der Sektion oder global in custom.css. */
+  .media-card {
+    --av-media-zoom: 1.04;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* Die Maske. `overflow: hidden` an der KARTE beschneidet nur ihre
+       Aussenkanten — zwischen Bild und Koerper liegt keine Kante, das
+       vergroesserte Bild waechst dort ueber den Koerper und frisst den Abstand
+       optisch auf (gemeldet 10.08.2026). Der Ausschnitt gehoert deshalb an die
+       figure: sie behaelt ihre Masse, das Bild bewegt sich darin. */
+    .media-card > .content-image:first-child figure {
+      overflow: hidden;
+    }
+
+    .media-card > .content-image:first-child img {
+      transition: scale var(--av-duration-slow) var(--av-ease-out);
+    }
+
+    .media-card:hover > .content-image:first-child img {
+      scale: var(--av-media-zoom);
+    }
+  }
+
+  /* ── Event card (event_upcoming) ─────────────────────────────────── */
+  .event--upcoming {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background: var(--av-card-bg);
+    border: var(--av-card-border);
+    border-radius: var(--av-card-radius);
+    box-shadow: var(--av-card-shadow);
+    overflow: hidden;
+    margin-block-end: var(--av-space-md);
+    transition:
+      box-shadow var(--av-duration-base) var(--av-ease-out),
+      transform   var(--av-duration-base) var(--av-ease-out);
+  }
+
+  .event--upcoming:hover {
+    box-shadow: var(--av-card-shadow-hover);
+    transform: translateY(calc(-1 * var(--av-card-lift)));
+  }
+
+  /* In a grid/flex event layout, spacing comes from the container gap. The
+     card's own bottom margin would otherwise sit inside the column, making it
+     taller than the cards — a stretched col-span neighbour (e.g. a title box)
+     then overshoots the cards. Drop the margin when a layout container handles
+     spacing; keep it for a plain stacked list. */
+  :is(.layout-auto-grid, .layout-stack, [class*="layout-columns-"]) > .event--upcoming {
+    margin-block-end: 0;
+  }
+
+  /* Stretched link: the title <a> covers the entire card */
+  .event--upcoming .event__title a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+
+  .event--upcoming.featured {
+    border-color: var(--av-color-primary);
+  }
+
+  .event--upcoming > figure {
+    margin: 0;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .event--upcoming > figure img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .event--upcoming .event__body {
+    padding: var(--av-card-padding);
+    display: flex;
+    flex-direction: column;
+    align-items: var(--av-event-align);
+    text-align: var(--av-event-align);
+    gap: var(--av-space-xs);
+    flex: 1;
+  }
+
+  .event--upcoming .event__meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    color: var(--av-color-text-muted);
+  }
+
+  /* Markenfarbe als SCHRIFT heisst hier überall --av-color-primary-text, nie
+     die rohe --av-color-primary: die ist die Fläche. Bei einer hellen Marke
+     (Plakat #cbd92b) stand Datum, „Weiterlesen" und jeder Titel-Hover sonst
+     mit 1,1:1 auf einer Karte fast derselben Farbe (gemessen 08.10.2026).
+     -text ist auf lesbar gerechnet und kippt in dunklen Sektionen von selbst
+     auf die helle Hälfte (layout.css). */
+  .event--upcoming .event__date {
+    font-size: var(--av-text-lg);
+    font-weight: var(--av-weight-bold);
+    color: var(--av-color-primary-text);
+    line-height: 1;
+  }
+
+  .event--upcoming .event__time {
+    font-size: var(--av-text-sm);
+    font-weight: var(--av-weight-bold);
+  }
+
+  .event--upcoming .event__location {
+    font-size: var(--av-text-xs);
+  }
+
+  /* h3 inherits --av-el-font-size — override it here */
+  .event--upcoming .event__title {
+    --av-el-font-size: var(--av-text-lg);
+    font-weight: var(--av-weight-bold);
+    line-height: var(--av-leading-tight);
+    margin: 0;
+    margin-block-start: var(--av-space-sm);
+    text-wrap: balance;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    width: 100%;
+  }
+
+  .event--upcoming .event__title a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  /* Titel bleiben Überschriften (Farbe, kein Unterstrich), nehmen beim
+     Überfahren aber die Hover-Farbe der Links — damit folgt auch das dem
+     Regler „Linkfarbe" im Design Studio. Ebenso bei news__title und den
+     Listen weiter unten. */
+  .event--upcoming .event__title a:hover {
+    color: var(--av-link-hover);
+  }
+
+  .event--upcoming .event__teaser {
+    font-size: var(--av-text-xs);
+    color: var(--av-color-text-muted);
+    line-height: var(--av-leading-body);
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* The title's stretched link covers the whole card, which otherwise sits on
+     top of the "weiterlesen" CTA and swallows its :hover. Lift the CTA above the
+     overlay so its own link/button keeps native hover + click (same target). */
+  .event--upcoming .event__cta {
+    position: relative;
+    z-index: 1;
+    margin: 0;
+    margin-block-start: auto;
+    padding-block-start: var(--av-space-xs);
+  }
+  /* Plain-link CTA ("weiterlesen" without .btn). Farbe und Unterstreichung
+     kommen vom gewöhnlichen Link (base.css) und damit aus dem Design Studio
+     („Linkfarbe", „Unterstreichung"). Vorher stand beides hier fest — die
+     Regler wirkten auf jeden Link der Seite, nur nicht auf diesen. */
+  .event--upcoming .event__cta a:not(.btn) {
+    font-weight: var(--av-weight-medium);
+  }
+
+  /* ── Event list (event_list) ─────────────────────────────────────── */
+  .event--list {
+    position: relative;
+    display: flex;
+    gap: var(--av-space-lg);
+    align-items: flex-start;
+    /* See .news--list: side padding for the hover overlay, negative margin keeps
+       content aligned; applied always so the separator line doesn't jump. */
+    padding: var(--av-space-md) var(--av-space-sm);
+    margin-inline: calc(-1 * var(--av-space-sm));
+    border-bottom: var(--av-border);
+    transition: background var(--av-duration-base) var(--av-ease-out);
+  }
+
+  .event--list:first-of-type {
+    border-top: var(--av-border);
+  }
+
+  /* Same as .news--list: section-independent tint, no inline bleed (so the
+     separator line doesn't grow on hover, and the overlay stays visible even on
+     a .bg-surface-2 section). */
+  .event--list:hover {
+    background: color-mix(in oklch, var(--av-color-text) 7%, transparent);
+  }
+
+  .event--list > .image_container {
+    flex-shrink: 0;
+    width: 120px;
+    height: 90px;
+    border-radius: var(--av-radius-sm);
+    overflow: hidden;
+    margin: 0;
+    float: none;
+    background: var(--av-color-primary-light);
+  }
+
+  .event--list > .image_container picture {
+    display: block;
+    width: 120px;
+    height: 90px;
+  }
+
+  .event--list > .image_container img {
+    width: 120px;
+    height: 90px;
+    display: block;
+    object-fit: cover;
+  }
+
+  .event--list__date {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    flex-shrink: 0;
+    width: 3.5rem;
+    padding-block-start: 0.15rem;
+  }
+
+  .event--list__day {
+    font-size: var(--av-text-3xl);
+    font-weight: var(--av-weight-bold);
+    color: var(--av-color-primary-text);
+    line-height: 1;
+  }
+
+  .event--list__month {
+    font-size: var(--av-text-xs);
+    font-weight: var(--av-weight-medium);
+    text-transform: uppercase;
+    letter-spacing: var(--av-tracking-wide);
+    color: var(--av-color-text-muted);
+  }
+
+  .event--list__year {
+    font-size: var(--av-text-xs);
+    color: var(--av-color-text-muted);
+  }
+
+  .event--list__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--av-space-2xs);
+    flex: 1;
+    min-width: 0;
+  }
+
+  .event--list__title {
+    --av-el-font-size: var(--av-text-md);
+    font-weight: var(--av-weight-semi);
+    line-height: var(--av-leading-snug);
+    margin: 0;
+    hyphens: auto;
+  }
+
+  .event--list__title a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .event--list__title a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+
+  .event--list__title a:hover {
+    color: var(--av-link-hover);
+  }
+
+  .event--list__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--av-space-xs);
+    font-size: var(--av-text-xs);
+    color: var(--av-color-text-muted);
+  }
+
+  .event--list__location::before {
+    content: '· ';
+  }
+
+  .event--list__fulldate {
+    font-weight: var(--av-weight-bold);
+  }
+
+  .event--list__teaser {
+    font-size: var(--av-text-xs);
+    color: var(--av-color-text-muted);
+    line-height: var(--av-leading-body);
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .event--list.featured .event--list__day {
+    color: var(--av-color-primary-dark);
+  }
+
+  /* ── Event reader (event_full) ────────────────────────────────────── */
+  .event.layout_full {
+    max-width: 72ch;
+    margin-inline: auto;
+  }
+
+  .event.layout_full h1 {
+    margin-block-end: var(--av-space-xs);
+  }
+
+  .event.layout_full .info {
+    font-size: var(--av-text-lg);
+    font-weight: var(--av-weight-bold);
+    color: var(--av-color-primary-text);
+    margin: 0;
+  }
+
+  .event.layout_full .info time {
+    word-spacing: 0.6em;
+  }
+
+  .event.layout_full .location {
+    font-size: var(--av-text-sm);
+    color: var(--av-color-text-muted);
+    margin-block-start: var(--av-space-2xs);
+    margin-block-end: var(--av-space-lg);
+  }
+
+  .event.layout_full .image_container {
+    float: none;
+    margin: 0 0 var(--av-space-lg) 0;
+    border-radius: var(--av-radius-md);
+    overflow: hidden;
+  }
+
+  .event.layout_full .image_container img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .event.layout_full .enclosure {
+    list-style: none;
+    padding: 0;
+    margin-block-start: var(--av-space-lg);
+    border-top: var(--av-border);
+    padding-block-start: var(--av-space-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--av-space-xs);
+  }
+
+  .event.layout_full .enclosure a {
+    font-size: var(--av-text-sm);
+    font-weight: var(--av-weight-medium);
+  }
+
+  .event.layout_full .enclosure .size {
+    font-weight: var(--av-weight-normal);
+    color: var(--av-color-text-muted);
+  }
+
+  .ave-reader p.back {
+    margin-block-start: var(--av-space-xl);
+  }
+
+  /* „Zurück": Farbe und Unterstreichung wie jeder Link (Design Studio).
+     Vorher gedämpftes Grau ohne Unterstrich, an beiden Reglern vorbei. */
+  .ave-reader p.back a {
+    font-size: var(--av-text-sm);
+    font-weight: var(--av-weight-medium);
+  }
+
+  .ave-reader p.back a::before {
+    content: '← ';
+  }
+
+
+  /* ── News card (news_av_card) ─────────────────────────────────────── */
+  .news--card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background: var(--av-card-bg);
+    border: var(--av-card-border);
+    border-radius: var(--av-card-radius);
+    box-shadow: var(--av-card-shadow);
+    overflow: hidden;
+    transition:
+      box-shadow var(--av-duration-base) var(--av-ease-out),
+      transform   var(--av-duration-base) var(--av-ease-out);
+  }
+
+  .news--card:hover {
+    box-shadow: var(--av-card-shadow-hover);
+    transform: translateY(calc(-1 * var(--av-card-lift)));
+  }
+
+  .news--card .news__image {
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .news--card .news__image .image_container {
+    margin: 0;
+  }
+
+  .news--card .news__image .image_container img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .news--card .news__body {
+    padding: var(--av-card-padding);
+    text-align: var(--av-card-align);
+    display: flex;
+    flex-direction: column;
+    gap: var(--av-space-xs);
+    flex: 1;
+  }
+
+  .news--card .news__meta {
+    font-size: var(--av-text-xs);
+    color: var(--av-color-text-muted);
+    margin: 0;
+  }
+
+  .news--card .news__author::before {
+    content: ' · ';
+  }
+
+  .news--card .news__title {
+    --av-el-font-size: var(--av-text-lg);
+    font-weight: var(--av-weight-bold);
+    line-height: var(--av-leading-tight);
+    margin: 0;
+    text-wrap: balance;
+    hyphens: auto;
+  }
+
+  .news--card .news__title a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .news--card .news__title a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+
+  .news--card .news__title a:hover {
+    color: var(--av-link-hover);
+  }
+
+  .news--card .news__teaser {
+    font-size: var(--av-text-xs);
+    color: var(--av-color-text-muted);
+    line-height: var(--av-leading-body);
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .news--card .news__cta {
+    margin: 0;
+    margin-block-start: auto;
+    padding-block-start: var(--av-space-xs);
+    font-size: var(--av-text-sm);
+    font-weight: var(--av-weight-medium);
+  }
+
+  /* „Weiterlesen": ein gewöhnlicher Link — Farbe und Unterstreichung aus
+     base.css bzw. dem Design Studio, nicht von hier (siehe event__cta). */
+
+  /* ── News list (news_av_list) ─────────────────────────────────────── */
+  .news--list {
+    position: relative;
+    display: flex;
+    gap: var(--av-space-md);
+    align-items: flex-start;
+    /* Horizontal padding + matching negative margin (always, not just on hover):
+       content stays aligned to the column, but the hover overlay gets side
+       breathing room — without the separator line jumping in width. */
+    padding: var(--av-space-md) var(--av-space-sm);
+    margin-inline: calc(-1 * var(--av-space-sm));
+    border-bottom: var(--av-border);
+    transition: background var(--av-duration-base) var(--av-ease-out);
+  }
+
+  .news--list:first-of-type {
+    border-top: var(--av-border);
+  }
+
+  /* Section-independent hover overlay: a translucent tint of the text colour
+     works the same on light, dark and coloured sections (unlike surface-2,
+     which is remapped per section). No inline bleed, so the row's border stays
+     the same width instead of the separator line growing on hover. */
+  .news--list:hover {
+    background: color-mix(in oklch, var(--av-color-text) 7%, transparent);
+  }
+
+  .news--list > .image_container {
+    flex-shrink: 0;
+    width: 120px;
+    height: 90px;
+    border-radius: var(--av-radius-sm);
+    overflow: hidden;
+    margin: 0;
+    float: none;
+    background: var(--av-color-primary-light);
+  }
+
+  .news--list > .image_container picture {
+    display: block;
+    width: 120px;
+    height: 90px;
+  }
+
+  .news--list > .image_container img {
+    width: 120px;
+    height: 90px;
+    display: block;
+    object-fit: cover;
+  }
+
+  .news--list__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--av-space-2xs);
+    flex: 1;
+    min-width: 0;
+  }
+
+  .news--list__meta {
+    font-size: var(--av-text-xs);
+    color: var(--av-color-text-muted);
+    margin: 0;
+  }
+
+  .news--list__author::before {
+    content: ' · ';
+  }
+
+  .news--list__title {
+    --av-el-font-size: var(--av-text-md);
+    font-weight: var(--av-weight-semi);
+    line-height: var(--av-leading-snug);
+    margin: 0;
+    hyphens: auto;
+  }
+
+  .news--list__title a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .news--list__title a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+
+  .news--list__title a:hover {
+    color: var(--av-link-hover);
+  }
+
+  .news--list__teaser {
+    font-size: var(--av-text-xs);
+    color: var(--av-color-text-muted);
+    line-height: var(--av-leading-body);
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* ── News reader (news_full) ──────────────────────────────────────── */
+  .mod_newsreader .layout_full {
+    max-width: 72ch;
+    margin-inline: auto;
+  }
+
+  .mod_newsreader .layout_full h1 {
+    margin-block-end: var(--av-space-2xs);
+  }
+
+  .mod_newsreader .layout_full .info {
+    font-size: var(--av-text-sm);
+    color: var(--av-color-text-muted);
+    margin-block-end: var(--av-space-lg);
+  }
+
+  .mod_newsreader .layout_full .info time {
+    font-weight: var(--av-weight-bold);
+    color: var(--av-color-primary-text);
+  }
+
+  .mod_newsreader .layout_full .image_container {
+    float: none;
+    margin: 0 0 var(--av-space-lg) 0;
+    border-radius: var(--av-radius-md);
+    overflow: hidden;
+  }
+
+  .mod_newsreader .layout_full .image_container img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .mod_newsreader .layout_full .enclosure {
+    list-style: none;
+    padding: 0;
+    margin-block-start: var(--av-space-lg);
+    border-top: var(--av-border);
+    padding-block-start: var(--av-space-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--av-space-xs);
+  }
+
+  .mod_newsreader .layout_full .enclosure a {
+    font-size: var(--av-text-sm);
+    font-weight: var(--av-weight-medium);
+  }
+
+  .mod_newsreader .layout_full .enclosure .size {
+    font-weight: var(--av-weight-normal);
+    color: var(--av-color-text-muted);
+  }
+
+  /* .mod_newsreader p.back → merged into .ave-reader p.back above */
+
+  /* ── Grid fixes ───────────────────────────────────────────────────── */
+  .pagination > p {
+    font-size: var(--av-text-xs);
+    color: var(--av-color-text-muted);
+  }
+
+  .layout-auto-grid .pagination,
+  .layout-columns-2 .pagination,
+  .layout-columns-3 .pagination,
+  .layout-columns-4 .pagination {
+    grid-column: 1 / -1;
+  }
+
+}

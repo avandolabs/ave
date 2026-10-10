@@ -1,0 +1,65 @@
+/*
+ * Avando AVE — View Transitions
+ * Cross-document (MPA) page cross-fade — pure CSS, progressive enhancement.
+ *
+ * OFF by default. Opt pages in with a per-page class (see bottom of file), or
+ * enable site-wide by setting a duration in custom.css / a persona.
+ * Token-driven (see tokens.css → --av-page-transition-*):
+ *   --av-page-transition-duration   0s = off (the default)
+ *   --av-page-transition-ease       timing function
+ *   --av-page-transition-scale      incoming zoom origin (1 = plain fade)
+ *
+ * Shipped by the bundle (public/starter/). To edit it, copy it to
+ * files/theme/CSS/view-transitions.css, which then replaces this one; an empty
+ * file there switches the effect off. Unsupported browsers navigate
+ * instantly; disabled under prefers-reduced-motion.
+ */
+
+@view-transition { navigation: auto; }
+
+/* Cross-fade with a hair of zoom (directionless). A pure opacity fade between
+   similar pages is nearly invisible, so the incoming content also scales up a
+   touch from centre — reads as a crossfade with presence, no slide direction. */
+@keyframes av-vt-out { to   { opacity: 0; } }
+@keyframes av-vt-in  { from { opacity: 0; transform: scale(var(--av-page-transition-scale, .98)); } }
+
+::view-transition-old(root) {
+  animation: av-vt-out
+    calc(var(--av-page-transition-duration, 350ms) * .6)
+    var(--av-page-transition-ease, ease) both;
+}
+::view-transition-new(root) {
+  animation: av-vt-in
+    var(--av-page-transition-duration, 350ms)
+    var(--av-page-transition-ease, ease) both;
+  transform-origin: center;
+}
+
+/* Persistent chrome: header + footer are identical across pages, so they keep
+   their own names and stay put instead of fading with the content. */
+#header { view-transition-name: site-header; }
+#footer { view-transition-name: site-footer; }
+
+/* ── Per-page opt-in ────────────────────────────────────────────────────────
+   Page transitions are OFF by default (tokens.css). Turn one on for a page by
+   assigning a class as its CSS class in Contao (Seite → Experten-Einstellungen
+   → CSS-Klasse). Contao writes it onto <body>; :has() lifts it to :root so the
+   tokens take effect. Cross-document transitions run in the *incoming* document,
+   so the class enables the animation when arriving at that page.
+   Enable site-wide instead? set --av-page-transition-duration in custom.css. */
+/* Scoped to body: Contao puts the page's CSS class on <body>, so this matches
+   only the current page. (A bare :has(.class) would also match the page's own
+   link in the nav menu — which appears on EVERY page — and leak site-wide.) */
+:root:has(body.page-transition)       { --av-page-transition-duration: var(--av-duration-slow); }     /* standard cross-fade */
+:root:has(body.page-transition-slow)  { --av-page-transition-duration: 600ms; }                       /* calmer entrance     */
+:root:has(body.page-transition-plain) { --av-page-transition-duration: var(--av-duration-slow);
+                                        --av-page-transition-scale: 1; }                               /* fade only, no zoom  */
+
+/* Opt-OUT — for the reverse workflow: enable site-wide in custom.css, then
+   exclude single pages with this class. */
+:root:has(body.no-page-transition)    { --av-page-transition-duration: 0s; }                          /* off for this page   */
+
+/* Respect user preference — no transitions when reduced motion is requested. */
+@media (prefers-reduced-motion: reduce) {
+  @view-transition { navigation: none; }
+}

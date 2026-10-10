@@ -1,0 +1,1206 @@
+/*
+ * Avando AVE — Design Tokens
+ * Layer av.tokens: all --av-* custom properties.
+ * Never reference raw values in components — always go through a token.
+ *
+ * Customer overrides belong in files/theme/CSS/custom.css (no layer = wins cascade).
+ */
+
+/*
+ * Layer order — declared once, here, as the first file loaded.
+ * av.normalize must be FIRST = LOWEST priority; customer custom.css is
+ * un-layered and loaded last, so it always wins the cascade.
+ */
+@layer av.normalize, av.tokens, av.base, av.typography, av.components, av.forms, av.theme, av.layout, av.animations;
+
+@layer av.tokens {
+
+  :root {
+
+    /* Drives the light-dark() colour tokens below and themes native controls
+       (scrollbars, form widgets) to match. Toggle via html.light / html.dark. */
+    color-scheme: light dark;
+
+    /* Hell/Dunkel-Schalter im Fuss. Aus, bis jemand ihn einschaltet — ein Theme
+       setzt keine Bedienelemente in fremde Webseiten, solange niemand darum
+       bittet. Eingeschaltet wird er in custom.css:
+
+           :root { --av-theme-switch-display: inline-flex; }
+
+       Bewusst NICHT ueber das Design Studio. Dort stand er kurz als Regler und
+       gehoerte nicht hin: das Studio stellt ein, wie die Seite AUSSIEHT, der
+       Schalter dagegen, was ein Besucher daran aendern darf. Das sind zwei
+       Fragen, und eine Oberflaeche, die beide stellt, laedt dazu ein, sie zu
+       verwechseln.
+
+       Wer sein Farbschema fest auf hell oder dunkel stellt, sollte ihn nicht
+       einschalten: dann gaebe es nichts zu schalten, und ein Besucher duerfte
+       die Entscheidung auch nicht umwerfen. */
+    --av-theme-switch-display: none;
+
+    /* ── Colour: Brand ──────────────────────────────────────────────────
+       The brand colour is the brand colour, in both schemes. It used to carry
+       light-dark(blue-7, blue-4), i.e. a lighter version in dark mode — right
+       where it is TYPE on a dark surface, wrong wherever it is the SURFACE.
+       An inverted header went from #2563eb to #4b8eff on a scheme switch, and
+       its auto-contrasted foreground flipped from white to black with it.
+
+       Which is why the two roles now have two tokens. Misusing them fails in
+       opposite ways, and that decided which one keeps the plain name: a surface
+       rendered in the wrong brand colour is silent — no test measures brand
+       fidelity — while text that is too dark on a dark background is caught by
+       the contrast checker and by ThemeSurfaceContrastTest. The plain name goes
+       to the role whose mistakes are loud. */
+    --av-color-primary:            var(--indigo-8);
+    --av-color-primary-light:      light-dark(var(--indigo-3), var(--indigo-9));
+    --av-color-primary-dark:       light-dark(var(--indigo-9), var(--indigo-2));
+
+    /* The readable half: brand colour as type or accent ON a surface.
+       A FLOOR, not an offset. The old +0.13 treated "how light is this colour
+       already" as irrelevant, and that is the only thing that matters —
+       measured across the sixteen presets, as text on each one's own dark
+       surface: #0a0a0a went 1.28 → 1.04, the lift making it worse by landing on
+       the surface's own lightness, while midnight went 8.29 → 12.54 having
+       needed nothing. Five of sixteen still failed.
+
+       0.72 clears 4.5:1 for all sixteen primaries and all fifteen custom
+       secondaries (worst case 5.20 / 5.18) and leaves anything already lighter
+       alone. Same idea as --av-color-*-text below and as the dark surfaces.
+
+       Der gehobene Zweig hat einen eigenen Namen, weil light-dark() das SCHEMA
+       kennt, nicht die SEKTION. Auf einer immer dunklen Sektion im Hellmodus
+       liefert -text sonst den hellen Zweig — also die dunkle Farbe auf dunklem
+       Grund. Gemessen als .text-primary auf .style-dark im Hellmodus: 15 von 16
+       Vorlagen unter 4,5, die schlechteste bei 1,05. layout.css setzt -text dort auf
+       -on-dark; das ist die Sektion, die weiß, worauf sie steht.
+
+       Und der helle Zweig braucht das Gegenstück: einen DECKEL. Das fehlte —
+       der Boden hob auf dunklem Grund, auf hellem stand die rohe Farbe. Gemessen
+       als .text-secondary auf ganz normaler Seite im Hellmodus: 15 von 16
+       Vorlagen unter 4,5 (studio-Gelb bei 1,54), als Verweis/.text-primary drei
+       (midnight 1,77). Kein Deckel, kein Fehler gemeldet — die Rolle hieß -text
+       und war nur zur Hälfte eine.
+
+       Der Deckel senkt die LEUCHTDICHTE, nicht die Helligkeit, und nur so weit
+       wie nötig: alle drei Linearkanäle mit demselben Faktor, das erhält Ton und
+       Sättigungsverhältnis. min(1, …) lässt alles in Ruhe, was schon reicht.
+       Eine pauschale Helligkeitsdecke (l ≤ 0,5) hätte 27 von 32 Markenakzenten
+       verschoben, teils drastisch (studio #e8d21a → #7a6200); so sind es 17, und
+       jeder nur bis 4,5 (midnight #2dd4bf → #188577). Die eigene Marke
+       (#3b5bdb, 5,38 auf der hellen Fläche) braucht den Deckel nicht mehr.
+
+       Ziel 0,17 statt der theoretischen 0,1833: die Rundung auf 8 Bit frisst den
+       Rest. Bei 0,1833 fielen 9 von 32 knapp durch (4,33–4,49) und 180 von 500
+       Zufallsfarben; bei 0,17 keiner von beiden (schlechteste 4,61 / 4,74).
+
+       Seit 08.10.2026 ist der Deckel ein Token (--av-on-light-cap) und folgt
+       der FLÄCHE. 0,17 war für Weiss gerechnet; auf getönten Flächen lagen
+       Links, „Weiterlesen" und Datum bei 2,9 (Plakat) bis 4,3:1. Gerechnet wird
+       jetzt aus der dunkleren der beiden Flächen, auf denen Text steht (Fläche,
+       Fläche 2), Ziel 4,6:1 — der Abstand zu 4,5 übernimmt die Rolle der
+       8-Bit-Reserve:
+         (min(L Fläche, L Fläche 2) + 0,05) / 4,6 − 0,05
+       Für die Standardflächen (#f8f9fa / abgeleitet ≈ #f2f3f4) ergibt das
+       0,154. Wählt das Studio eine andere Fläche, schreibt es den passenden
+       Wert (VarComputer::onLightCap); einen Regler dafür gibt es bewusst nicht.
+
+       Diese drei Zeilen sind die EINZIGE Stelle, an der die Rechnung steht. Das
+       Design Studio schreibt nur --av-color-primary; -on-light/-on-dark/-text
+       folgen von hier. Bis 05.08.2026 schrieb es alle drei zusätzlich selbst,
+       wortgleich, in PHP UND JavaScript — dieselbe Formel an drei Orten, von
+       denen zwei stumm veralten konnten.
+
+       Dass -text über die -on-*-Token geht statt inline gerechnet zu werden, ist
+       der Grund, warum das überhaupt möglich ist: der Opt-out-Regler
+       (brandTextContrast, „Marke als Text nicht anpassen") ersetzt -on-light und
+       -on-dark durch die rohe Marke, und -text folgt ihm. Eine inline
+       ausgerechnete Formel wäre von aussen nicht mehr erreichbar. */
+    --av-on-light-cap:             0.154;
+    --av-color-primary-on-dark:    oklch(from var(--av-color-primary) clamp(0.72, l, 1) c h);
+    --av-color-primary-on-light:   color(from var(--av-color-primary) srgb-linear
+                                     calc(r * min(1, var(--av-on-light-cap) / (0.2126 * r + 0.7152 * g + 0.0722 * b)))
+                                     calc(g * min(1, var(--av-on-light-cap) / (0.2126 * r + 0.7152 * g + 0.0722 * b)))
+                                     calc(b * min(1, var(--av-on-light-cap) / (0.2126 * r + 0.7152 * g + 0.0722 * b))));
+    --av-color-primary-text:       light-dark(
+                                     var(--av-color-primary-on-light),
+                                     var(--av-color-primary-on-dark));
+    /* Auto-Kontrast: Schwarz auf heller Marke, Weiß auf dunkler. Gerechnet auf
+       der ECHTEN Leuchtdichte, nicht auf OKLCH-Helligkeit.
+
+       Vorher stand hier ein Helligkeits-Schwellwert (l gegen 0,62) — und der war
+       auf zweierlei Weise falsch. Erstens ist OKLCH-Helligkeit ein schlechter
+       Stellvertreter für Leuchtdichte, sobald Sättigung im Spiel ist: vier von
+       32 Markenflächen bekamen die SCHLECHTERE der beiden Farben (basic 4,20 wo
+       Schwarz 5,00 gegeben hätte, gastro/secondary 3,68 statt 5,71). Zweitens
+       war `* 100` keine Stufe, sondern eine Rampe — jede Farbe, deren Helligkeit
+       innerhalb ±0,01 der Schwelle lag, bekam ein MITTLERES GRAU auf sich selbst.
+       Der Fehler wanderte deshalb nur, wenn man an der Schwelle drehte.
+
+       `srgb-linear` liefert genau die Kanäle, aus denen die WCAG-Leuchtdichte
+       gebildet wird, also lässt sie sich ausrechnen statt schätzen. Der Umschlag
+       liegt bei L = 0,1791: dort sind Schwarz und Weiß gleich gut (je 4,58:1).
+       Wer immer die bessere Hälfte wählt, kann daher gar nicht unter 4,58 fallen
+       — das ist keine Abstimmung, sondern eine Garantie. Nachgemessen: 32 von 32
+       Markenflächen bestehen (schlechteste 4,60) und 500 Zufallsfarben ebenfalls
+       (schlechteste 4,58, exakt das Minimum). Der Faktor 100000 macht daraus die
+       harte Stufe, die vorher fehlte. */
+    --av-color-text-on-primary:    color(from var(--av-color-primary) srgb-linear
+                                     clamp(0, (0.1791 - (0.2126 * r + 0.7152 * g + 0.0722 * b)) * 100000, 1)
+                                     clamp(0, (0.1791 - (0.2126 * r + 0.7152 * g + 0.0722 * b)) * 100000, 1)
+                                     clamp(0, (0.1791 - (0.2126 * r + 0.7152 * g + 0.0722 * b)) * 100000, 1));
+    --av-color-text-on-secondary:  color(from var(--av-color-secondary) srgb-linear
+                                     clamp(0, (0.1791 - (0.2126 * r + 0.7152 * g + 0.0722 * b)) * 100000, 1)
+                                     clamp(0, (0.1791 - (0.2126 * r + 0.7152 * g + 0.0722 * b)) * 100000, 1)
+                                     clamp(0, (0.1791 - (0.2126 * r + 0.7152 * g + 0.0722 * b)) * 100000, 1));
+
+    /* Derived from primary via a split-complementary hue rotation (+150° in
+       OKLCH). l + c are kept, so the accent stays perceptually as vivid, and
+       because primary carries light-dark(), the whole secondary family inherits
+       light/dark + persona changes automatically — one knob drives both.
+       Flip to (h - 150) for the other split-complement (toward yellow-green).
+       Override with a literal in files/theme/CSS/custom.css for a fixed brand accent.
+
+       Two dials shape the derived secondary:
+       --av-sec-hue-shift: hue rotation in degrees. Small = analogous (close to
+         primary, calm/harmonious); ±120 triadic; ±150 split-complement; 180 complement.
+       --av-sec-chroma: saturation multiplier (0 = grey, 1 = as vivid as primary). */
+    --av-sec-hue-shift: -60;
+    --av-sec-chroma:    0.8;
+    --av-color-secondary:          oklch(from var(--av-color-primary)       l calc(c * var(--av-sec-chroma)) calc(h + var(--av-sec-hue-shift)));
+    --av-color-secondary-light:    oklch(from var(--av-color-primary-light) l calc(c * var(--av-sec-chroma)) calc(h + var(--av-sec-hue-shift)));
+    --av-color-secondary-dark:     oklch(from var(--av-color-primary-dark)  l calc(c * var(--av-sec-chroma)) calc(h + var(--av-sec-hue-shift)));
+    /* Same split as primary. The derived secondary inherits whatever primary
+       is, so without its own -text it would inherit the surface role too —
+       and a navy secondary measured 1.47:1 as text on dark before the floor.
+       (Gemessen an der damaligen Vorlage „Editorial" mit #26415e; die Vorlage
+       heisst seit 06.08.2026 „Cool" und trägt andere Farben — die Messung
+       bleibt gültig, ihr Beispiel ist nur nicht mehr nachstellbar.) */
+    --av-color-secondary-on-dark:  oklch(from var(--av-color-secondary) clamp(0.72, l, 1) c h);
+    --av-color-secondary-on-light: color(from var(--av-color-secondary) srgb-linear
+                                     calc(r * min(1, var(--av-on-light-cap) / (0.2126 * r + 0.7152 * g + 0.0722 * b)))
+                                     calc(g * min(1, var(--av-on-light-cap) / (0.2126 * r + 0.7152 * g + 0.0722 * b)))
+                                     calc(b * min(1, var(--av-on-light-cap) / (0.2126 * r + 0.7152 * g + 0.0722 * b))));
+    --av-color-secondary-text:     light-dark(
+                                     var(--av-color-secondary-on-light),
+                                     var(--av-color-secondary-on-dark));
+
+    /* ── Colour: Surface ────────────────────────────────────────────── */
+    --av-color-surface:   light-dark(var(--gray-0), var(--gray-9));
+
+    /* Stufe 2 und 3 FOLGEN der gewählten Hintergrundfarbe, statt feste Grauwerte
+       zu sein. Vorher taten sie das nur, wenn jemand auch den Regler
+       „Abgesetzte Fläche" anfasste — sonst stand neben einer getönten Seite eine
+       neutrale Karte, und bei 8 von 16 Vorlagen brach die Abstufung. Bei
+       brutalist war sie sogar UMGEKEHRT: 0.928 → 0.963 → 0.942, die Karte heller
+       als die Seite, obwohl die Leiter nach unten gehen soll.
+
+       Helligkeitsschritte statt einer Beimischung, damit Farbton und Sättigung
+       der Auswahl erhalten bleiben — eine warme Creme ergibt eine warme Karte,
+       kein Grau daneben. 0.019 / 0.040 reproduzieren die bisherige Grau-Leiter
+       (0.982 → 0.963 → 0.942); der Standard verschiebt sich dadurch um einen
+       Wert je Kanal (#f1f3f5 → #f2f3f4), also unsichtbar.
+
+       Dunkel bleiben die Stufen gepinnt: dort MUSS die Leiter absolut sein, sonst
+       landet eine helle Auswahl unter der eigenen dunklen Fläche des Themes. Es
+       sind dieselben Werte, die der Regler benutzt (atLightness 0.345 / 0.428) —
+       Voreinstellung und Regler rechnen damit erstmals gleich. */
+    --av-color-surface-2: light-dark(
+                            oklch(from var(--av-color-surface) calc(l - 0.019) c h),
+                            oklch(from var(--av-color-surface) 0.345 c h));
+    --av-color-surface-3: light-dark(
+                            oklch(from var(--av-color-surface) calc(l - 0.040) c h),
+                            oklch(from var(--av-color-surface) 0.428 c h));
+    --av-color-border:    light-dark(var(--gray-3), var(--gray-7));
+
+    /* Die beiden Enden des frei waehlbaren Verlaufs (.bg-gradient-dark) —
+       unabhaengig vom Farbschema. Die Token heissen weiter `dark`, weil ihr
+       Standard dunkel ist und gespeicherte Zustaende sie so kennen; im Studio
+       heissen sie „Farbverlauf", denn waehlbar sind beliebige Farben (die
+       Vorlage „Plakat" endet in einem warmen Braun).
+
+       Der Winkel gilt fuer ALLE diagonalen Verlaeufe — Primaer, Sekundaer und
+       diesen hier, dazu die drei Verlaufs-Vorlagen des Fusses. Eine Seite, auf
+       der ein Verlauf von links oben und der naechste von rechts unten kommt,
+       sieht nicht abwechslungsreich aus, sondern unentschieden. Der sanfte
+       Verlauf (.bg-gradient-subtle) bleibt ausgenommen: er ist eine senkrechte
+       Aufhellung, keine Diagonale. */
+    --av-gradient-angle:     135deg;
+    --av-gradient-dark-from: #0b1120;   /* near-black navy */
+    --av-gradient-dark-to:   #334155;   /* slate-700 */
+
+    /* Image shapes (.shape-*) — border for .shape-border */
+    --av-img-border-width: 2px;
+    --av-img-border-color: var(--av-color-primary-text);
+
+    /* ── Card background shades (override --av-card-bg to retheme all cards) */
+    --av-card-bg-1: var(--indigo-1);
+    --av-card-bg-2: var(--indigo-3);
+    --av-card-bg-3: var(--indigo-5);
+    --av-card-bg-4: var(--indigo-8);
+
+    /* ── Colour: Text ───────────────────────────────────────────────── */
+    --av-color-text:       light-dark(var(--gray-9), var(--gray-1));
+    /* Derived from text ↦ surface so it follows the text colour and dark mode.
+       Section overrides (e.g. white 65% on dark) still win.
+
+       --av-muted-fraction ist der Regler: der Anteil des vollen Kontrasts, den
+       Nebentext behaelt. EINE Zahl, zwei Ausdruecke — auf einer farbigen oder
+       verlaufenden Flaeche gibt es keinen einzelnen Hintergrund zum Hinmischen,
+       dort verblasst er stattdessen nach transparent (--av-muted-strength
+       weiter unten benutzt genau das). Vorher rechnete das Design Studio beide
+       Ausdruecke selbst aus, in PHP und in ave-editor.js. */
+    --av-muted-fraction:   55%;
+    --av-color-text-muted: color-mix(in oklch, var(--av-color-text) var(--av-muted-fraction), var(--av-color-surface));
+
+    /* @token --av-focus  Fokusring  Farbe des Tastatur-Fokusrings
+       Die Primärfarbe, in der Helligkeit begrenzt. Ein Markenton wird nach
+       Wirkung gewählt, ein Fokusring muss sich abheben — hing er direkt an
+       --av-color-primary, wurde er bei hellen oder blassen Marken unsichtbar
+       und die Seite per Tastatur unbedienbar, ohne dass das beim Klicken je
+       auffällt. Die Kappung bei 0.6 hält den Farbton und sichert ~3:1 gegen
+       die Fläche (gemessen über die Personas). */
+    --av-focus: light-dark(
+      oklch(from var(--av-color-primary) min(l, 0.6) c h),
+      oklch(from var(--av-color-primary) max(l, 0.6) c h)
+    );
+
+    /* @token --av-muted-strength  Deckkraft gedämpfter Text  Wie kräftig
+       sekundärer Text erscheint (Footer, invertierte Navigation).
+       War an drei Stellen fest verdrahtet (65/70/72 %) und damit die einzige
+       unsichtbare Stellschraube für Lesbarkeit: Wer gedämpften Text zu blass
+       fand, konnte nur die Farbe ändern — was auch den normalen Text traf.
+
+       Derselbe Regler wie --av-muted-fraction, plus 17 Punkte. Der Aufschlag ist
+       nicht willkürlich: er reproduziert das frühere Standardpaar (55 / 72)
+       exakt, ein unangetastetes Theme rendert also bytegleich. Und er gleicht
+       echten Spielraum aus — eine farbige Leiste hat weniger Kontrast zu
+       verschenken als eine Seitenfläche, ihr Nebentext muss also kräftiger
+       bleiben. min() deckelt bei 100 %, sonst wird aus „ganz kräftig" wieder
+       durchsichtig. */
+    --av-muted-strength: min(100%, calc(var(--av-muted-fraction) + 17%));
+
+    /* @token --av-muted-strength-inv  Deckkraft gedämpfter Text (invertiert)
+       Dasselbe für helle Schrift auf dunklem oder farbigem Grund. Helle Schrift
+       wirkt kräftiger als dunkle, verträgt also mehr Dämpfung — deshalb der
+       Abschlag. Stand vorher als 60/65/70 % an fünf Stellen in layout.css und
+       war damit für den Regler unerreichbar. */
+    --av-muted-strength-inv: calc(var(--av-muted-strength) - 7%);
+
+    /* Link + heading colour. Declared here (not only as a var() fallback in the
+       consumer) so tokens.css stays the single source of truth — the Design
+       Studio reads its defaults from these. */
+    --av-link:          var(--av-color-primary-text);
+    /* Hover: die LESBARE Linkfarbe, ein Stück weiter vom Grund weg — dunkler
+       im hellen Schema, heller im dunklen. Vorher die rohe Marke, 22 % dunkler
+       (--av-color-primary-dark): das setzt eine dunkle Marke voraus. Bei einer
+       hellen fiel der Link beim Überfahren UNTER seine Ruhefarbe — gemessen am
+       08.10.2026 bei Plakat (#cbd92b auf eigener Fläche) 1,8:1 statt 3,0:1.
+       Abgeleitet aus -on-light/-on-dark, dieselbe Formel wie bei einer eigenen
+       Linkfarbe (VarComputer::link()), dort war es schon richtig. */
+    --av-link-hover:    light-dark(
+                          color-mix(in oklch, var(--av-color-primary-on-light), black 22%),
+                          color-mix(in oklch, var(--av-color-primary-on-dark), white 22%));
+    /* Unterstrich getrennt fuer Ruhe und Ueberfahren, weil das zwei
+       Entscheidungen sind.
+
+       Der Standard bildet ab, was das Theme schon immer getan hat — nur stand
+       es nirgends: Open Props' normalize schreibt
+       `:where(a):where(:not(:hover)) { text-decoration: inherit }`. In Ruhe
+       erbt der Link also die Dekoration seines Absatzes (keine), und beim
+       Ueberfahren greift der Unterstrich des Browsers. Gemessen 10.08.2026 auf
+       der Pruefseite: 19 Textlinks, alle `none` in Ruhe.
+
+       Hier steht dasselbe jetzt ausdruecklich da, statt aus einer fremden
+       Regel zu folgen — und damit ist es erreichbar. */
+    --av-link-underline:       none;
+    --av-link-underline-hover: underline;
+
+    /* Hover-Effekt der Textlinks (Studio: „Beim Überfahren"). Neun Token statt
+       einer Liste von Varianten, damit jede Kombination aus den Bausteinen
+       entsteht und eine Sektion einzelne davon umstellen kann:
+         Strich      — Stil und Stärke beim Überfahren (Welle, kräftig)
+         Streifen    — ein Hintergrund-Verlauf in --av-link-mark, dessen Grösse
+                       von -mark-size zu -mark-size-hover wechselt (Strich
+                       wächst, Marker, Invertiert)
+         Schrift     — Farbe beim Überfahren (Invertiert: die Fläche)
+       Der Standard ist der Effekt „Unterstrich" ohne Strich in Ruhe — genau
+       das, was die beiden Zeilen darüber schon immer taten. Der Streifen ist
+       aus (transparent, Grösse 0); wirkt nur auf Textlinks (base.css). */
+    --av-link-underline-style-hover: solid;
+    --av-link-thickness-hover:       1px;
+    --av-link-mark:                  transparent;
+    --av-link-mark-size:             0% 0%;
+    --av-link-mark-size-hover:       0% 0%;
+    --av-link-hover-ink:             var(--av-link-hover);
+    --av-link-pad:                   0;
+    /* Die Blockfarbe von „Invertiert" — eigenes Token, damit eine farbige
+       Sektion (layout.css) den Block auf halbtransparentes Weiss stellen kann,
+       ohne Strich und Marker anzufassen. */
+    --av-link-block:                 var(--av-link);
+    --av-color-heading: currentColor;
+
+    /* ── Colour: Semantic ───────────────────────────────────────────────
+       Each of these has TWO jobs, and they pull in opposite directions:
+
+       - as a SIGNAL — the alert's fill and border, a field's error outline —
+         it has to be recognisable at a glance. Bright, saturated, unmistakably
+         amber or red.
+       - as TEXT it has to be read at 14px, which on a light page means dark.
+
+       One value cannot do both. Driving them from a single token was the bug:
+       first the text failed (info 2.52:1, success 2.03, warning 1.45, error
+       4.28 — all of them, on the light side), and darkening the token far
+       enough to fix that turned amber into brown (#804200) and took the fill
+       and border down with it, because they derive from the same value.
+
+       So: the token stays the SIGNAL colour, and the text is derived from it by
+       capping lightness — the same shape as --av-color-text-on-primary, which
+       solves the same kind of problem one level up.
+
+       0.48 / 0.76 are the loosest caps that still clear 4.5:1 for all four hues
+       against the 12% tint they sit on (measured: worst case 5.03 light, 5.01
+       dark; 0.52 already fails at 4.29). Loosest on purpose — every step darker
+       is colour taken out of the text for margin nobody asked for. */
+    --av-color-success: var(--green-6);
+    --av-color-warning: var(--yellow-5);
+    --av-color-error:   var(--red-6);
+    --av-color-info:    var(--blue-5);
+
+    /* The readable half. Used wherever a semantic colour becomes type — the
+       alert message, the required-field asterisk, a field's error line — while
+       the tokens above stay the colour of the signal itself.
+
+       The tint is why this is not simply "one shade darker": the alert message
+       does not sit on the page, it sits on a 12% wash of its own colour, which
+       is slightly darker again. */
+    --av-color-success-text: light-dark(
+      oklch(from var(--av-color-success) clamp(0, l, 0.48) c h),
+      oklch(from var(--av-color-success) clamp(0.76, l, 1) c h));
+    --av-color-warning-text: light-dark(
+      oklch(from var(--av-color-warning) clamp(0, l, 0.48) c h),
+      oklch(from var(--av-color-warning) clamp(0.76, l, 1) c h));
+    --av-color-error-text: light-dark(
+      oklch(from var(--av-color-error) clamp(0, l, 0.48) c h),
+      oklch(from var(--av-color-error) clamp(0.76, l, 1) c h));
+    --av-color-info-text: light-dark(
+      oklch(from var(--av-color-info) clamp(0, l, 0.48) c h),
+      oklch(from var(--av-color-info) clamp(0.76, l, 1) c h));
+
+    /* mark is a HIGHLIGHT, not a warning — same hue, opposite job. It derived
+       from --av-color-warning, so pulling that colour down to text strength
+       would have turned the highlight into a dark olive wash. Its own value.
+
+       No light-dark() here on purpose: a highlight carries dark text in both
+       schemes (see base.css), so it has to stay light in both. Deriving it from
+       the scheme is what broke the old one — yellow-5 at 35% measured 16.97 on
+       the light side and 3.22 on the dark, because the translucency let the dark
+       page through. */
+    --av-color-highlight: var(--yellow-3);
+
+    /* ── Typography: Families ───────────────────────────────────────── */
+    --av-font-sans:
+      -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+      Helvetica, Arial, sans-serif, 'Apple Color Emoji';
+    --av-font-serif:
+      Georgia, 'Times New Roman', Times, serif;
+    --av-font-mono:
+      ui-monospace, 'Cascadia Code', 'Source Code Pro',
+      Menlo, Consolas, 'DejaVu Sans Mono', monospace;
+    /* Heading/display font. Defaults to the body font, so headings follow
+       --av-font-sans until --av-font-display is overridden (font pairing). */
+    --av-font-display: var(--av-font-sans);
+
+    /* ── Typography: die drei Regler der Skala ───────────────────────────
+       Multiplikatoren, keine fertigen Größen — dasselbe Muster wie
+       --av-radius-scale und --av-shadow-scale. Das Design Studio schreibt nur
+       diese drei Zahlen; die zwölf Größen unten rechnen selbst.
+
+       Bis 05.08.2026 war es umgekehrt: die zwölf clamp()-Ausdrücke standen
+       zusätzlich wörtlich in VarComputer::TYPE_SCALE und in TYPE_SCALE in
+       ave-editor.js, und der Editor schrieb fertig ausmultiplizierte Größen.
+       Dieselbe Tabelle an drei Orten — wer hier eine Größe änderte, änderte sie
+       für den Kunden nur, solange der keinen der drei Regler angefasst hatte.
+
+       Gemessen vor dem Umbau: über fünf Fensterbreiten (375–1920) und vier
+       Faktor-Kombinationen liefert calc(1 * clamp(…)) exakt dieselbe Größe wie
+       das nackte clamp(…) — 20 von 20 Fällen gleich.
+
+       --av-lead-scale gilt NUR für --av-text-lg: das ist der .lead-Absatz, nie
+       eine Überschrift. Deshalb trägt lg auch nicht den Überschriften-Faktor. */
+    --av-text-scale:    1;
+    --av-heading-scale: 1;
+    --av-lead-scale:    1;
+
+    /* ── Typography: Display (above h1, hero use) ───────────────────── */
+    --av-text-display-1: calc(var(--av-text-scale) * var(--av-heading-scale) * (clamp(3rem,    5vw + 1rem,   5.5rem)));
+    --av-text-display-2: calc(var(--av-text-scale) * var(--av-heading-scale) * (clamp(2.25rem, 4vw + .75rem, 4rem)));
+    --av-text-display-3: calc(var(--av-text-scale) * var(--av-heading-scale) * (clamp(1.75rem, 3vw + .5rem,  3rem)));
+
+    /* ── Typography: Fluid scale ─────────────────────────────────────────
+     * Open Props --font-size-fluid-* are display-scale tokens (1.5–3.5rem).
+     * Use hand-tuned clamp() values for UI text instead.
+     * ──────────────────────────────────────────────────────────────────── */
+    --av-text-xs:   calc(var(--av-text-scale) * (0.75rem));
+    --av-text-sm:   calc(var(--av-text-scale) * (0.875rem));
+    --av-text-base: calc(var(--av-text-scale) * (clamp(1rem,   0.925rem + 0.375vw, 1.125rem)));
+    --av-text-md:   calc(var(--av-text-scale) * (clamp(1.125rem, 1rem + 0.625vw, 1.375rem)));
+    --av-text-lg:   calc(var(--av-text-scale) * var(--av-lead-scale)    * (clamp(1.25rem, 2vw + .5rem,   1.875rem)));
+    --av-text-xl:   calc(var(--av-text-scale) * var(--av-heading-scale) * (clamp(1.5rem,  2.5vw + .5rem, 2.25rem)));
+    --av-text-2xl:  calc(var(--av-text-scale) * var(--av-heading-scale) * (clamp(1.75rem, 3vw + .5rem,   3rem)));
+    --av-text-3xl:  calc(var(--av-text-scale) * var(--av-heading-scale) * (clamp(2rem,    4vw + .5rem,   3.75rem)));
+    --av-text-4xl:  calc(var(--av-text-scale) * var(--av-heading-scale) * (clamp(2.25rem, 5vw + .5rem,   4.5rem)));
+
+    /* ── Typography: Versalien ─────────────────────────────────────────
+       Zwei Schalter, nach ROLLE statt nach Tag — und das ist kein Detail.
+       In diesem Theme haengt die Optik einer Ueberschrift nicht am Tag: ein h2
+       in einer .text-scale--display-Sektion rendert als Display-1. Ein Schalter
+       je Tag (h1 … h6) haette also neun Versprechen gegeben, von denen einige
+       genau dort nicht halten, wo Versalien am ehesten gewollt sind.
+
+       --av-heading-transform  gilt fuer h1–h6 in ihrer normalen Groesse.
+       --av-display-transform  gilt fuer alles, was als DISPLAY liest: die
+                               Utilities .display-1/2/3 und die Ueberschriften
+                               in .text-scale--display-Sektionen.
+
+       text-transform laesst den Text im DOM unveraendert — Vorleseprogramme
+       lesen ihn normal. Die Lesbarkeit sinkt allerdings mit der Zeilenlaenge,
+       weshalb Versalien fuer Display eine bessere Idee sind als fuer Fliesstext-
+       nahe Ueberschriften. */
+    --av-heading-transform: none;
+    --av-display-transform: none;
+
+    /* ── Typography: Leading ────────────────────────────────────────── */
+    --av-leading-none:    1;
+    --av-leading-display: 1.05;
+    --av-leading-tight:   1.2;
+    --av-leading-snug:    1.35;
+    --av-leading-body:    1.6;
+    --av-leading-loose:   1.8;
+
+    /* ── Typography: Tracking ───────────────────────────────────────── */
+    --av-tracking-tight:  -.03em;
+    --av-tracking-normal: 0;
+    --av-tracking-wide:   .04em;
+    --av-tracking-widest: .1em;
+
+    /* ── Typography: Weight ─────────────────────────────────────────── */
+    --av-weight-light:  300;
+    --av-weight-normal: 400;
+    --av-weight-medium: 500;
+    --av-weight-semi:   600;
+    --av-weight-bold:   700;
+    --av-weight-extra:  800;
+    --av-weight-black:  900;
+
+    /* Editable via the Theme-Editor (heading / body weight). Dedicated tokens so
+       changing them leaves strong/b/buttons on the fixed --av-weight-* scale. */
+    --av-heading-weight: var(--av-weight-bold);
+    --av-body-weight:    var(--av-weight-normal);
+
+    /* ── Typography: Prose ──────────────────────────────────────────── */
+    --av-prose-width: 68ch;
+
+    /* Heading line-length cap. Off by default (Open Props normalize caps
+       h1–h6 quite tightly, which is often unwanted). Set a value here to bring
+       a measure back site-wide, or use the .measure utility per element. */
+    --av-heading-measure: none;
+    --av-heading-measure-on: 40ch;   /* value the .measure utility applies */
+
+    /* ── Spacing ──────────────────────────────────────────────────────
+       --av-space-scale ist der Dichte-Regler: ein Multiplikator auf die ganze
+       Staffel, damit der Rhythmus zusammen wächst und schrumpft statt in Stufen
+       zu springen. Gleiches Muster wie --av-text-scale und --av-radius-scale.
+
+       Bis 05.08.2026 rechnete das Design Studio diese acht Werte selbst aus —
+       einmal in VarComputer::density(), einmal in ave-editor.js, und ein drittes
+       Mal in computeMobile() für den Block unten. Die Staffel stand also
+       vierfach, und die mobile Zuordnung (md → --size-4 statt --size-5) musste
+       an zwei Orten übereinstimmen, ohne dass etwas das geprüft hätte.
+
+       Gemessen vor dem Umbau: über neun Größen und fünf Faktoren liefert
+       calc(<faktor> * var(--size-n)) exakt dasselbe wie das alte
+       calc(var(--size-n) * <faktor>), und bei Faktor 1 dasselbe wie var(--size-n)
+       — 45 von 45 Kombinationen gleich. */
+    --av-space-scale: 1;
+    --av-space-2xs: calc(var(--av-space-scale) * var(--size-1));
+    --av-space-xs:  calc(var(--av-space-scale) * var(--size-2));
+    --av-space-sm:  calc(var(--av-space-scale) * var(--size-3));
+    --av-space-md:  calc(var(--av-space-scale) * var(--size-5));
+    --av-space-lg:  calc(var(--av-space-scale) * var(--size-7));
+    --av-space-xl:  calc(var(--av-space-scale) * var(--size-9));
+    --av-space-2xl: calc(var(--av-space-scale) * var(--size-11));
+    --av-space-3xl: calc(var(--av-space-scale) * var(--size-13));
+
+    /* ── Layout ─────────────────────────────────────────────────────── */
+    --av-container-sm:  640px;
+    --av-container-md:  768px;
+    --av-container-lg:  1024px;
+    --av-container-xl:  1280px;
+    --av-container-2xl: 1440px;
+    --av-container:     var(--av-container-xl);
+    --av-gutter:        var(--av-space-md);
+
+    /* Proportional multiplier on every grid/column gap (Design Studio: "Grid gap"). */
+    --av-layout-gap-scale: 1;
+    /* Multiplier on the dark overlay of bg-image* sections. */
+    --av-bg-overlay-scale: 1;
+
+    /* ── Borders & Radius ─────────────────────────────────────────────
+       The Open Props ramp is kept as-is (2/5/16/32/64px, geometric — each step
+       roughly doubles) and the Design Studio only SCALES it. At scale 1 the
+       calc() collapses to the untouched Open Props value, so an unconfigured
+       Free install and a freshly saved Pro install are pixel-identical by
+       construction — the same pattern the density control already uses.
+
+       Do NOT let the Studio write --av-radius-sm/md/lg/xl directly: any
+       synthesized ramp has a different shape than the geometric one here and
+       reintroduces the jump on first save. It writes --av-radius-scale only. */
+    --av-radius-scale: 1;
+    --av-radius-sm:   calc(var(--radius-2) * var(--av-radius-scale));
+    --av-radius-md:   calc(var(--radius-3) * var(--av-radius-scale));
+    --av-radius-lg:   calc(var(--radius-4) * var(--av-radius-scale));
+    --av-radius-xl:   calc(var(--radius-5) * var(--av-radius-scale));
+    --av-radius-full: var(--radius-round);
+    /* The width on its own, because several rules need it without the colour:
+       the footer separator, the outline card, the brand-bordered card. They all
+       wrote `var(--av-border-width, 1px)` — and nothing ever set the token, so
+       the fallback was the only value they ever saw and the Rahmenstärke slider
+       did not reach them.
+
+       --av-border is COMPOSITE, and a custom property is resolved where it is
+       DECLARED. Standing here alone, it froze the root border colour: a section
+       that remaps --av-color-border (style-light, style-dark, bg-primary,
+       bg-secondary, the gradients, text-on-light) still handed every
+       `var(--av-border)` the light-mode near-black. Measured 06.08.2026 in a
+       .style-light section: --av-color-border was oklch(100% 0 0 / 25%), while
+       --av-border read `2px solid light-dark(#1a1a1a, …)` — so 23 rules across
+       six stylesheets drew a black hairline where translucent white was meant.
+
+       Every block that remaps --av-color-border therefore redeclares
+       --av-border right below it, so it resolves there. Same remedy as the glow
+       ladder further down; BorderTokenTest holds it. */
+    --av-border-width: 1px;
+    --av-border:      var(--av-border-width) solid var(--av-color-border);
+
+    /* ── Shadows ───────────────────────────────────────────────────────
+       Open Props' shadows are multi-layer stacks (--shadow-3 alone is five
+       layers with graded opacity). A synthesized single-layer shadow can never
+       reproduce that, so the Studio must not overwrite --av-shadow-*; it scales
+       the opacity ladder instead, exactly like the radius/density controls.
+
+       Open Props builds that ladder additively (--shadow-strength-3 =
+       strength + 2%), which means it can never reach zero — at strength 0% the
+       layers still sit at 2%..9%. Rebuilt multiplicatively below: scale 1 is
+       arithmetically identical to Open Props, scale 0 is genuinely invisible.
+
+       --shadow-strength itself is deliberately NOT redefined. It stays Open
+       Props' own (1%, and 25% via its dark-mode media query), so dark mode keeps
+       adapting automatically and we avoid duplicating that media query — every
+       --shadow-N consumes the ladder only, never the raw strength.
+
+       --av-shadow-scale + the rebuilt strength ladder live UNLAYERED at the
+       end of this file — see the note there for why. */
+
+    --av-shadow-sm: var(--shadow-1);
+    --av-shadow-md: var(--shadow-3);
+    --av-shadow-lg: var(--shadow-5);
+
+    /* ── Dunkle Fläche ─────────────────────────────────────────────────
+       Eine dunkle Fläche, drei Verwender: .style-dark (Sektionen), .btn--dark
+       (Knöpfe) und die Fuß-Vorlage „dunkel". Bis 05.08.2026 stand in allen drei
+       unabhängig voneinander --gray-9 aus Open Props — eine Farbe, die das
+       Design Studio nicht kannte und an die es nicht herankam.
+
+       Die Schrift darauf wird AUTO-KONTRASTIERT, nicht festgelegt: dieselbe
+       Rechnung wie --av-color-text-on-primary. Damit bleibt der Regler auch
+       dann heil, wenn jemand eine helle Farbe wählt — sonst hätte man wieder
+       eine Fläche, deren Schrift nicht mitdenkt.
+
+       Der Preis dafür ist eine Nuance: die Schrift war --gray-1 (241,243,245),
+       jetzt ist sie Weiß. Das ist mehr Kontrast, nicht weniger, und es war die
+       Bedingung dafür, dass die Farbe überhaupt frei wählbar wird. */
+    --av-color-dark-surface:    var(--gray-9);
+    --av-color-on-dark-surface: color(from var(--av-color-dark-surface) srgb-linear
+                                  clamp(0, (0.1791 - (0.2126 * r + 0.7152 * g + 0.0722 * b)) * 100000, 1)
+                                  clamp(0, (0.1791 - (0.2126 * r + 0.7152 * g + 0.0722 * b)) * 100000, 1)
+                                  clamp(0, (0.1791 - (0.2126 * r + 0.7152 * g + 0.0722 * b)) * 100000, 1));
+
+    /* ── Knopf-Schatten ────────────────────────────────────────────────
+       Eine eigene Leiter, und zwar aus einem gemessenen Grund: --av-shadow-*
+       sind die FLÄCHEN-Schatten von Open Props, entworfen für grosse helle
+       Karten. Ihre Deckkraft liegt bei 0,03–0,10, und sie werfen kaum nach
+       unten. Unter einem kleinen, gesättigten Knopf liest sich das als nichts —
+       angesehen: die Stufen sm und md waren auf weissem Grund nicht von einem
+       Knopf ohne Schatten zu unterscheiden.
+
+       Ein Knopf braucht das Gegenteil: engen Radius, deutlichen Versatz nach
+       unten, mehr Deckkraft. Deshalb hier eigene Werte statt einer Verbiegung
+       der Flächen-Leiter.
+
+       Am selben Regler: --av-shadow-scale („Schatten-Tiefe") skaliert auch
+       diese Leiter, 0 = aus. Die Geometrie bleibt davon unberührt, wie überall
+       sonst auch.
+
+       ── Ruhe und Hover: zwei Zustände, ein Mechanismus. Die Klassen setzen nicht mehr box-shadow
+       direkt, sondern DIESE Token — sonst gewinnt `.btn:hover` (0,2,0) gegen
+       `a.btn--shadow-md` (0,1,1) und löscht beim Überfahren genau den Schatten,
+       den jemand vergeben hat. Dieselbe Lehre wie beim Bild-Filter: nicht über
+       Selektoren streiten, sondern das Token umschalten.
+
+       Beide sind hier deklariert, und `-hover` steht auf `none` — NICHT auf
+       `var(--av-btn-shadow-rest)`. Eine Referenz löst dort auf, wo sie steht:
+       an :root wäre sie einmal zu `none` eingefroren, und ein Knopf mit festem
+       Schatten verlöre ihn beim Überfahren. Dieselbe Falle wie bei --av-border
+       am 06.08.2026.
+
+       Stattdessen setzen die Schatten-Klassen BEIDE Token. Das wiederholt einen
+       Wert, hält aber jede Auflösung dort, wo sie hingehört — am Element. Und
+       die Klasse darf am Inhaltselement stehen, wie Contao sie schreibt, statt
+       nur direkt am Knopf.
+
+       Die Meinung, ob ein gewöhnlicher Knopf abhebt, steht nicht hier, sondern
+       in files/theme/CSS/theme.css — das Bundle bleibt neutral. */
+    --av-btn-shadow-rest:  none;
+    --av-btn-shadow-hover: none;
+
+    --av-btn-shadow-sm: 0  2px  4px oklch(0% 0 0 / calc(18% * var(--av-shadow-scale)));
+    --av-btn-shadow-md: 0  5px 14px oklch(0% 0 0 / calc(28% * var(--av-shadow-scale)));
+    --av-btn-shadow-lg: 0 10px 28px oklch(0% 0 0 / calc(34% * var(--av-shadow-scale)));
+
+    /* ── Anheben ──────────────────────────────────────────────────────
+       Der Schatten allein genügt nur beim WEICHEN Schatten: dort trägt die
+       Unschärfe die Information „weiter weg vom Papier". Beim HARTEN Schatten
+       gibt es keine Unschärfe — der Versatz IST die Höhe. Wächst nur er,
+       während der Knopf stehenbleibt, liest das Auge nicht „Knopf steigt",
+       sondern „Licht wandert". Erst die Gegenbewegung hält die knopfnahe
+       Schattenkante an ihrem Platz und lässt den Spalt wachsen.
+
+       Deshalb zwei Größen statt einer: --av-btn-lift ist der Hub, gemessen
+       nach oben; --av-btn-lift-diag ist ein FAKTOR (0 oder 1), keine Länge,
+       und schaltet den waagerechten Anteil zu. Weich = 0, also nur nach oben,
+       wie überall üblich. Hart = 1, also diagonal entgegen dem Versatz —
+       geschrieben von „Schatten-Art", denn ob ein Schatten hart ist, kann CSS
+       einem fertigen Wert nicht ansehen.
+
+       Die Leiter bleibt bei 1/2/3px und wächst NICHT mit --av-shadow-scale
+       mit. Ein Hub ist eine Geste, kein Maß: bei Tiefe 2 wären es 6px, und
+       ein Knopf, der beim Überfahren um sechs Pixel wegspringt, wirkt nicht
+       tiefer, sondern nervös. Die Tiefe steckt im Schatten, nicht im Weg.
+
+       Warum die Ruhe-Klassen (btn--shadow-*) den Hub auf 0 setzen: dort ist
+       Ruhe- und Hover-Schatten derselbe. Ein Knopf, der sich bewegt, während
+       sein Schatten mitwandert, hat keinen Spalt gewonnen — er ist nur
+       verrutscht. Bewegung ohne Schattenwechsel ist keine Höhe.
+
+       Zur Dauer: der Hub liegt auf `translate`, und das steht in der
+       transition-Liste von .btn — der Regler „Animationstempo" bestimmt ihn
+       also mit, ohne dass hier etwas dafür getan werden müsste. Bei
+       reduzierter Bewegung entfällt der Hub ganz (forms.css), statt nur
+       schneller zu sein. */
+    --av-btn-lift-sm: 1px;
+    --av-btn-lift-md: 2px;
+    --av-btn-lift-lg: 3px;
+    --av-btn-lift: 0px;
+    --av-btn-lift-diag: 0;
+
+    /* ── Leuchten ──────────────────────────────────────────────────────
+       Ein Schatten wirft Dunkles nach unten, ein Leuchten legt Farbiges rundum.
+       Deshalb dieselbe Bauart wie die Schatten-Leiter — drei Stufen, ein
+       Deckkraft-Regler — aber ohne Versatz und mit wählbarer Farbe.
+
+       ZWEI Schichten je Stufe, nicht eine: ein enger heller Kern und ein weiter
+       weicher Hof. Ein einzelner grosser Weichzeichner sieht nach Nebel aus,
+       nicht nach Licht; erst der Kern macht daraus eine Lichtquelle. Dasselbe
+       Argument, aus dem die Schatten von Open Props mehrschichtig bleiben.
+
+       Die Farbe geht über oklch(from … l c h / …), damit jede gewählte Farbe
+       ihren Ton behält und nur die Deckkraft gestaffelt wird. --av-glow-scale
+       multipliziert sie, genau wie --av-shadow-scale bei den Schatten: 0 = aus,
+       1 = wie entworfen, 2 = doppelt.
+
+       Weiss als Standard, weil ein Leuchten meistens auf dunklem Grund sitzt
+       und dort neutral bleiben soll — wer es farbig will, sagt es.
+
+       Die drei Stufen stehen NICHT hier, sondern am Ende der Datei in einem
+       eigenen Block — die Begründung dafür steht dort. */
+    --av-glow-color: #ffffff;
+    --av-glow-scale: 1;
+
+    /* ── Glas ──────────────────────────────────────────────────────────
+       EIN Material, nicht vier. Milchglas kam im Theme an vier Stellen vor und
+       sah an jeder anders aus: Kopfleiste blur(16px), .style-glass blur(12px)
+       mit 10 % Weiß, .btn--glass blur(8px) mit 12 %, und die Kopf-Vorlagen im
+       Design Studio schrieben ihre eigenen 16px noch einmal fest. Vier Werte
+       für einen Gestaltungsgedanken heißt: wer ihn ändern will, muss vier
+       Stellen finden, und drei davon liegen nicht dort, wo er sucht.
+
+       Jetzt eine Unschärfe und eine Tönung für alle. Die Abstufungen INNERHALB
+       des Knopfes (Grund, Überfahren, Rand) bleiben relativ zur Tönung
+       erhalten, sonst verlöre er seine Plastik — dieselbe Bauart wie
+       --av-muted-strength (Anteil + Aufschlag).
+
+       Der Schleier hinter einem Dialog gehört ausdrücklich NICHT dazu: das ist
+       kein Glas, sondern eine Abdunklung, und er soll nicht mitwandern, wenn
+       jemand die Kopfleiste klarer haben will. */
+    --av-glass-blur: 16px;
+    --av-glass-tint: 12%;
+
+    /* ── Text Shadows ──────────────────────────────────────────────────
+
+       An --av-shadow-scale gekoppelt, denselben Regler wie die Kastenschatten.
+       Vorher waren es feste Werte, und „Schatten-Tiefe" hiess damit stillschweigend
+       „Tiefe der KASTENschatten" — ein Theme auf 0 hatte flache Karten und
+       weiterhin volle Textschatten. Skaliert wird die Deckkraft, nicht der
+       Versatz: ein Textschatten soll schwächer werden, nicht wandern.
+
+       Auf 0 verschwinden beide, was „flach" auch bedeuten soll. VarComputer
+       schreibt für „weich"/„stark" dieselbe Form, sonst risse der Regler ab,
+       sobald jemand den Charakter umstellt. */
+    --av-text-shadow-sm: 0 1px 2px oklch(0% 0 0 / calc(20% * var(--av-shadow-scale)));
+    --av-text-shadow-md: 0 2px 4px oklch(0% 0 0 / calc(30% * var(--av-shadow-scale)));
+    --av-text-shadow-lg: 0 4px 8px oklch(0% 0 0 / calc(40% * var(--av-shadow-scale)));
+
+    /* ── Motion ──────────────────────────────────────────────────────── */
+    --av-ease-out:        var(--ease-3);
+    --av-ease-spring:     var(--ease-spring-3);
+    /* --av-duration-scale ist der Dauer-Regler: ein Multiplikator auf alle drei
+       Stufen, damit sie ihr Verhaeltnis behalten. Er heisst im Studio
+       „Uebergangsdauer" und nicht „Tempo", weil er eine DAUER skaliert: groesser
+       ist langsamer. Unter dem Namen „Animationstempo" las sich derselbe Regler
+       genau verkehrt herum (gemeldet 07.08.2026). Das Design Studio schrieb
+       vorher die drei Zeiten fertig aus (in PHP UND in ave-editor.js) und
+       rundete dabei auf ganze Millisekunden; hier bleibt der Wert exakt
+       (350ms x 1,15 = 402,5ms statt gerundet 403ms). */
+    --av-duration-scale:  1;
+    --av-duration-fast:   calc(var(--av-duration-scale) * 100ms);
+    --av-duration-base:   calc(var(--av-duration-scale) * 200ms);
+    --av-duration-slow:   calc(var(--av-duration-scale) * 350ms);
+
+    /* Die Einblender (.animate, .animate--hero, .style-pop) lasen ihre Zeiten
+       bis 07.08.2026 aus `var(--animate-duration, 0.75s)` — und --animate-duration
+       wird NIRGENDS deklariert. Der Rückfall war also der einzige Wert, den die
+       Regel je gesehen hat: der Dauer-Regler erreichte die auffälligste Bewegung
+       der Seite gar nicht. Wer ihn hochdrehte, bekam langsamere Knöpfe und
+       gleich schnelle Einblender und schloss daraus, der Regler tue zu wenig.
+
+       Genau die Falle, für die FallbackOnlyTokenTest da ist — der Wächter sucht
+       aber nach `--av-`, und diese Token heissen ohne Präfix. Sie behalten ihren
+       Namen: `--animate-duration` steht so im Spickzettel als Übersteuerung je
+       Element. Statt sie umzubenennen, bekommt der RÜCKFALL hier ein echtes
+       Token, das der Regler erreicht.
+
+       Bei Faktor 1 kommt überall dieselbe Zahl heraus wie vorher. */
+    --av-animate-duration: calc(var(--av-duration-scale) * 750ms);
+    --av-animate-delay:    calc(var(--av-duration-scale) * 100ms);
+    --av-animate-stagger:  calc(var(--av-duration-scale) *  80ms);
+    --av-animate-ease:     cubic-bezier(0.16, 1, 0.3, 1);
+
+    /* .style-pop springy hover — tunable.
+
+       Der Pop hat eine EIGENE Skala, er haengt nicht an der allgemeinen Dauer.
+       Kurz war er daran gekoppelt (06.08.2026) — das war falsch: die
+       Rueckstellung ist mit 2000ms eine bewusst lange Feder, ein Faktor 1,5 auf
+       alle Uebergaenge machte daraus 3 Sekunden, und wer die Seite insgesamt
+       flotter will, meint damit nicht die Feder. Zwei Absichten, zwei Regler.
+
+       Der Seitenwechsel bleibt ebenfalls unabhaengig: dessen Dauer ist eine
+       Auswahl aus drei Stufen (aus / weich / kraeftig) und keine Skala. */
+    --av-pop-scale:       1.1;
+    --av-pop-speed:       1;
+    --av-pop-in:          calc(var(--av-pop-speed) * 300ms);
+    --av-pop-return:      calc(var(--av-pop-speed) * 2000ms);
+
+    /* Page transition (cross-document view transitions) — OFF by default.
+       Opt individual pages in via a CSS class (see view-transitions.css), or
+       enable site-wide by setting a duration here / in custom.css. Fully
+       token-driven; 0s = no transition. */
+    --av-page-transition-duration: 0s;
+    --av-page-transition-ease:     var(--av-ease-out);
+    --av-page-transition-scale:    .98;   /* incoming zoom origin; 1 = plain fade */
+
+    /* ── Z-Index ─────────────────────────────────────────────────────── */
+    --av-z-base:     1;
+    --av-z-dropdown: 100;
+    --av-z-sticky:   200;
+    --av-z-modal:    9000;
+    --av-z-toast:    9500;
+    --av-z-skip:     9999;
+
+    /* ── Forms ───────────────────────────────────────────────────────── */
+    --av-input-height:  2.625rem;
+    --av-input-padding: var(--av-space-xs) var(--av-space-sm);
+    --av-input-radius:  var(--av-radius-md);
+
+    /* Buttons default to the input radius; override to decouple the two. */
+    --av-btn-radius: var(--av-input-radius);
+
+    /* Button size multiplier — scales the standard button and, proportionally,
+       btn--sm / btn--lg (they keep their relative offset). */
+    --av-btn-scale: 1;
+    /* ── Header / Navigation / Footer ──────────────────────────────────
+       Declared here so tokens.css remains the single source of truth. NOTE:
+       the header/footer tokens marked (*) are currently only consumed by the
+       SITE stylesheet (files/theme/CSS/theme.css), not by the bundle — the
+       corresponding Design Studio controls therefore do nothing on a clean
+       install until that CSS moves into the bundle. */
+    --av-header-position:   sticky;              /* (*) */
+    --av-header-inset:      auto;                /* (*) */
+    /* Deliberately UNSET: the header takes its natural height until the Design
+       Studio's "header height" control activates it. `initial` makes the custom
+       property guaranteed-invalid, so `var(--av-header-height)` without a
+       fallback is ignored (natural height) while `var(--av-header-height, 100px)`
+       in the scroll-hide offset still gets its fallback. Declaring a real length
+       here would silently force a min-height on every header. */
+    --av-header-height:     initial;
+    --av-header-bg:         var(--av-color-surface);           /* (*) */
+    --av-header-color:      var(--av-color-text);
+    --av-header-accent:     var(--av-color-primary-text);           /* (*) */
+    --av-header-border:     var(--av-border);                  /* (*) */
+    --av-header-backdrop:   blur(var(--av-glass-blur));         /* (*) */
+    --av-header-btn-bg:     var(--av-color-primary);           /* (*) */
+    --av-header-btn-color:  var(--av-color-text-on-primary);   /* (*) */
+    --av-header-nav:        var(--av-header-color);
+    --av-header-nav-active: var(--av-color-primary);
+
+    /* Das Dropdown-Panel ist eine EIGENE Fläche. Es hat seine eigene Farbe
+       (--av-nav-dropdown-bg, frei wählbar: Fläche, Marke, Zweitfarbe, eigene,
+       dazu durchscheinend), und deshalb braucht es auch seine eigene Tinte und
+       seine eigene Hervorhebung. Vorher hatte es beides nicht: navigation.css
+       schrieb die Linkfarbe fest auf --av-color-text, die aktive auf
+       --av-color-primary-text, und die Hover-Fläche las --av-color-surface-2 —
+       eine Stufe der SEITEN-Leiter.
+
+       Das ging gut, solange das Panel die Seitenfläche war, und ging schief,
+       sobald jemand es umfärbte: zwei unabhängige Entscheidungen, eine
+       unterstellte Beziehung. Gemessen am 06.08.2026 auf der Vorlage refined
+       (Panel #f4ecdd, beige): --av-color-surface-2 liegt HELLER als das Panel,
+       die überfahrene Zeile wurde also ein fast weisser Fleck auf Beige — sie
+       las wie ein Loch, nicht wie eine Hervorhebung.
+
+       Die Hervorhebung wird deshalb aus dem abgeleitet, worauf sie liegt und
+       was sie trägt: das Panel, 7% in Richtung seiner eigenen Tinte gerückt.
+       Damit stimmt die Richtung von selbst — auf hellem Panel wird sie dunkler,
+       und wer das Panel dunkel färbt, färbt die Tinte hell und bekommt eine
+       hellere Hervorhebung, ohne einen dritten Regler anfassen zu müssen.
+       Gemessen gilt das auch für ein durchscheinendes Panel: color-mix erhält
+       den Alphakanal (0,60 → 0,632).
+
+       Die 7% sind ein gemessener Kompromiss, kein runder Wert. Die Stufe steigt
+       damit von 0,046–0,107 Leuchtdichte (die alte Seiten-Leiter) auf
+       0,115–0,143, ist also gut doppelt so deutlich. Weiter zu gehen kostet:
+       jede Vertiefung nimmt dem MARKENFARBENEN aktiven Text Kontrast, weil
+       --av-color-primary-on-light gegen WEISS gedeckelt ist, nicht gegen die
+       Hervorhebung. Gemessen über die sechzehn Vorlagen, aktiver Text auf der
+       Hervorhebung: 5% → 3,85–7,99 · 7% → 3,71–7,64 · 10% → 3,46–7,19, gegen
+       4,06–8,39 auf der alten Fläche. Sechs Vorlagen lagen dort schon unter
+       4,5; das ist ein eigener, älterer Befund und hängt am Deckel, nicht an
+       dieser Stufe.
+
+       Und die Navigation hatte gar keine eigene Schriftangabe — sie erbte den
+       Fliesstext vom body. Als Token ist sie wählbar, ohne dass sich am
+       Standard etwas ändert.
+
+       ── Bild-Filter ───────────────────────────────────────────────────
+       Ein Ausdruck, kein Bündel Einzelwerte: der Regler schreibt fertiges
+       `sepia(60%)` oder `grayscale(100%)`, das Stylesheet setzt es nur ein.
+       `none` ist der Standard und kostet nichts — der Browser legt dafür keine
+       eigene Ebene an.
+
+       Gilt für INHALTSBILDER, nicht für Hintergrundbilder von Sektionen: ein
+       Filter auf der Sektion träfe auch den Text darüber. SVG sind bewusst
+       NICHT ausgenommen — wer Graustufen für alle Bilder wählt, meint in der
+       Regel auch die Icons; die Ausnahme trägt `.image--original`. */
+    --av-img-filter: none;
+
+    --av-nav-font-family:    var(--av-font-sans);
+    --av-nav-font-size:      var(--av-text-sm);
+    --av-nav-font-weight:    var(--av-weight-medium);
+    --av-nav-dropdown-bg:    var(--av-color-surface);
+    --av-nav-dropdown-radius: var(--av-radius-md);
+    --av-nav-dropdown-color:        var(--av-color-text);
+    --av-nav-dropdown-active-color: var(--av-color-primary-text);
+    --av-nav-item-hover-bg:  color-mix(in oklch, var(--av-nav-dropdown-bg), var(--av-nav-dropdown-color) 7%);
+    /* Die fünf standen bisher nur als Rückfall in navigation.css — also war der
+       Rückfall der einzige Wert, den sie je hatten. Hier stehen sie mit exakt
+       demselben Wert, das ändert nichts am Bild; es macht sie erreichbar, für
+       custom.css heute und für einen Regler später. FallbackOnlyTokenTest hält
+       das offen. */
+    --av-nav-toggle-size:     1.7em;
+    --av-nav-gap:             var(--av-space-md);
+    --av-nav-item-gap:        0.125rem;
+    --av-nav-divider:         var(--av-color-border);
+    --av-nav-dropdown-padding: 0.3rem;
+    --av-nav-dropdown-shadow: var(--av-shadow-lg);
+
+    /* ── Symbol des Untermenü-Umschalters ──────────────────────────────
+       Der Haken war aus zwei Rändern gezeichnet und damit nicht austauschbar:
+       eine andere Form hätte andere Geometrie gebraucht. Als Maske ist die Form
+       ein WERT — ein Token, ein Auswahlfeld, kein Sonderfall im Stylesheet. Die
+       Fläche bleibt currentColor, das Symbol folgt also weiter der Kopffarbe,
+       und beim Aufklappen dreht es sich um --av-nav-toggle-open-rotate.
+
+       Plus/Minus ist der Grund für die zweite Maske: dort soll sich nichts
+       drehen, sondern der senkrechte Strich verschwinden. Wo Drehen reicht
+       (Haken, Dreieck), zeigt -open auf dieselbe Maske. */
+    --av-nav-toggle-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M2 4l3 3 3-3' fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    --av-nav-toggle-mask-open: var(--av-nav-toggle-mask);
+    --av-nav-toggle-open-rotate: 180deg;
+
+    /* ── Trennlinien ───────────────────────────────────────────────────
+       Beides standardmässig AUS: die Navigation trennt heute über Abstand, und
+       das soll sich ohne Zutun nicht ändern. `0 solid transparent` statt `none`,
+       damit die Regel immer dieselbe Form hat und der Regler nur die Stärke
+       tauscht. */
+    --av-nav-item-divider: 0 solid transparent;
+    --av-nav-item-divider-x: 0 solid transparent;
+    /* Luft NUR wenn ein Strich da ist. Der halbe Abstand je Seite reichte
+       optisch nicht: der Umschalter-Knopf ist 1,7em breit und trägt ein
+       deutlich kleineres Zeichen, links steht also toter Raum und rechts klebte
+       der Strich am nächsten Wort. Der Zuschlag kommt als margin, nicht als
+       padding — das Innenpolster der Einträge bleibt unangetastet. */
+    --av-nav-divider-space: 0;
+    /* Senkrechtes Gegenstück im Panel. Zum TEXT sass die Linie schon mittig
+       (je 18,5px), aber die Hover-Fläche füllt die ganze Zeilenbox und stiess
+       bis auf 1px an sie — im Bild gemessen: Fläche endet bei 210, Strich bei
+       212, nächster Text erst bei 251. Der Zuschlag vergrössert den
+       Zeilenabstand, der Strich bleibt in dessen Mitte.
+
+       Der Wert ist kein fester Abstand, sondern der INNENABSTAND des Panels
+       (--av-nav-dropdown-padding, Regler „Innenabstand"). Damit misst der Raum
+       um die Linie dasselbe wie der seitliche Randabstand — die Linie ist
+       ohnehin um denselben Wert seitlich eingerückt, waagerecht und senkrecht
+       stimmt also dieselbe Zahl. Wer den Regler zieht, bewegt beides. */
+    --av-nav-divider-space-y: 0px;
+
+    /* ── Marker für den aktiven Punkt auf Ebene 1 ──────────────────────
+       Drei Token, ein Auswahlfeld: Unterstrich setzt nur die Linie, Pille nur
+       Fläche und Rundung. So braucht keine Variante eine eigene Regel. */
+
+    --av-nav-marker-line: 0 solid transparent;
+    --av-nav-marker-bg: transparent;
+    --av-nav-marker-radius: 0;
+    --av-nav-marker-pad: 0;
+    /* Ruhezustand der Markierungsflaeche und ihre Kurve beim Aufziehen. 1 heisst:
+       sie ist schon da und wechselt nur die Farbe — das ist die schlichte Pille.
+       0 heisst: sie waechst beim Ueberfahren aus dem Nichts, und mit einer
+       elastischen Kurve schiesst sie dabei einmal ueber ihr Ziel hinaus. Genau
+       das ist der Unterschied zwischen „Pille" und „Pille federnd"; die Form
+       ist dieselbe, nur ihr Weg dorthin nicht. */
+    --av-nav-marker-rest: 1;
+    --av-nav-marker-ease: var(--av-ease-out);
+
+    /* ── Karten ────────────────────────────────────────────────────────
+       Fuenf Stellen beantworteten die Frage „was ist eine Karte" getrennt:
+       .style-card und .style-interactive-card hier im Bundle, .news--card,
+       .event--upcoming und .media-card im Starter-Theme. Drei davon lasen
+       --av-card-bg gar nicht, sondern schrieben surface-2 fest; und auf
+       dieselbe Geste gab es zwei Antworten (shadow-lg + 5px gegen shadow-md +
+       2px). Seit 08.08.2026 lesen alle fuenf dieses Vokabular.
+
+       Zwei Werte stehen doppelt, und das ist kein Versehen: eine Kachel
+       (.style-interactive-card) hat von Haus aus KEINEN Rahmen, eine Karte
+       schon — und die Event-Karte zentriert ihren Text, die anderen nicht.
+       Das laesst sich nicht als EIN Standard schreiben, ohne eine der beiden
+       Seiten zu veraendern. Also zwei Token mit je eigenem Standard, und der
+       Regler schreibt beide gemeinsam: der Standard bleibt, wie es war, und
+       jede Auswahl gilt fuer alle Karten.
+
+       --av-card-align steht auf `inherit`, nicht auf `start`: eine Karte in
+       einer zentrierten Sektion soll zentriert bleiben, solange niemand etwas
+       waehlt. */
+    --av-card-bg:            var(--av-color-surface-2);
+    /* Rahmen in ZWEI Teilen, und der Grund ist derselbe wie bei --av-border
+       selbst, nur eine Ebene hoeher. Der zusammengesetzte Wert muss in jeder
+       Sektion neu aufgeloest werden, die die Rahmenfarbe umstellt — sonst
+       friert er an der Wurzel ein. Genau diese Neuauflösung hat aber am
+       08.08.2026 den Studio-Regler ueberstimmt: in einer cards-primary-Sektion
+       blieb der Rahmen 2px, waehrend er draussen auf 4px ging (gemessen).
+
+       Also traegt der Regler die BREITE, und die Sektion loest nur die FARBE
+       neu auf. Die Breite wird an der Wurzel gesetzt und vererbt sich in jede
+       Sektion hinein; die Sektion baut daraus ihren eigenen Rahmen. Beide
+       kommen an, ohne sich zu ueberstimmen. */
+    --av-card-border-width:  var(--av-border-width);
+    --av-tile-border-width:  0px;
+    --av-card-border:        var(--av-card-border-width) solid var(--av-color-border);
+    --av-tile-border:        var(--av-tile-border-width) solid var(--av-color-border);
+    --av-card-radius:        var(--av-radius-md);
+    --av-card-padding:       var(--av-space-md);
+    --av-card-shadow:        none;
+    --av-card-shadow-hover:  var(--av-shadow-md);
+    /* Hoehendeckel fuer Bilder in einer Kachel. Ohne ihn deckelt nur die
+       Spaltenbreite — und die waechst beim Umbruch, das Piktogramm wird auf
+       dem Telefon also am groessten. Fuer eine Kachel mit Foto am Element
+       heraufsetzen. */
+    --av-tile-media-max:     8rem;
+    --av-card-lift:          2px;
+    --av-card-align:         inherit;
+    --av-event-align:        center;
+
+    /* Beschreibungsliste: Breite der Begriffsspalte. `minmax` statt einer festen
+       Zahl, damit lange Begriffe nicht umbrechen muessen und kurze trotzdem
+       keine halbe Zeile leer lassen. Unterhalb von 600px stapelt die Liste
+       ohnehin, dann gilt der Wert nicht mehr. */
+    --av-dl-term-width:      minmax(8rem, 14rem);
+    /* Als ganzes Kurzschreiben, damit "aus" wirklich `none` heisst und
+       nicht eine durchsichtige Linie, die weiter Platz nimmt — dieselbe
+       Bauart wie --av-header-border und --av-footer-border. */
+    --av-nav-dropdown-border: 1px solid var(--av-nav-divider);
+
+    --av-footer-bg:     var(--av-color-surface-3);   /* (*) */
+    --av-footer-color:  var(--av-color-text);        /* (*) */
+    /* Aus der FUSSFARBE gedämpft, nicht aus der Seitenfarbe. Der Fuss steht auf
+       --av-color-surface-3, und im Dunkelmodus ist das die HELLSTE Stufe der
+       Leiter (Leuchtdichte 0,076 gegen 0,017 der Seite). Die Seitendämpfung ist
+       für den dunklen Seitengrund gerechnet und las auf dem helleren Fuss
+       2,49:1. Aus --av-footer-color abgeleitet folgt sie dem, worauf sie
+       tatsächlich liegt — und jedes Preset, das --av-footer-color setzt, zieht
+       sie automatisch mit. */
+    --av-footer-muted:  color-mix(in srgb, var(--av-footer-color) var(--av-muted-strength), transparent);
+    --av-footer-accent: var(--av-color-primary-text);     /* (*) */
+    /* How opaque the header is once the page is scrolled. Was hard-wired at 75%
+       in components.css, which made "Fläche" mean "glass": there was no way to
+       get a solid bar. At 100% the backdrop blur has nothing left to show
+       through and the header is simply solid. */
+    --av-header-opacity: 75%;
+
+    /* Zwei Entscheidungen, zwei Tokens: WELCHE Farbe (das Preset leitet sie aus
+       der Schriftfarbe ab) und OB überhaupt (der Schalter). Vorher schrieben die
+       Presets eine blosse Farbe in diesen Kurzschreibweise-Slot — border-style
+       fiel damit auf `none`, und JEDES farbige Preset hatte in Wahrheit gar
+       keinen Rahmen: gemessen 0px none bei primary, gradientPrimary, dark und
+       custom, waehrend die Presets sich die Muehe machten, eine Farbe dafuer
+       auszurechnen. */
+    --av-footer-border-color: var(--av-color-border);
+    --av-footer-border: var(--av-border-width, 1px) solid var(--av-footer-border-color);
+  }
+
+  /* ── Mobile: scale spacing down one step ─────────────────────────────
+     Trägt denselben Faktor wie oben, sonst wäre die Dichte auf dem Handy
+     eingefroren: der Regler wirkte am Schreibtisch und nicht auf dem Telefon.
+     Genau dafür gab es früher VarComputer::computeMobile(), das diesen Block
+     noch einmal nachbaute — inklusive der Zuordnung md → --size-4. */
+  @media (max-width: 768px) {
+    :root {
+      --av-space-md:  calc(var(--av-space-scale) * var(--size-4));   /* gaps, space-box-md:  1.5rem → 1.25rem */
+      --av-space-lg:  calc(var(--av-space-scale) * var(--size-5));   /* section--sm:         2rem   → 1.5rem  */
+      --av-space-xl:  calc(var(--av-space-scale) * var(--size-7));   /* section default:     4rem   → 2rem    */
+      --av-space-2xl: calc(var(--av-space-scale) * var(--size-9));   /* section--lg:         7.5rem → 4rem    */
+      --av-space-3xl: calc(var(--av-space-scale) * var(--size-11));  /* hero/display:        15rem  → 7.5rem  */
+    }
+  }
+
+  /* OS preference is honoured automatically by light-dark() (color-scheme:
+     light dark on :root). These classes let a manual toggle force one mode.
+
+     Bewusst NUR auf <html> und nicht mehr auch auf <body>. Eine Deklaration
+     auf <body> ist fuer den ganzen Seiteninhalt die naehere und schlug damit
+     alles, was auf <html> steht — das Farbschema aus dem Design Studio (live
+     als Inline-Style, gespeichert in theme-vars.css) ebenso wie dessen
+     Vorschau „Dunkel". Wer einmal den Fuss-Schalter gedrueckt hatte, sah im
+     Studio danach keinen der beiden Regler mehr wirken.
+
+     Auf <html> und hier im Layer stimmt die Rangfolge von selbst:
+       Studio (Inline-Style)  >  gespeichertes festes Schema (theme-vars.css,
+       ungelayert)  >  Besucherwahl (diese Klassen)  >  Systemeinstellung.
+     Ein fest auf hell oder dunkel gestelltes Schema kann ein Besucher damit
+     auch nicht mehr umwerfen — auch nicht ueber eine alte Wahl in
+     localStorage, die das Boot-Skript sonst still wieder anwendet. */
+  html.light { color-scheme: light; }
+  html.dark  { color-scheme: dark; }
+
+}
+
+/* ── Shadow strength ladder (UNLAYERED, on purpose) ────────────────────────
+   These override Open Props' own --shadow-strength-* declarations. Open Props
+   ships completely unlayered, and in the cascade UNLAYERED always beats layered
+   — so the same declarations inside @layer av.tokens above would silently lose
+   and the shadow control would do nothing (verified: alpha stayed at Open Props'
+   value for every scale). They therefore have to sit outside the layer.
+
+   Safe despite being unlayered: these are custom-property declarations only, so
+   they can never win a styling conflict, and custom.css still loads later with
+   equal specificity — a customer override keeps working.
+
+   Only the derived ladder is rebuilt, never --shadow-strength itself: every
+   Open Props --shadow-N consumes the ladder, so leaving the base alone keeps its
+   dark-mode media query (1% → 25%) working without duplicating it here. */
+:root {
+  --av-shadow-scale: 1;
+  --shadow-strength-3:  calc((var(--shadow-strength) + 2%) * var(--av-shadow-scale));
+  --shadow-strength-4:  calc((var(--shadow-strength) + 3%) * var(--av-shadow-scale));
+  --shadow-strength-5:  calc((var(--shadow-strength) + 4%) * var(--av-shadow-scale));
+  --shadow-strength-6:  calc((var(--shadow-strength) + 5%) * var(--av-shadow-scale));
+  --shadow-strength-7:  calc((var(--shadow-strength) + 6%) * var(--av-shadow-scale));
+  --shadow-strength-8:  calc((var(--shadow-strength) + 7%) * var(--av-shadow-scale));
+  --shadow-strength-10: calc((var(--shadow-strength) + 9%) * var(--av-shadow-scale));
+}
+
+@layer av.tokens {
+
+  /* ── Leucht-Leiter ────────────────────────────────────────────────────
+     Diese Selektorliste ist der ganze Trick, und sie ist nicht kosmetisch.
+
+     Eine Custom Property wird DORT aufgelöst, wo sie deklariert ist. Stünden
+     die drei Stufen nur auf :root, würde `oklch(from var(--av-glow-color) …)`
+     mit der Farbe von :root ausgerechnet, und Nachfahren erbten die fertige
+     Zeichenkette. Ein `--av-glow-color` auf einer Sektion bliebe wirkungslos —
+     gemessen, und genau das war der Fall bis 05.08.2026.
+
+     Sie zusätzlich auf den Leucht-Klassen zu deklarieren löst das: dort wird
+     neu aufgelöst, mit der Farbe, die an DIESER Stelle gilt. Der Text steht
+     trotzdem nur einmal da, weil beide Fälle dieselbe Deklaration teilen.
+
+     Warum nicht gleich auf `*`? Gemessen an der Prüfseite (1319 Elemente): eine
+     volle Stil-Neuberechnung kostet mit `:root` 13,5 ms, mit `*` 16,4 ms — über
+     dem Budget eines Bildes, und das bei jedem Reglerzug. Mit dieser Liste sind
+     es 13,4 ms, also nichts. Nur wer leuchtet, zahlt.
+
+     Die Schatten haben dieselbe Einschränkung (--av-shadow-scale wirkt auch
+     nicht je Sektion). Dort ist die Kette länger, weil Open Props' --shadow-N
+     ihrerseits aus --shadow-strength-* zusammengesetzt sind; das wäre ein
+     eigener Schritt. */
+  :root,
+  :is(.glow, .glow-sm, .glow-md, .glow-lg,
+      .text-glow, .text-glow-sm, .text-glow-md, .text-glow-lg,
+      .btn--glow, .btn--glow-sm, .btn--glow-md, .btn--glow-lg),
+  :is(.btn--glow, .btn--glow-sm, .btn--glow-md, .btn--glow-lg) > a {
+  /* Die dritte Zahl ist die SPREIZUNG, und sie ist der Grund, warum die erste
+     Fassung zu schwach aussah. Ohne sie liegt der Weichzeichner mittig auf der
+     Elementkante, also zur Hälfte HINTER dem Element — sichtbar bleibt nur der
+     äussere, schwache Rand. Bei der kleinen Stufe kam so gut wie nichts an.
+     Mit Spreizung tritt das Licht aus der Kante heraus, und erst dann liest es
+     sich als Leuchten statt als Unschärfe.
+
+     Die Spreizung ist GEOMETRIE und wird deshalb von --av-glow-scale nicht
+     angefasst — genauso, wie der Schatten-Regler die Versätze in Ruhe lässt.
+     Wer es dezenter will, dreht die Stärke herunter (etwa 0,6 kommt der ersten
+     Fassung nahe), behält aber die Form. */
+  --av-glow-sm:
+    0 0  6px 1px oklch(from var(--av-glow-color) l c h / calc(60% * var(--av-glow-scale))),
+    0 0 16px 4px oklch(from var(--av-glow-color) l c h / calc(35% * var(--av-glow-scale)));
+  --av-glow-md:
+    0 0 10px 2px oklch(from var(--av-glow-color) l c h / calc(70% * var(--av-glow-scale))),
+    0 0 30px 8px oklch(from var(--av-glow-color) l c h / calc(42% * var(--av-glow-scale)));
+  --av-glow-lg:
+    0 0 14px  4px oklch(from var(--av-glow-color) l c h / calc(80% * var(--av-glow-scale))),
+    0 0 56px 14px oklch(from var(--av-glow-color) l c h / calc(50% * var(--av-glow-scale)));
+
+  /* Für Schrift enger gefasst: ein Textleuchten mit den Radien von oben
+     verwischt die Buchstabenform, statt sie zu betonen.
+
+     text-shadow kennt keine Spreizung — hier bleibt also nur Radius und
+     Deckkraft, und beides ist angehoben. Enger als beim Kasten bleibt es
+     trotzdem, aus demselben Grund. */
+  --av-text-glow-sm:
+    0 0  6px oklch(from var(--av-glow-color) l c h / calc(70% * var(--av-glow-scale))),
+    0 0 14px oklch(from var(--av-glow-color) l c h / calc(45% * var(--av-glow-scale)));
+  --av-text-glow-md:
+    0 0 10px oklch(from var(--av-glow-color) l c h / calc(85% * var(--av-glow-scale))),
+    0 0 24px oklch(from var(--av-glow-color) l c h / calc(55% * var(--av-glow-scale)));
+  --av-text-glow-lg:
+    0 0 14px oklch(from var(--av-glow-color) l c h / calc(90% * var(--av-glow-scale))),
+    0 0 34px oklch(from var(--av-glow-color) l c h / calc(60% * var(--av-glow-scale)));
+  }
+
+}

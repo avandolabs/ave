@@ -1,0 +1,29 @@
+<article class="news news--card{{ class }}">
+    {%- if addImage %}
+        <div class="news__image">
+            {{ include('@Contao/image.html.twig') }}
+        </div>
+    {%- endif %}
+    <div class="news__body">
+        <p class="news__meta">
+            <time datetime="{{ datetime }}">{{ date }}</time>
+            {%- if author %}<span class="news__author">{{ author }}</span>{% endif %}
+        </p>
+        <h2 class="news__title">
+            {%- if link|default %}
+                <a href="{{ link }}" title="{{ newsHeadline }}">{{ newsHeadline }}</a>
+            {%- else %}
+                {{- newsHeadline }}
+            {%- endif %}
+        </h2>
+        {%- if hasTeaser %}
+            <p class="news__teaser">{{ teaser|striptags|trim }}</p>
+        {%- endif %}
+        {%- if (hasText.invoke() or hasTeaser) and link|default %}
+            <p class="news__cta"><a href="{{ link }}">Weiterlesen</a></p>
+        {%- endif %}
+    </div>
+</article>
+{%- if not hasReader %}
+    {%- do add_schema_org(getSchemaOrgData.invoke()) %}
+{%- endif %}

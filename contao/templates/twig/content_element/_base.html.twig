@@ -1,0 +1,36 @@
+{% extends "@Contao/content_element/_base.html.twig" %}
+
+{#
+ # Vion override of content_element/_base.html.twig
+ #
+ # 1. attributes — merges ce_style/ce_bg/ce_color presets and extra_style
+ #    (AbstractContentElementController exposes the full model row as `data`).
+ #    When ce_bg is a bg-image* preset and ce_bg_image is set, the responsive
+ #    background image variables are emitted (mirrors mod_article / element_group).
+ #
+ # 2. inner — whitespace control: the core template leaves leading/trailing
+ #    whitespace around the conditional headline block. Fixed with {%- -%} trim markers.
+ #}
+{% block attributes %}
+    {#- ce_btn_icon_pos (icon--before) only makes sense WITH an icon; emitting it
+        alone would render an empty icon box (reserved space / black square). -#}
+    {%- set _ce_preset = [data.ce_style|default, data.ce_span|default, data.ce_align|default, data.ce_self_align|default, data.ce_bg|default, data.ce_color|default, data.ce_space_below|default, data.ce_btn_icon|default, (data.ce_btn_icon|default ? data.ce_btn_icon_pos|default : null)]|filter(v => v)|join(' ') -%}
+    {%- set _ce_bg_style = '' -%}
+    {%- set _ce_bg_class = '' -%}
+    {%- if (data.ce_bg|default) starts with 'bg-image' and data.ce_bg_image|default -%}
+        {%- set _bg_sm = figure(data.ce_bg_image, [600,  0, 'proportional']) -%}
+        {%- set _bg_md = figure(data.ce_bg_image, [1200, 0, 'proportional']) -%}
+        {%- set _bg_lg = figure(data.ce_bg_image, [1920, 0, 'proportional']) -%}
+        {%- if _bg_sm -%}
+            {%- set _ce_bg_class = 'has-bg-image' -%}
+            {%- set _ce_bg_style = '--section-bg-sm: url(' ~ _bg_sm.image.img.src ~ '); --section-bg-md: url(' ~ _bg_md.image.img.src ~ '); --section-bg-lg: url(' ~ _bg_lg.image.img.src ~ ')' -%}
+        {%- endif -%}
+    {%- endif -%}
+    {{- attributes.addClass([_ce_preset, _ce_bg_class]|filter(v => v)|join(' ')).addStyle(data.extra_style|default).addStyle(_ce_bg_style) -}}
+{% endblock %}
+
+{% block inner -%}
+    {%- if headline.text %}{{ block('headline_component') }}
+    {% endif -%}
+    {%- block content %}{% endblock -%}
+{%- endblock %}

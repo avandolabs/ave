@@ -1,0 +1,51 @@
+<article class="event event--list{{ classList|default }}">
+
+    {%- if addImage %}
+        {{ include('@Contao/image.html.twig') }}
+    {%- else %}
+        <div class="event--list__date">
+            <span class="event--list__day">{{ startDate|date('d') }}</span>
+            <span class="event--list__month">{{ month }}</span>
+            <span class="event--list__year">{{ startDate|date('Y') }}</span>
+        </div>
+    {%- endif %}
+
+    <div class="event--list__body">
+
+        <h3 class="event--list__title">
+            {%- if href|default %}
+                <a href="{{ href }}" title="{{ title }}"{{ target }}>{{ link|default(title) }}</a>
+            {%- else %}
+                {{- title }}
+            {%- endif %}
+        </h3>
+
+        <div class="event--list__meta">
+            <span class="event--list__fulldate">
+                {%- if endDate and endDate != startDate -%}
+                    {%- if startDate|date('mY') == endDate|date('mY') -%}
+                        {{- startDate|date('d.') -}}–{{- endDate|date('d.m.Y') -}}
+                    {%- elseif startDate|date('Y') == endDate|date('Y') -%}
+                        {{- startDate|date('d.m.') -}}–{{- endDate|date('d.m.Y') -}}
+                    {%- else -%}
+                        {{- startDate|date('d.m.Y') -}}–{{- endDate|date('d.m.Y') -}}
+                    {%- endif -%}
+                {%- else -%}
+                    {{- date -}}
+                {%- endif -%}
+            </span>
+            {%- if time %}<span class="event--list__time">{{ time }}</span>{% endif %}
+            {%- if location %}<span class="event--list__location">{{ location }}</span>{% endif %}
+        </div>
+
+        {%- if teaser|default %}
+            <p class="event--list__teaser">{{ teaser|striptags|trim }}</p>
+        {%- endif %}
+
+    </div>
+
+</article>
+
+{%- if not hasReader %}
+    {%- do add_schema_org(getSchemaOrgData.invoke()) %}
+{%- endif %}

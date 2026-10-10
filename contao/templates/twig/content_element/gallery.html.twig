@@ -1,0 +1,23 @@
+{% extends "@Contao/content_element/gallery.html.twig" %}
+
+{% block content %}
+    {{ parent() }}
+    {% if images is not empty and images|first.hasLightbox %}
+        {% add 'glightbox-css' to stylesheets %}
+            <link rel="stylesheet" href="{{ asset('bundles/avandoave/glightbox/glightbox.min.css') }}">
+        {% endadd %}
+        {% add 'glightbox-js' to body %}
+            <script src="{{ asset('bundles/avandoave/glightbox/glightbox.min.js') }}"></script>
+        {% endadd %}
+        {% add 'glightbox-init' to body %}
+            <script{{ attrs().setIfExists('nonce', csp_nonce('script-src')) }}>
+            document.addEventListener('DOMContentLoaded', function () {
+                document.querySelectorAll('a[data-lightbox]').forEach(function (a) {
+                    a.dataset.gallery = a.dataset.lightbox;
+                });
+                GLightbox({ selector: 'a[data-lightbox]' });
+            });
+            </script>
+        {% endadd %}
+    {% endif %}
+{% endblock %}

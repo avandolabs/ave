@@ -1,0 +1,14 @@
+# Beschriftungen der Bildgrößen aus config/image_sizes.yaml. Contao liest sie
+# aus der Übersetzungsdomäne image_sizes und hängt die Maße selbst an.
+# Muster: Format Seitenverhältnis · Größe. Bewusst ohne Spaltenzahl, denn die
+# gilt nur am Desktop; schmale Bildschirme regelt das sizes-Attribut.
+card_1col: 'Karte 16:9 · XL'
+card_2col: 'Karte 16:9 · L'
+card_3col: 'Karte 16:9 · M'
+card_4col: 'Karte 16:9 · S'
+content_wide: 'Breitbild 2:1 · groß'
+content_half: 'Querformat 3:2 · mittel'
+content_third: 'Querformat 3:2 · klein'
+content_square: 'Quadrat 1:1'
+content_portrait: 'Hochformat 3:4'
+list_thumbnail: 'Vorschaubild 4:3 · mini'

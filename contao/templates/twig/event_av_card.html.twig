@@ -1,0 +1,36 @@
+<article class="event event--upcoming{% if featured %} featured{% endif %}{% if classList|default %} {{ classList }}{% endif %}">
+
+    <div class="event__body">
+
+        <div class="event__meta">
+            <time datetime="{{ datetime }}" class="event__date">{{ date }}</time>
+            {%- if time %}<span class="event__time">{{ time }}</span>{% endif %}
+            {%- if location %}<span class="event__location">{{ location }}</span>{% endif %}
+        </div>
+
+        <h3 class="event__title">
+            {%- if href|default -%}
+                <a href="{{ href }}" title="{{ title }}"{{ target }}>{{ link|default(title) }}</a>
+            {%- else -%}
+                {{- title -}}
+            {%- endif -%}
+        </h3>
+
+        {%- if teaser|default %}
+            <p class="event__teaser">{{ teaser|striptags|trim }}</p>
+        {%- endif %}
+
+        {%- if href|default %}
+            {%- set _btnClass = featured ? 'btn btn--sm' : 'btn btn--sm btn--outline' -%}
+            <p class="event__cta">
+                <a href="{{ href }}" class="{{ _btnClass }}">{{ more|default('Mehr') }}</a>
+            </p>
+        {%- endif %}
+
+    </div>
+
+</article>
+
+{%- if not hasReader %}
+    {%- do add_schema_org(getSchemaOrgData.invoke()) %}
+{%- endif %}

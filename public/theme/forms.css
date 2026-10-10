@@ -1,0 +1,457 @@
+/*
+ * Avando AVE — Forms
+ * Layer av.forms: inputs, buttons, Contao .widget wrapper, validation states.
+ *
+ * Contao wraps each form field in <div class="widget widget-[type]">.
+ * Buttons are rendered as <button> or <input type="submit">.
+ */
+
+@layer av.forms {
+
+  /* ── Base input styles ────────────────────────────────────────────
+
+     :where() um die :not()-Kette — sie zählt sonst SIEBENFACH. Die Basis kam
+     damit auf (0,7,1) und schlug `.widget.valid input` (0,2,1): Die
+     border-Kurzschreibweise hier überschrieb die Zustandsfarbe, und der
+     Rahmen blieb in beiden Schemata #dee2e6 — gültige wie fehlerhafte Felder
+     sahen aus wie normale. Gemessen. :where() setzt den Beitrag auf 0, die
+     Basis liegt jetzt bei (0,0,1) und verliert gegen jeden Zustand. */
+  input:where(:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="submit"]):not([type="button"]):not([type="reset"])),
+  select,
+  textarea {
+    display: block;
+    inline-size: 100%;
+    min-block-size: var(--av-input-height);
+    padding: var(--av-input-padding);
+    font-family: inherit;
+    font-size: var(--av-text-base);
+    line-height: var(--av-leading-snug);
+    /* Form controls are self-contained light/dark surfaces. Coloured sections
+       (.style-light/.bg-primary/…) remap --av-color-text(-muted) to white for
+       their content — that must NOT leak into the input, or text + placeholder
+       vanish on the (un-remapped, light) input background. Re-pin to the
+       surface-appropriate defaults so inputs stay legible on any section. */
+    --av-color-text:       light-dark(var(--gray-9), var(--gray-1));
+    --av-color-text-muted: light-dark(var(--gray-6), var(--gray-5));
+    --av-color-surface-2:  light-dark(var(--gray-1), var(--gray-8));
+    color: var(--av-color-text);
+    background-color: var(--av-color-surface);
+    border: var(--av-border);
+    border-radius: var(--av-input-radius);
+    appearance: none;
+    transition:
+      border-color var(--av-duration-fast) var(--av-ease-out),
+      box-shadow   var(--av-duration-fast) var(--av-ease-out);
+
+    &:focus {
+      outline: none;
+      border-color: var(--av-color-primary-text);
+      box-shadow: 0 0 0 3px oklch(from var(--av-color-primary) l c h / 20%);
+    }
+
+    &:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+      background-color: var(--av-color-surface-2);
+    }
+
+    &::placeholder {
+      color: var(--av-color-text-muted);
+    }
+  }
+
+  textarea {
+    min-block-size: 8rem;
+    resize: vertical;
+  }
+
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23666' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right var(--av-space-sm) center;
+    padding-inline-end: var(--av-space-2xl);
+  }
+
+  /* ── Label ──────────────────────────────────────────────────────── */
+  label {
+    display: block;
+    font-size: var(--av-text-sm);
+    font-weight: var(--av-weight-medium);
+    margin-block-end: var(--av-space-2xs);
+    color: var(--av-color-text);
+
+    & .mandatory {
+      color: var(--av-color-error-text);
+      margin-inline-start: .15em;
+    }
+  }
+
+  /* ── Contao widget wrapper ──────────────────────────────────────── */
+  .widget {
+    display: flex;
+    flex-direction: column;
+    gap: var(--av-space-2xs);
+    margin-block-end: var(--av-space-md);
+  }
+
+  /* ── Checkbox & Radio ──────────────────────────────────────────────
+   * Contao renders:
+   *   <fieldset class="checkbox_container|radio_container">
+   *     [<legend>Field label</legend>]
+   *     <span><input type="checkbox"> <label for=…>Option</label></span>  (per option)
+   *   </fieldset>
+   * Input and label are SIBLINGS inside the <span> → the span is the inline
+   * container (not the label). Hence: span = flex, label stays inline. */
+  .checkbox_container,
+  .radio_container {
+    border: 0;
+    padding: 0;
+    margin: 0 0 var(--av-space-md);
+  }
+
+  /* only the option spans (which contain an input) — NOT e.g. <span.mandatory> in the label */
+  .checkbox_container span:has(> input),
+  .radio_container span:has(> input) {
+    display: flex;
+    align-items: center;
+    gap: var(--av-space-xs);
+  }
+
+  .checkbox_container span:has(> input) + span:has(> input),
+  .radio_container span:has(> input) + span:has(> input) {
+    margin-block-start: var(--av-space-2xs);
+  }
+
+  .checkbox_container label,
+  .radio_container label {
+    display: inline;
+    margin: 0;
+    font-weight: var(--av-weight-normal);
+    cursor: pointer;
+  }
+
+  /* Field label (legend) above the options, styled like a normal label */
+  .checkbox_container > legend,
+  .radio_container > legend {
+    font-size: var(--av-text-sm);
+    font-weight: var(--av-weight-medium);
+    color: var(--av-color-text);
+    margin-block-end: var(--av-space-2xs);
+    padding-inline: 0;
+  }
+
+  .checkbox_container input[type="checkbox"],
+  .radio_container input[type="radio"],
+  .widget-checkbox input[type="checkbox"],
+  .widget-radio input[type="radio"] {
+    inline-size: 1.1rem;
+    block-size: 1.1rem;
+    accent-color: var(--av-color-primary);
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+
+  /* Fallback for nested <label><input> … (e.g. custom markup) */
+  .widget-checkbox label:has(> input),
+  .widget-radio label:has(> input) {
+    display: flex;
+    align-items: center;
+    gap: var(--av-space-xs);
+    font-weight: var(--av-weight-normal);
+    cursor: pointer;
+  }
+
+  /* ── Fieldset / Legend ──────────────────────────────────────────── */
+  fieldset {
+    border: var(--av-border);
+    border-radius: var(--av-radius-md);
+    padding: var(--av-space-md);
+    margin: 0 0 var(--av-space-md);
+  }
+
+  legend {
+    font-weight: var(--av-weight-semi);
+    font-size: var(--av-text-sm);
+    padding-inline: var(--av-space-xs);
+    color: var(--av-color-text-muted);
+  }
+
+  /* ── Validation states ──────────────────────────────────────────── */
+  .widget.error {
+    & input, & select, & textarea {
+      border-color: var(--av-color-error);
+
+      &:focus {
+        box-shadow: 0 0 0 3px oklch(from var(--av-color-error) l c h / 20%);
+      }
+    }
+
+    & p.error {
+      font-size: var(--av-text-sm);
+      /* Type, so the readable half — the border above stays the signal. */
+      color: var(--av-color-error-text);
+      margin-block: var(--av-space-2xs) 0;
+    }
+  }
+
+  .widget.valid {
+    & input, & select, & textarea {
+      border-color: var(--av-color-success);
+    }
+  }
+
+  /* ── Buttons ──────────────────────────────────────────────────────
+   *
+   * Button styles target only interactive elements — never div.btn.
+   * This handles two patterns without conflict:
+   *   a.btn          → .btn on a link directly (RTE, template)
+   *   div.btn > a    → .btn on a Contao CE wrapper (hyperlink CE cssClass)
+   *
+   * div.btn receives no layout or appearance styles; only the <a> inside does.
+   *
+   * Variants also match `div.btn--x > button`: the CSS class of a form submit
+   * field sits on the button in Contao 5, but only on its div.widget wrapper in
+   * Contao 6. Both selectors stay, so one stylesheet serves both versions.
+   */
+  :is(a.btn, button.btn, :not(a,button).btn > a, button[type="submit"], input[type="submit"]) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--av-space-xs);
+    padding: calc(var(--av-space-xs) * var(--av-btn-scale, 1)) calc(var(--av-space-lg) * var(--av-btn-scale, 1));
+    font-family: inherit;
+    font-size: calc(var(--av-text-base) * var(--av-btn-scale, 1));
+    font-weight: var(--av-weight-medium);
+    line-height: var(--av-leading-none);
+    min-block-size: calc(var(--av-input-height) * var(--av-btn-scale, 1));
+    /* Buttons default to the input radius but can diverge (e.g. pill buttons). */
+    border-radius: var(--av-btn-radius, var(--av-input-radius));
+    border: 2px solid transparent;
+    cursor: pointer;
+    text-decoration: none;
+    /* Stay within the container on small screens: never exceed the available
+       width, and let a long label wrap (or break) instead of overflowing. */
+    max-inline-size: 100%;
+    white-space: normal;
+    overflow-wrap: break-word;
+    text-align: center;
+    /* --av-duration-base, nicht -fast. 100ms sind fuer einen Knopf unterhalb
+       der Schwelle, an der ein Farbwechsel als Uebergang gelesen wird — er
+       springt einfach um, und der Hub von zwei Pixeln ist in 100ms gar nicht
+       zu sehen. Der Dauer-Regler wirkte dadurch wie wirkungslos: 100 → 200ms
+       bleibt zweimal „sofort" (gemeldet 07.08.2026, nachdem schon die
+       Einblender angeschlossen waren).
+
+       Ein Knopf ist ein groesseres Objekt als ein Textlink und darf laenger
+       brauchen; -fast bleibt deshalb dort, wo Sofortigkeit richtig ist —
+       Fokusringe, Links, Aufklapper. Mit -base steht der Regler jetzt fuer
+       200ms bis 400ms statt 100 bis 200. */
+    transition:
+      background-color var(--av-duration-base) var(--av-ease-out),
+      border-color     var(--av-duration-base) var(--av-ease-out),
+      box-shadow       var(--av-duration-base) var(--av-ease-out),
+      transform        var(--av-duration-base) var(--av-ease-out),
+      translate        var(--av-duration-base) var(--av-ease-out);
+
+    /* Ruhe- und Hover-Schatten über Token, siehe tokens.css. Die Hover-Regel
+       steht VOR :focus-visible: beide sind (0,2,0), also entscheidet die
+       Reihenfolge — und sichtbarer Fokus geht vor Zierde. */
+    box-shadow: var(--av-btn-shadow-rest);
+
+    &:hover { box-shadow: var(--av-btn-shadow-hover); }
+
+    /* Der Hub steht in einer eigenen Regel und nicht oben im Hover-Block, weil
+       er anders als der Schatten bei reduzierter Bewegung GANZ entfallen soll.
+       base.css kürzt dort nur die Dauer auf .01ms — ein Sprung um zwei Pixel
+       bliebe also ein Sprung, nur eben ohne Ankündigung. `translate` statt
+       `transform`, damit :active seinen eigenen Versatz behält: zwei
+       Eigenschaften, die sich addieren, statt einer, die die andere löscht. */
+    @media (prefers-reduced-motion: no-preference) {
+      &:hover {
+        translate:
+          calc(-1 * var(--av-btn-lift) * var(--av-btn-lift-diag))
+          calc(-1 * var(--av-btn-lift));
+      }
+    }
+
+    &:active  { transform: translateY(1px); }
+    &:disabled { opacity: .5; cursor: not-allowed; pointer-events: none; }
+  }
+
+  /* Primary (default). Colours flow through --_btn-* hooks (default = primary),
+     so a context like the header can flip just the primary button without
+     touching colour variants (which set their own background directly). */
+  :is(a.btn, button.btn, :not(a,button).btn > a, button[type="submit"], input[type="submit"]) {
+    background-color: var(--_btn-bg, var(--av-color-primary));
+    color: var(--_btn-fg, var(--av-color-text-on-primary));
+
+    &:hover       { background-color: var(--_btn-bg-hover, var(--av-color-primary-dark)); }
+    &:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px oklch(from var(--av-color-primary) l c h / 30%);
+    }
+  }
+
+  /* Secondary — same treatment as primary, but in the secondary colour */
+  :is(a.btn--secondary, button.btn--secondary, :not(a,button).btn--secondary > a, :not(a,button).btn--secondary > button) {
+    background-color: var(--av-color-secondary);
+    color: var(--av-color-text-on-secondary);
+    border-color: transparent;
+
+    &:hover { background-color: var(--av-color-secondary-dark); }
+    &:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px oklch(from var(--av-color-secondary) l c h / 30%);
+    }
+  }
+
+  /* Neutral — subdued surface button (the former "secondary" look) */
+  :is(a.btn--neutral, button.btn--neutral, :not(a,button).btn--neutral > a, :not(a,button).btn--neutral > button) {
+    background-color: var(--av-color-surface-2);
+    color: var(--av-color-text);
+    border-color: var(--av-color-border);
+
+    &:hover { background-color: var(--av-color-surface-3); border-color: var(--av-color-text-muted); }
+  }
+
+  /* Outline (primary) */
+  :is(a.btn--outline, button.btn--outline, :not(a,button).btn--outline > a, :not(a,button).btn--outline > button) {
+    background-color: transparent;
+    color: var(--av-color-primary-text);
+    border-color: var(--av-color-primary-text);
+
+    &:hover { background-color: var(--av-color-primary); color: var(--av-color-text-on-primary); }
+  }
+
+  /* Outline — secondary colour */
+  :is(a.btn--outline-secondary, button.btn--outline-secondary, :not(a,button).btn--outline-secondary > a, :not(a,button).btn--outline-secondary > button) {
+    background-color: transparent;
+    color: var(--av-color-secondary-text);
+    border-color: var(--av-color-secondary-text);
+
+    &:hover { background-color: var(--av-color-secondary); color: var(--av-color-text-on-secondary); }
+  }
+
+  /* Ghost */
+  :is(a.btn--ghost, button.btn--ghost, :not(a,button).btn--ghost > a, :not(a,button).btn--ghost > button) {
+    background-color: transparent;
+    color: var(--av-color-text);
+    border-color: transparent;
+
+    &:hover { background-color: var(--av-color-surface-2); }
+  }
+
+  /* Size variants */
+  :is(a.btn--sm, button.btn--sm, :not(a,button).btn--sm > a, :not(a,button).btn--sm > button) {
+    font-size: calc(var(--av-text-sm) * var(--av-btn-scale, 1));
+    padding: calc(var(--av-space-2xs) * var(--av-btn-scale, 1)) calc(var(--av-space-md) * var(--av-btn-scale, 1));
+    min-block-size: calc(2rem * var(--av-btn-scale, 1));
+  }
+
+  :is(a.btn--lg, button.btn--lg, :not(a,button).btn--lg > a, :not(a,button).btn--lg > button) {
+    font-size: calc(var(--av-text-md) * var(--av-btn-scale, 1));
+    padding: calc(var(--av-space-sm) * var(--av-btn-scale, 1)) calc(var(--av-space-xl) * var(--av-btn-scale, 1));
+    min-block-size: calc(3.25rem * var(--av-btn-scale, 1));
+  }
+
+  /* Full width */
+  :is(a.btn--full, button.btn--full, :not(a,button).btn--full > a, :not(a,button).btn--full > button) { inline-size: 100%; }
+  /* Beim Hyperlink-CE trägt der WRAPPER die Klasse, und components.css setzt
+     .content-hyperlink auf inline-flex (damit ein Button in einer Grid-Zelle
+     nicht mitgedehnt wird). 100 % eines inline-flex-Kastens ist die
+     Inhaltsbreite — gemessen 137px statt 1232. Nur für btn--full aufheben, die
+     Begründung des inline-flex bleibt für alle anderen bestehen. */
+  :not(a, button).btn--full {
+    display: block;
+    inline-size: 100%;
+  }
+
+  /* Soft — primary at low opacity, fills on hover */
+  :is(a.btn--soft, button.btn--soft, :not(a,button).btn--soft > a, :not(a,button).btn--soft > button) {
+    background-color: oklch(from var(--av-color-primary) l c h / 12%);
+    color: var(--av-color-primary-text);
+    border-color: transparent;
+    &:hover { background-color: oklch(from var(--av-color-primary) l c h / 22%); }
+  }
+
+  /* Dark — for use on light sections needing a dark CTA */
+  :is(a.btn--dark, button.btn--dark, :not(a,button).btn--dark > a, :not(a,button).btn--dark > button) {
+    background-color: var(--av-color-dark-surface);
+    color: var(--av-color-on-dark-surface);
+    border-color: transparent;
+    /* Ein Helligkeitsschritt statt eines zweiten Graus. --gray-8 war kein
+       aufgehelltes --gray-9, sondern ein eigener, kühlerer Ton — kein
+       Mischanteil traf ihn. Gemessen liegt er +0,083 in der OKLCH-Helligkeit;
+       so gerechnet folgt das Überfahren jeder gewählten Farbe. */
+    &:hover { background-color: oklch(from var(--av-color-dark-surface) calc(l + 0.083) c h); }
+  }
+
+  /* Glass — for use on dark/image sections */
+  :is(a.btn--glass, button.btn--glass, :not(a,button).btn--glass > a, :not(a,button).btn--glass > button) {
+    /* Grund, Rand und Überfahren bleiben relativ zur Tönung gestaffelt (früher
+       fest 12/28/22 %), sonst verliert der Knopf seine Plastik, sobald jemand
+       am Glas dreht. */
+    background: oklch(100% 0 0 / var(--av-glass-tint));
+    backdrop-filter: blur(var(--av-glass-blur));
+    -webkit-backdrop-filter: blur(var(--av-glass-blur));
+    border-color: oklch(100% 0 0 / calc(var(--av-glass-tint) + 16%));
+    color: white;
+    &:hover { background: oklch(100% 0 0 / calc(var(--av-glass-tint) + 10%)); }
+  }
+
+  /* Effekt-Varianten: Schatten und Leuchten am Knopf.
+     ────────────────────────────────────────────────────────────────────
+     Warum eigene btn--*-Klassen statt der Utilities .shadow / .glow?
+     Weil die Klasse beim Hyperlink-CE am WRAPPER landet, nicht am <a>:
+     Contao baut <div class="content-hyperlink btn btn--pill"><a>…</a></div>.
+     Ein .glow-lg im CSS-Feld ergäbe dort ein 900px breites, eckiges Leuchten
+     um eine unsichtbare Kiste — gemessen: Wrapper 900px/Radius 0, der
+     sichtbare Knopf 167px/Radius 99. Dieselbe Dreierform wie bei jeder
+     anderen Variante holt es ans <a>, wo es hingehört.
+
+     An den globalen Token, nicht an eigenen Werten: „Schatten-Tiefe" und
+     „Leuchten" aus den Effekten wirken damit auch hier.
+
+     Der Fokusring gewinnt bewusst (eine Pseudoklasse mehr) — er ersetzt den
+     Effekt, solange der Knopf fokussiert ist. Ein box-shadow kann nicht aus
+     zwei Regeln addiert werden, und sichtbarer Fokus geht vor Zierde. */
+  :is(a.btn--shadow-sm, button.btn--shadow-sm, :not(a,button).btn--shadow-sm > a, :not(a,button).btn--shadow-sm > button) { --av-btn-shadow-rest: var(--av-btn-shadow-sm); --av-btn-shadow-hover: var(--av-btn-shadow-sm); --av-btn-lift: 0px; }
+  :is(a.btn--shadow,    button.btn--shadow,    :not(a,button).btn--shadow > a, :not(a,button).btn--shadow > button),
+  :is(a.btn--shadow-md, button.btn--shadow-md, :not(a,button).btn--shadow-md > a, :not(a,button).btn--shadow-md > button) { --av-btn-shadow-rest: var(--av-btn-shadow-md); --av-btn-shadow-hover: var(--av-btn-shadow-md); --av-btn-lift: 0px; }
+  :is(a.btn--shadow-lg, button.btn--shadow-lg, :not(a,button).btn--shadow-lg > a, :not(a,button).btn--shadow-lg > button) { --av-btn-shadow-rest: var(--av-btn-shadow-lg); --av-btn-shadow-hover: var(--av-btn-shadow-lg); --av-btn-lift: 0px; }
+
+  :is(a.btn--glow-sm, button.btn--glow-sm, :not(a,button).btn--glow-sm > a, :not(a,button).btn--glow-sm > button) { --av-btn-shadow-rest: var(--av-glow-sm); --av-btn-shadow-hover: var(--av-glow-sm); --av-btn-lift: 0px; }
+  :is(a.btn--glow,    button.btn--glow,    :not(a,button).btn--glow > a, :not(a,button).btn--glow > button),
+  :is(a.btn--glow-md, button.btn--glow-md, :not(a,button).btn--glow-md > a, :not(a,button).btn--glow-md > button) { --av-btn-shadow-rest: var(--av-glow-md); --av-btn-shadow-hover: var(--av-glow-md); --av-btn-lift: 0px; }
+  :is(a.btn--glow-lg, button.btn--glow-lg, :not(a,button).btn--glow-lg > a, :not(a,button).btn--glow-lg > button) { --av-btn-shadow-rest: var(--av-glow-lg); --av-btn-shadow-hover: var(--av-glow-lg); --av-btn-lift: 0px; }
+
+  /* Nur beim Überfahren. Setzt das Token, nicht box-shadow — deshalb darf die
+     Klasse auch an einem Vorfahren stehen und gilt dann für alle Knöpfe darin.
+     `btn--hover-flat` ist das Gegenstück: es nimmt einem Knopf (oder einem
+     ganzen Bereich) das Abheben wieder, auch wenn es global eingeschaltet ist.
+
+     Schatten und Hub kommen hier immer zusammen, in derselben Zeile: sie sind
+     zwei Hälften einer Bewegung, und wer eine Klasse vergibt, meint beide.
+     Deshalb löscht btn--hover-flat auch beide. */
+  .btn--hover-shadow-sm { --av-btn-shadow-hover: var(--av-btn-shadow-sm); --av-btn-lift: var(--av-btn-lift-sm); }
+  .btn--hover-shadow,
+  .btn--hover-shadow-md { --av-btn-shadow-hover: var(--av-btn-shadow-md); --av-btn-lift: var(--av-btn-lift-md); }
+  .btn--hover-shadow-lg { --av-btn-shadow-hover: var(--av-btn-shadow-lg); --av-btn-lift: var(--av-btn-lift-lg); }
+  .btn--hover-flat      { --av-btn-shadow-hover: var(--av-btn-shadow-rest); --av-btn-lift: 0px; }
+
+  /* Pill — fully rounded, combinable with other style variants */
+  :is(a.btn--pill, button.btn--pill, :not(a,button).btn--pill > a, :not(a,button).btn--pill > button) { border-radius: 99px; }
+
+  /* Icon — square icon-only button */
+  :is(a.btn--icon, button.btn--icon, :not(a,button).btn--icon > a, :not(a,button).btn--icon > button) {
+    padding: var(--av-space-xs);
+    aspect-ratio: 1;
+  }
+
+  /* ── Form submit row ────────────────────────────────────────────── */
+  .widget-submit {
+    margin-block-start: var(--av-space-lg);
+    align-items: flex-start;
+  }
+
+}

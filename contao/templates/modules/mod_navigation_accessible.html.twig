@@ -1,0 +1,48 @@
+{% extends "@Contao/mod_navigation_accessible.html.twig" %}
+
+{#
+  Override {% block style %} so our --nav-* token overrides are guaranteed
+  to register immediately after navigation.css in the stylesheet collection.
+  No !important, no load-order guessing.
+#}
+
+{% block style %}
+    {{ parent() }}
+    {% add 'avandoave-nav-tokens' to stylesheets %}
+        <style{{ attrs().setIfExists('nonce', csp_nonce('style-src')) }}>
+        :root {
+            --nav-breakpoint:                 768;
+            --nav-color:                      var(--av-header-nav, var(--av-header-color, var(--av-color-text)));
+            --nav-active-color:               var(--av-header-nav-active, var(--av-color-primary));
+            --nav-font-size:                  var(--av-nav-font-size, var(--av-text-sm));
+            --nav-font-weight:                var(--av-weight-medium);
+            --nav-item-line-height:           var(--av-leading-body);
+            --nav-submenu-background:         var(--av-color-surface);
+            --nav-burger-line-color:          var(--av-color-text);
+            --nav-mobile-background:          var(--av-color-surface);
+            --nav-mobile-color:               var(--av-color-text);
+            --nav-mobile-active-background:   var(--av-color-surface-2);
+            --nav-mobile-active-color:        var(--av-color-primary);
+            --nav-mobile-active-border-color: var(--av-color-primary);
+            --nav-mobile-btn-clr:             var(--av-color-primary);
+            --nav-mobile-separator-color:     var(--av-color-border);
+            --nav-mobile-font-size:           var(--av-text-base);
+            --nav-mobile-padding:             var(--av-space-xl) var(--av-space-md) var(--av-space-md);
+            --nav-mobile-backdrop-height:     64px;
+            --skip-background:                var(--av-color-surface-3);
+            --skip-color:                     var(--av-color-text);
+            --skip-focus-border-color:        var(--av-color-primary);
+        }
+        /* Submenu flyouts sit on a light --nav-submenu-background, so keep their
+           text on the regular text colour even when the header (and thus the
+           top-level --nav-color) is inverted to an on-primary colour. */
+        /* Only the nested submenu <ul>s — NOT Contao's parent <li class="submenu">,
+           which would inherit down to the top-level trail link and re-colour it. */
+        .level_2,
+        .level_3 {
+            --nav-color: var(--av-color-text);
+            --nav-active-color: var(--av-color-primary);
+        }
+        </style>
+    {% endadd %}
+{% endblock %}

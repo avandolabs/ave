@@ -1,0 +1,1794 @@
+/*
+ * Avando AVE — Layout Utilities
+ * Layer av.layout: layout-* / align-* / space-* / style-* / .section / .container
+ */
+
+@layer av.layout {
+
+  /* ── Container ──────────────────────────────────────────────────── */
+  .container {
+    inline-size: 100%;
+    max-inline-size: var(--av-container);
+    margin-inline: auto;
+    padding-inline: var(--av-gutter);
+  }
+
+  .container--sm   { --av-container: var(--av-container-sm); }
+  .container--md   { --av-container: var(--av-container-md); }
+  .container--lg   { --av-container: var(--av-container-lg); }
+  .container--xl   { --av-container: var(--av-container-xl); }
+  .container--2xl  { --av-container: var(--av-container-2xl); }
+  .container--full { max-inline-size: none; }
+
+  /* ── Section ──────────────────────────────────────────────────────
+
+     Full-width page sections with standardised vertical rhythm */
+  .section              { padding-block: var(--av-space-xl); }
+  .section.section--sm  { padding-block: var(--av-space-lg); }
+  .section.section--lg  { padding-block: var(--av-space-2xl); }
+  .section.section--flush { padding-block: 0; }
+
+  /* Vertical centering — flex column, min-height only when not compact */
+  .section.align-content-center {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  /* min-height for CTA/hero contexts — suppressed when section--sm/--flush, or
+     when an explicit viewport height (.vh-*) is chosen (that one then wins). */
+  .section.align-content-center:not(.section--sm):not(.section--flush):not([class*="vh-"]) {
+    min-block-size: clamp(320px, 50vh, 640px);
+  }
+
+  /* ── Viewport heights (Hero / full-bleed sections) ────────────────────
+     Minimum block size relative to the viewport — controls hero height
+     without faking it via padding. min-* so content can always push taller.
+     dvh (dynamic viewport) with a vh fallback for older engines. Pair with the
+     "Centered (text + content)" alignment to vertically centre the content
+     (the element-group / .container is a flex/grid, so place-content applies).
+     --av-hero-offset subtracts e.g. a fixed header from the full height and can
+     be set in custom.css; it only affects .vh-full. */
+  .vh-full  { min-block-size: 100vh; min-block-size: calc(100dvh - var(--av-hero-offset, 0px)); }
+  .vh-large { min-block-size: 75vh;  min-block-size: 75dvh; }
+  .vh-half  { min-block-size: 50vh;  min-block-size: 50dvh; }
+  .vh-third { min-block-size: 33vh;  min-block-size: 33.334dvh; }
+
+  /* Portrait phones: a "half" or "third" of a tall narrow viewport looks flat
+     and empty, so lift the fractional heights. Full stays full. */
+  @media (max-width: 768px) {
+    .vh-large { min-block-size: 80vh; min-block-size: 80dvh; }
+    .vh-half  { min-block-size: 60vh; min-block-size: 60dvh; }
+    .vh-third { min-block-size: 50vh; min-block-size: 50dvh; }
+  }
+
+  /* Element groups carry the height AND are the flex/grid box, so
+     "Centered (text + content)" (place-content:center) centres directly.
+     For an article <section> the height is on the section but the centring
+     class is moved onto the inner .container — so make the tall section a
+     flex column and drop the centred container into its middle. */
+  .section[class*="vh-"]:has(> .container.align-content-center) {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  /* Push content to the right edge — flex column with items on the cross-axis
+     end. Every direct child (block, card, button, .layout-row) shrinks to its
+     content width and moves right; a .layout-row stays horizontal but sits on
+     the right. Pairs with align-text-end ("Right (text + content)"). */
+  .section.align-content-end {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+
+  /* ── Full-bleed sections inside an article ──────────────────────────
+     Normally one section is one article, and the article already spans the
+     viewport. A template that renders several sections at once sits inside
+     one article's .container instead, so its sections inherit the grid
+     width (measured 05.08.2026 at 1440px: 1250 instead of 1440) and their
+     own .container indents a second time. Both classes below mark that
+     case and break out to full viewport width via the 100vw
+     negative-margin trick; the templates simultaneously wrap their content
+     in .container so the text stays centred at the design grid width.
+
+     .ave-reader is added by news_full / event_full to every item section —
+     there the mod_newsreader / mod_eventreader wrapper div is suppressed by
+     our bundle template overrides, so no white-box artefacts appear.
+     .section--bleed is the free form for any such template.
+
+     Both assume no sidebars on the page (typical for detail and landing
+     pages). The break-out only applies when a section design preset is
+     active, i.e. when .section is present. */
+  :is(.ave-reader, .section--bleed).section {
+    inline-size: 100vw;
+    max-inline-size: 100vw;
+    margin-inline: calc(50% - 50vw);
+  }
+
+  /* Remove the enclosing article's padding so no gap appears above/below. */
+  .mod_article:has(:is(.ave-reader, .section--bleed).section) {
+    padding-block: 0;
+  }
+
+  /* ── layout-* ───────────────────────────────────────────────────── */
+  .layout-grid {
+    display: grid;
+    gap: calc(var(--av-layout-gap, var(--av-space-md)) * var(--av-layout-gap-scale, 1));
+  }
+
+  /* ── Equal columns: intrinsic, container-relative ──────────────────
+     Exactly N columns when there is room; collapses to fewer (then 1)
+     when each track would drop below --av-col-min. No media queries —
+     the grid reacts to its OWN available width, so a 3-column group
+     placed inside a narrow sidebar collapses correctly. The max() keeps
+     exactly N at full width; auto-fit drops tracks only once they would
+     fall under the minimum. Add .no-stack to lock the column count. */
+  .layout-columns-2,
+  .layout-columns-3,
+  .layout-columns-4,
+  .layout-columns-6 {
+    display: grid;
+    gap: calc(var(--av-layout-gap, var(--av-space-md)) * var(--av-layout-gap-scale, 1));
+    grid-template-columns: repeat(
+      auto-fit,
+      minmax(
+        max(
+          min(100%, var(--av-col-min, 16rem)),
+          calc((100% - (var(--av-cols) - 1) * calc(var(--av-layout-gap, var(--av-space-md)) * var(--av-layout-gap-scale, 1))) / var(--av-cols))
+        ),
+        1fr
+      )
+    );
+  }
+
+  /* --av-col-min steht an JEDER Spaltenklasse, nicht nur dort, wo es vom
+     Standard abweicht. Custom Properties vererben, und der Rueckfall an der
+     Lesestelle greift nur, wenn nichts geerbt wird: ein layout-columns-2
+     INNERHALB von layout-columns-6 erbte dessen 8rem und hielt auf einem
+     390px-Telefon zwei 169px-Spalten, statt umzubrechen (gemessen). Der
+     Fehler trifft jedes verschachtelte Raster und meldet sich nie — er sieht
+     nur eng aus. Je eine Zeile schliesst die ganze Klasse. */
+  .layout-columns-2 { --av-cols: 2; --av-col-min: 16rem; }
+  .layout-columns-3 { --av-cols: 3; --av-col-min: 16rem; }
+  .layout-columns-4 { --av-cols: 4; --av-col-min: 16rem; }
+  /* Ratio base: rarely shown as 6 equal columns; its real job is to host spans
+     (span-2..5) for common ratios — 50/50, 66/33, 83/17, thirds, sixths. */
+  .layout-columns-6 { --av-cols: 6; --av-col-min: 8rem; }
+
+  .layout-columns-2.no-stack { grid-template-columns: repeat(2, 1fr); }
+  .layout-columns-3.no-stack { grid-template-columns: repeat(3, 1fr); }
+  .layout-columns-4.no-stack { grid-template-columns: repeat(4, 1fr); }
+  .layout-columns-6.no-stack { grid-template-columns: repeat(6, 1fr); }
+
+  /* ── Element spans (optional: the occasional non-equal layout) ───────
+     80% of the time you want equal columns (above). For the exception, a
+     single child may claim more width via .col-span-2/3 or .col-span-full.
+
+     Robustness by design:
+     • :has() — a grid that CONTAINS a span switches from intrinsic auto-fit
+       to a fixed track count, so spans are deterministic. Without a span the
+       grid stays fully intrinsic (the common case is untouched).
+     • Only spans that FIT the column count are defined (span-2 needs ≥3 cols,
+       span-3 needs 4) — an over-span is simply undefined and stays one track,
+       so it can never break out of the grid.
+     • min-inline-size:0 stops long content (URLs, pre, tables) from bursting
+       a track; below the collapse breakpoint every span resets to full width. */
+  :is(.layout-columns-2, .layout-columns-3, .layout-columns-4, .layout-columns-6):has(> [class*="col-span-"]) {
+    grid-template-columns: repeat(var(--av-cols), 1fr);
+  }
+
+  :where([class*="layout-columns-"], .layout-grid) > [class*="col-span-"] {
+    min-inline-size: 0;
+  }
+
+  .layout-columns-3 > .col-span-2,
+  .layout-columns-4 > .col-span-2,
+  .layout-columns-6 > .col-span-2 { grid-column: span 2; }
+  .layout-columns-4 > .col-span-3,
+  .layout-columns-6 > .col-span-3 { grid-column: span 3; }
+  .layout-columns-6 > .col-span-4 { grid-column: span 4; }
+  .layout-columns-6 > .col-span-5 { grid-column: span 5; }
+
+  /* Full-bleed child — safe in any column count */
+  :where([class*="layout-columns-"], .layout-grid) > .col-span-full { grid-column: 1 / -1; }
+
+  @media (max-width: 768px) {
+    :is(.layout-columns-2, .layout-columns-3, .layout-columns-4, .layout-columns-6):has(> [class*="col-span-"]) {
+      grid-template-columns: 1fr;
+    }
+    [class*="layout-columns-"] > :is(.col-span-2, .col-span-3, .col-span-4, .col-span-5) { grid-column: auto; }
+  }
+
+  /* Asymmetric ratios (2:1) can't be expressed via auto-fit, so these
+     keep a single viewport breakpoint (see media query below). */
+  .layout-columns-asymmetric {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: calc(var(--av-layout-gap, var(--av-space-md)) * var(--av-layout-gap-scale, 1));
+  }
+
+  .layout-columns-asymmetric--reverse {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: calc(var(--av-layout-gap, var(--av-space-md)) * var(--av-layout-gap-scale, 1));
+  }
+
+  /* Sidebar: fluid main + fixed-width aside (Every Layout "Sidebar").
+     Wraps intrinsically once main can no longer keep
+     --av-sidebar-content-min; no media query needed. */
+  .layout-sidebar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: calc(var(--av-layout-gap, var(--av-space-lg)) * var(--av-layout-gap-scale, 1));
+    align-items: start;
+  }
+  .layout-sidebar > :first-child {        /* main content — greedily fills */
+    flex: 999 1 var(--av-sidebar-content-min, 60%);
+  }
+  .layout-sidebar > :last-child {         /* aside — fixed target width */
+    flex: 1 1 var(--av-sidebar-width, 280px);
+  }
+  /* --left variant: the aside is the FIRST DOM child instead of the last */
+  .layout-sidebar--left > :first-child {  /* aside */
+    flex: 1 1 var(--av-sidebar-width, 280px);
+  }
+  .layout-sidebar--left > :last-child {   /* main content */
+    flex: 999 1 var(--av-sidebar-content-min, 60%);
+  }
+
+  /* Sticky element (e.g. sidebar in layout-sidebar): stick ONLY from desktop up.
+     In the stacked single-column layout (mobile) a pinned element would
+     otherwise overlap the content below it → so it stays static there.
+     Offset is overridable via --av-sticky-top. */
+  @media (min-width: 769px) {
+    .layout-sticky {
+      position: sticky;
+      top: var(--av-sticky-top, calc(var(--av-header-measured, var(--av-header-height, 4rem)) + var(--av-space-lg)));
+      align-self: start;
+    }
+  }
+
+  /* Safety net: in the stacked mobile layout NO direct sidebar child may
+     stay sticky (else it overlaps the content) — applies regardless of how
+     sticky was set (class, cssID, inline, extra_style). !important beats
+     inline styles too. */
+  @media (max-width: 768px) {
+    .layout-sidebar > * { position: static !important; }
+  }
+
+  /* ── Page-level columns (#container) ───────────────────────────────
+     The page template renders #left / #right as <aside> only when the
+     corresponding layout region is filled in the page layout. These rules
+     arrange them as columns from desktop up (left | main | right), but via
+     :has() apply ONLY when left/right are actually present. On mobile
+     (≤768px) everything stacks in DOM order. Side-column width is overridable
+     via --av-col-side (default 16rem, e.g. in custom.css). */
+  #container { --av-col-side: 16rem; }
+
+  @media (min-width: 769px) {
+    #container:has(:is(#left, #right)) {
+      display: grid;
+      gap: calc(var(--av-layout-gap, var(--av-space-xl)) * var(--av-layout-gap-scale, 1));
+      align-items: start;
+    }
+    #container:has(#left):not(:has(#right)) {
+      grid-template-columns: var(--av-col-side) minmax(0, 1fr);
+    }
+    #container:has(#right):not(:has(#left)) {
+      grid-template-columns: minmax(0, 1fr) var(--av-col-side);
+    }
+    #container:has(#left):has(#right) {
+      grid-template-columns: var(--av-col-side) minmax(0, 1fr) var(--av-col-side);
+    }
+    /* visual order: left first, even though #main comes first in the DOM */
+    #container > #left  { order: 1; }
+    #container > #main  { order: 2; min-inline-size: 0; }
+    #container > #right { order: 3; }
+  }
+
+  /* Feature: two equal columns, large gap; collapses intrinsically. */
+  .layout-feature {
+    display: grid;
+    gap: calc(var(--av-layout-gap, var(--av-space-2xl)) * var(--av-layout-gap-scale, 1));
+    grid-template-columns: repeat(
+      auto-fit,
+      minmax(
+        max(
+          min(100%, var(--av-feature-min, 20rem)),
+          calc((100% - calc(var(--av-layout-gap, var(--av-space-2xl)) * var(--av-layout-gap-scale, 1))) / 2)
+        ),
+        1fr
+      )
+    );
+    align-items: center;
+  }
+  .layout-feature.no-stack { grid-template-columns: 1fr 1fr; }
+
+  /* Auto-fit: as many columns as fit at the minimum track width.
+     The column count follows the CONTAINER, not the number of children —
+     n ≤ (width + gap) / (--av-auto-min + gap). At the defaults (container-xl
+     1280px, gutter + gap = --av-space-md) that yields 4 columns, so a 5th
+     child wraps. Lower --av-auto-min (per element via "Inline-Styles", or
+     site-wide in custom.css) to fit more; min() keeps the track from
+     overflowing a container narrower than the minimum itself. */
+  .layout-auto-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(var(--av-auto-min, 280px), 100%), 1fr));
+    gap: calc(var(--av-layout-gap, var(--av-space-md)) * var(--av-layout-gap-scale, 1));
+  }
+
+  .layout-stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--av-stack-gap, var(--av-space-md));
+  }
+
+  .layout-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--av-row-gap, var(--av-space-sm));
+  }
+  .layout-row.row-spread { justify-content: space-between; }
+
+  /* ── Responsive: only the asymmetric ratios still need a breakpoint ──
+     columns-2/3/4, feature, sidebar and auto-grid all collapse
+     intrinsically above — no media queries required. */
+  @media (max-width: 768px) {
+    .layout-columns-asymmetric:not(.no-stack),
+    .layout-columns-asymmetric--reverse:not(.no-stack) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* ── align-* ────────────────────────────────────────────────────── */
+  .align-content-center  { place-content: center; }
+  .align-content-start   { place-content: start; }
+  .align-content-end     { place-content: end; }
+  .align-content-between { place-content: space-between; }
+  .justify-between       { justify-content: space-between; }
+  /* Pure alignment modifiers — one property each, applied to an ALREADY-flex
+     container (layout-row / layout-stack / media--*). They do not create the
+     flex context, so no flex-wrap side effect. Cross axis (= vertical in a row):
+     align-items-*. Main axis (= vertical in a column): justify-*. */
+  .align-items-start     { align-items: flex-start; }
+  .align-items-center    { align-items: center; }
+  .align-items-end       { align-items: flex-end; }
+  .align-items-stretch   { align-items: stretch; }  /* boxes fill the row height */
+  .justify-center        { justify-content: center; }
+
+  /* Horizontally centre an element THAT sizes to its content (e.g. a button /
+     hyperlink CE, which is inline-flex and has no container width). Works in any
+     context: block-level + fit-content + auto inline margins centre it, and the
+     auto margins also centre it as a flex/grid item (overriding any stretch).
+     Use on the element itself when text-align on the parent can't reach it. */
+  .self-start {
+    display: flex;
+    inline-size: fit-content;
+    max-inline-size: 100%;
+    margin-inline-start: 0;
+    margin-inline-end: auto;
+  }
+  .self-center {
+    display: flex;
+    inline-size: fit-content;
+    max-inline-size: 100%;
+    margin-inline: auto;
+  }
+  .self-end {
+    display: flex;
+    inline-size: fit-content;
+    max-inline-size: 100%;
+    margin-inline-start: auto;
+    margin-inline-end: 0;
+  }
+
+  /* Fill the parent / grid cell height — put on a box that should take the full
+     available vertical space (e.g. match the tallest sibling in a bento grid,
+     or a nested card inside a stretched cell). Grid items already stretch by
+     default; use this to override an align-items:start layout or when nested. */
+  .h-full { block-size: 100%; }
+
+  /* Flex child grows to fill the remaining main-axis space. Put on each box
+     inside a layout-stack (flex column) so they fill/equalise the column
+     height — e.g. two stat boxes filling a bento column next to a tall box.
+     (In a layout-row they fill the width instead.) */
+  .grow { flex: 1 1 0; min-block-size: 0; }
+
+  /* One-shot column that fills the available height AND makes its boxes fill it.
+     Put on ONE element (the element group / bento column) — combines the roles
+     of align-items-stretch + h-full + grow: it becomes a full-height flex
+     column (stretches into its grid cell) and its direct children grow equally
+     to fill. The common "boxes fill the column next to a taller box" case,
+     out of the box.
+
+     Base = a plain stack (also the mobile behaviour): boxes keep their natural
+     height and top-aligned content, so text flows compactly when the columns
+     collapse underneath each other. */
+  .fill-stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--av-stack-gap, var(--av-space-md));
+  }
+  /* Only when the columns actually sit side by side (≥ the mobile breakpoint)
+     do the boxes fill the (stretched) column height. flex-basis: auto → each
+     box starts at its content size and the leftover space is shared out, so the
+     box with more content stays larger while all of them fill the column
+     (content-aware; .fill-stack--even forces equal heights). Each box centres
+     its content vertically — flex-based (justify-content), NOT place-items, so
+     the horizontal text alignment is never touched. Mobile → normal compact flow. */
+  @media (min-width: 769px) {
+    .fill-stack { align-self: stretch; }
+    .fill-stack > * {
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;   /* flex-based, vertical only — no place-items */
+    }
+    .fill-stack--even > * { flex-basis: 0; }
+  }
+  /* Vertically centre a box's content while keeping its own horizontal text
+     alignment (unlike .align-all-center, which also centres horizontally —
+     awkward for left-aligned running text, esp. on mobile). Put on a box that
+     may be stretched (grid cell / bento tile) so its content stays middle. */
+  .v-center {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  /* ── Vertikale Ausrichtung (av-y-*) ──────────────────────────────────
+     Eigene Achse, eigene Klassen. Die alten align-content-* lösten sich je
+     nach Box in VERSCHIEDENE Eigenschaften auf: justify-content auf einer
+     .section (Flex-Spalte), place-content auf einer Element-Gruppe (Grid).
+     Deshalb wurde "rechts + vertikal zentriert" auf einer Gruppe still zu
+     "unten rechts". Hier ist jeder Layout-Modus ausdrücklich benannt, und
+     die Klasse bedeutet überall dasselbe.
+
+     Die horizontale Achse bleibt bei align-text-* — die war nie mehrdeutig.
+
+
+     Grundfall: Box ohne eigenen Layout-Modus (und .layout-stack, das bereits
+     eine Flex-Spalte ist). Als Flex-Spalte ist die Hauptachse die vertikale. */
+  .av-y-start, .av-y-center, .av-y-end {
+    display: flex;
+    flex-direction: column;
+  }
+  .av-y-start  { justify-content: flex-start; }
+  .av-y-center { justify-content: center; }
+  .av-y-end    { justify-content: flex-end; }
+
+  /* Grid: den Track-Block UND die Elemente in ihrem Track ausrichten, damit
+     unterschiedlich hohe Spalten zueinander mittig stehen — genau der Fall,
+     den das alte kombinierte Feld nicht ausdrücken konnte. */
+  :is(.layout-grid, .layout-columns-2, .layout-columns-3, .layout-columns-4,
+      .layout-columns-6, .layout-columns-asymmetric,
+      .layout-columns-asymmetric--reverse, .layout-feature,
+      .layout-auto-grid):is(.av-y-start, .av-y-center, .av-y-end) {
+    display: grid;
+  }
+  :is(.layout-grid, .layout-columns-2, .layout-columns-3, .layout-columns-4,
+      .layout-columns-6, .layout-columns-asymmetric,
+      .layout-columns-asymmetric--reverse, .layout-feature,
+      .layout-auto-grid).av-y-start  { align-content: start;  align-items: start; }
+  :is(.layout-grid, .layout-columns-2, .layout-columns-3, .layout-columns-4,
+      .layout-columns-6, .layout-columns-asymmetric,
+      .layout-columns-asymmetric--reverse, .layout-feature,
+      .layout-auto-grid).av-y-center { align-content: center; align-items: center; }
+  :is(.layout-grid, .layout-columns-2, .layout-columns-3, .layout-columns-4,
+      .layout-columns-6, .layout-columns-asymmetric,
+      .layout-columns-asymmetric--reverse, .layout-feature,
+      .layout-auto-grid).av-y-end    { align-content: end;    align-items: end; }
+
+  /* Flex-Zeile: dort ist die QUERachse die vertikale, und die Zeile darf
+     nicht zur Spalte umgebogen werden. */
+  :is(.layout-row, .layout-sidebar):is(.av-y-start, .av-y-center, .av-y-end) {
+    flex-direction: row;
+  }
+  :is(.layout-row, .layout-sidebar).av-y-start  { align-items: flex-start; }
+  :is(.layout-row, .layout-sidebar).av-y-center { align-items: center; }
+  :is(.layout-row, .layout-sidebar).av-y-end    { align-items: flex-end; }
+
+  /* Vertikal ausrichten braucht überschüssige Höhe. Spiegelt die bewährte
+     Regel von .align-content-center: Mindesthöhe für Hero-/CTA-Kontexte,
+     unterdrückt bei kompakten Sections und wenn eine .vh-* Höhe gewählt ist
+     (die gewinnt dann). */
+  .section.av-y-center:not(.section--sm):not(.section--flush):not([class*="vh-"]),
+  .section.av-y-end:not(.section--sm):not(.section--flush):not([class*="vh-"]) {
+    min-block-size: clamp(320px, 50vh, 640px);
+  }
+
+  /* Beim Artikel trägt die <section> die Höhe, die Ausrichtungsklasse wandert
+     aber auf den inneren .container (siehe mod_article). Die hohe Section wird
+     daher selbst zur Flex-Spalte, die den Container mittig fallen lässt. */
+  .section[class*="vh-"]:has(> .container.av-y-center) {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .section[class*="vh-"]:has(> .container.av-y-end) {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+
+  /* One-shot: turn a plain box into a both-axes-centered grid (needs no flex). */
+  .align-all-center      { display: grid; place-items: center; }
+  .align-text-center {
+    text-align: center;
+
+    /* Open Props normalize gives h1-h6 and p a max-inline-size — without
+     * margin-inline: auto those blocks start at the left and look misaligned.
+     * Same for any block capped by a numeric .measure-* utility (typically a
+     * CE wrapper div, which none of the element selectors above would catch). */
+    & :where(h1, h2, h3, h4, h5, h6, p, .lead, figure, img,
+             .measure-45, .measure-50, .measure-60, .measure-70) {
+      margin-inline: auto;
+    }
+
+    /* flex-row button groups need justify-content, not text-align — both as
+       descendant (.layout-row inside the group) and as same element (when
+       section_layout and section_align land on the same element_group wrapper) */
+    & .layout-row,
+    &.layout-row { justify-content: center; }
+  }
+  .align-text-end {
+    text-align: end;
+
+    /* Same Open Props max-inline-size fix as align-text-center, mirrored:
+     * push constrained blocks to the right edge with margin-inline-start: auto. */
+    & :where(h1, h2, h3, h4, h5, h6, p, .lead,
+             .measure-45, .measure-50, .measure-60, .measure-70) {
+      margin-inline-start: auto;
+      margin-inline-end: 0;
+    }
+
+    & .layout-row,
+    &.layout-row { justify-content: flex-end; }
+  }
+
+  /* Direct case: the alignment class sits ON a heading/paragraph itself (e.g. the
+     headline CE, which has no wrapper). Their Open-Props max-inline-size keeps the
+     box narrower than its parent, so text-align alone leaves it visually left —
+     centre / end the box itself too. */
+  :where(h1, h2, h3, h4, h5, h6, p, .lead,
+         .measure-45, .measure-50, .measure-60, .measure-70).align-text-center {
+    margin-inline: auto;
+  }
+  :where(h1, h2, h3, h4, h5, h6, p, .lead,
+         .measure-45, .measure-50, .measure-60, .measure-70).align-text-end {
+    margin-inline-start: auto;
+    margin-inline-end: 0;
+  }
+
+  /* ── space-* ────────────────────────────────────────────────────── */
+  .space-box-2xs { padding: var(--av-space-2xs); }
+  .space-box-xs  { padding: var(--av-space-xs); }
+  .space-box-sm  { padding: var(--av-space-sm); }
+  .space-box-md  { padding: var(--av-space-md); }
+  .space-box-lg  { padding: var(--av-space-lg); }
+  .space-box-xl  { padding: var(--av-space-xl); }
+
+  /* Large box insets stay too generous once columns stack on a phone (the
+     horizontal padding eats the narrow width). Step the big sizes down one
+     extra notch — the spacing tokens already drop a step at this breakpoint. */
+  @media (max-width: 768px) {
+    .space-box-lg { padding: var(--av-space-md); }
+    .space-box-xl { padding: var(--av-space-lg); }
+  }
+
+  .space-block-xs  { padding-block: var(--av-space-xs); }
+  .space-block-sm  { padding-block: var(--av-space-sm); }
+  .space-block-md  { padding-block: var(--av-space-md); }
+  .space-block-lg  { padding-block: var(--av-space-lg); }
+  .space-block-xl  { padding-block: var(--av-space-xl); }
+  .space-block-2xl { padding-block: var(--av-space-2xl); }
+
+  /* Remove padding on mobile only. .space-none-mobile drops all sides; the
+     -inline / -block variants target one axis. .space-inline-none-mobile also
+     rides along with the space-box-* presets, so a box inset never doubles up
+     with the section gutter on a phone. Declared after the space-box block so
+     these win over the shorthand. */
+  @media (max-width: 768px) {
+    .space-none-mobile        { padding: 0; }
+    .space-inline-none-mobile { padding-inline: 0; }
+    .space-block-none-mobile  { padding-block: 0; }
+  }
+
+  .space-below-xs  { margin-block-end: var(--av-space-xs); }
+  .space-below-sm  { margin-block-end: var(--av-space-sm); }
+  .space-below-md  { margin-block-end: var(--av-space-md); }
+  .space-below-lg  { margin-block-end: var(--av-space-lg); }
+  .space-below-xl  { margin-block-end: var(--av-space-xl); }
+  .space-below-2xl { margin-block-end: var(--av-space-2xl); }
+  .no-space-below  { margin-block-end: 0 !important; }
+
+  /* Responsive visibility.
+
+     Im Seiteninhalt richtet sich das nach dem Fenster — ein Absatz, der auf
+     kleinen Bildschirmen wegfallen soll, hat mit der Navigation nichts zu tun.
+
+     Im KOPF folgt es dagegen der Navigation. Bis 08.10.2026 hingen beide am
+     selben festen Breakpoint und stimmten deshalb von allein ueberein; seit die
+     Leiste nach Platz statt nach Fensterbreite umschaltet, muss die Kopplung
+     ausgesprochen werden. Sonst blieb der Kontakt-Knopf neben einem Burger
+     stehen — und zwar genau dort, wo er den Platz wegnimmt, der die Leiste
+     erst eng gemacht hat.
+
+     :has() statt einer zweiten Klasse am Kopf: ein Zustand, eine Quelle. Eine
+     von JS gesetzte Parallelklasse koennte veralten, dieser Selektor nicht. */
+  @media (max-width: 768px) { .desktop-only { display: none !important; } }
+  @media (min-width: 769px) { .mobile-only  { display: none !important; } }
+  #header:has(.mod_navigation.is-compact) .desktop-only { display: none !important; }
+
+  /* Gap between rows/columns of a layout container (grid, layout-stack,
+     layout-row). Applied on the wrapper; overrides the three container gap
+     vars at once, so it works whichever layout the element group uses.
+
+     .gap-none schreibt 0px, nicht 0: Die Rasterformel oben rechnet
+     `100% - (cols - 1) * gap`. calc() verlangt bei +/- auf beiden Seiten
+     denselben Typ — eine einheitenlose 0 ist eine <number>, und
+     `100% - <number>` ist ungueltig. Der Browser verwirft dann nicht den
+     Summanden, sondern die ganze Deklaration: grid-template-columns fiel auf
+     `none` zurueck und die Kacheln standen untereinander. Auch `gap` selbst
+     starb mit, weil calc(0 * scale) eine Zahl statt einer Laenge ergibt.
+     Mit 0px bleibt beides eine Laenge. */
+  .gap-none { --av-layout-gap: 0px;              --av-stack-gap: 0px;              --av-row-gap: 0px; }
+  .gap-xs   { --av-layout-gap: var(--av-space-xs);  --av-stack-gap: var(--av-space-xs);  --av-row-gap: var(--av-space-xs); }
+  .gap-sm   { --av-layout-gap: var(--av-space-sm);  --av-stack-gap: var(--av-space-sm);  --av-row-gap: var(--av-space-sm); }
+  .gap-md   { --av-layout-gap: var(--av-space-md);  --av-stack-gap: var(--av-space-md);  --av-row-gap: var(--av-space-md); }
+  .gap-lg   { --av-layout-gap: var(--av-space-lg);  --av-stack-gap: var(--av-space-lg);  --av-row-gap: var(--av-space-lg); }
+  .gap-xl   { --av-layout-gap: var(--av-space-xl);  --av-stack-gap: var(--av-space-xl);  --av-row-gap: var(--av-space-xl); }
+  .gap-2xl  { --av-layout-gap: var(--av-space-2xl); --av-stack-gap: var(--av-space-2xl); --av-row-gap: var(--av-space-2xl); }
+
+  /* Single-axis gap (grid rows vs columns). Grouped under the gap-* family.
+     Set the CSS longhands directly so they override the container's `gap`
+     shorthand — combine with .gap-* for a base and override one axis.
+     gap-row = vertical (between rows), gap-col = horizontal (between columns). */
+  .gap-row-none { row-gap: 0; }                    .gap-col-none { column-gap: 0; }
+  .gap-row-xs   { row-gap: var(--av-space-xs); }   .gap-col-xs   { column-gap: var(--av-space-xs); }
+  .gap-row-sm   { row-gap: var(--av-space-sm); }   .gap-col-sm   { column-gap: var(--av-space-sm); }
+  .gap-row-md   { row-gap: var(--av-space-md); }   .gap-col-md   { column-gap: var(--av-space-md); }
+  .gap-row-lg   { row-gap: var(--av-space-lg); }   .gap-col-lg   { column-gap: var(--av-space-lg); }
+  .gap-row-xl   { row-gap: var(--av-space-xl); }   .gap-col-xl   { column-gap: var(--av-space-xl); }
+  .gap-row-2xl  { row-gap: var(--av-space-2xl); }  .gap-col-2xl  { column-gap: var(--av-space-2xl); }
+
+  @media (max-width: 768px) {
+    .space-mobile-collapse { padding-block: 0 !important; margin-block: 0 !important; }
+  }
+
+  /* ── Table cell padding (on the table / the CE via cssID) ───────────
+     --av-table-py/px are inherited → th/td (base.css) pick them up. */
+  .table-compact     { --av-table-py: var(--av-space-2xs); --av-table-px: var(--av-space-xs); }
+  .table-comfortable { --av-table-py: var(--av-space-sm);  --av-table-px: var(--av-space-md); }
+  .table-spacious    { --av-table-py: var(--av-space-md);  --av-table-px: var(--av-space-lg); }
+
+  /* Don't wrap cells → columns keep their natural width and the table scrolls
+     cleanly on mobile instead of getting squashed. */
+  .table-nowrap :is(th, td) { white-space: nowrap; }
+
+  /* ── style-* ────────────────────────────────────────────────────── */
+  .style-glass {
+    background: oklch(100% 0 0 / var(--av-glass-tint));
+    backdrop-filter: blur(var(--av-glass-blur));
+    -webkit-backdrop-filter: blur(var(--av-glass-blur));
+    --av-card-bg: oklch(100% 0 0 / var(--av-glass-tint));
+    /* Glass: only a faint hairline. Exposed via --av-card-border so it applies
+       consistently whether glass is standalone or combined with style-card /
+       style-interactive-card (both read this token). */
+    --av-card-border: var(--av-card-border-width) solid oklch(100% 0 0 / 12%);
+    --av-tile-border: var(--av-card-border);
+    border: var(--av-card-border);
+  }
+
+  /* ── style-glass-dark ────────────────────────────────────────────
+     Dunkles Pendant zu .style-glass: dieselbe Milchglas-Unschaerfe
+     (--av-glass-blur), aber die Flaeche zieht ins Dunkle statt ins Helle.
+     Fuer helle Sektionen und helle Hero-Bilder, auf denen ein heller
+     Glas-Block zu wenig Kontrast zum Text bringt.
+
+     Anders als .style-glass bringt dieser Block den Textkontext selbst
+     mit — die Flaeche ist dunkel, also helle Schrift. Dasselbe Token-Set
+     wie .style-light / .bg-gradient-dark, damit verschachtelte Karten,
+     gedaempfte Texte und Raender mitziehen. Der Rand bleibt der helle
+     Glas-Saum; auf Dunkel liest er als Kante. */
+  .style-glass-dark {
+    background: oklch(0% 0 0 / 42%);
+    backdrop-filter: blur(var(--av-glass-blur));
+    -webkit-backdrop-filter: blur(var(--av-glass-blur));
+    color: white;
+    --av-section-color:    white;
+    --av-color-text:       white;
+    --av-color-text-muted: oklch(100% 0 0 / var(--av-muted-strength-inv));
+    --av-color-surface-2:  oklch(100% 0 0 / 10%);
+    --av-color-surface-3:  oklch(100% 0 0 / 18%);
+    --av-color-border:     oklch(100% 0 0 / 18%);
+    --av-border:      var(--av-border-width) solid var(--av-color-border);
+    --av-card-bg:          oklch(0% 0 0 / 42%);
+    --av-card-border: var(--av-card-border-width) solid oklch(100% 0 0 / 18%);
+    --av-tile-border: var(--av-card-border);
+    border: var(--av-card-border);
+  }
+
+  /* ── Das Karten-Vokabular ─────────────────────────────────────────
+     Fuenf Stellen beantworteten die Frage „was ist eine Karte" getrennt
+     voneinander: hier, .style-card, und in theme.css .news--card,
+     .event--upcoming, .media-card. Drei davon lasen --av-card-bg gar nicht,
+     sondern schrieben surface-2 fest — eine Sektion mit bg-primary faerbte
+     ihre .style-card-Kinder mit, ihre News-Karten nicht. Und auf dieselbe
+     Geste gab es zwei Antworten: hier shadow-lg + 5px, dort shadow-md + 2px.
+
+     Jetzt lesen alle fuenf dieselben Token. Der RUECKFALL bleibt aber je
+     Klasse ihr eigener: --av-card-border faellt hier auf `none` zurueck und
+     bei .style-card auf --av-border, der Hub hier auf 5px und bei den
+     News-Karten auf 2px. Damit aendert das Zusammenlegen NICHTS am heutigen
+     Bild (belegt: 18 Aufnahmen, 0 abweichende Pixel) — und sobald das Studio
+     ein Token setzt, gilt es fuer alle Karten gemeinsam. Genau die Bauart,
+     die --av-card-border hier schon vorgemacht hat. */
+  .style-interactive-card {
+    background: var(--av-card-bg);
+    border: var(--av-tile-border);
+    border-radius: var(--av-card-radius);
+    box-shadow: var(--av-card-shadow);
+
+    /* Der Übergang steht NICHT hier, sondern in animations.css hinter
+       `.animate` — mit Begründung dort. Kurz: eine Karte, die auch einblendet,
+       trägt beide Klassen, und `transition` ist eine Liste pro Element, keine
+       Sammlung aus mehreren Regeln. Die spätere Ebene gewinnt komplett. */
+    &:hover {
+      box-shadow: var(--av-card-shadow-hover);
+      transform: translateY(calc(-1 * var(--av-card-lift)));
+    }
+  }
+
+  /* :where() haelt den Beitrag bei 0. Eine gewoehnliche Regel hier war gleich
+     spezifisch wie .align-text-center und stand spaeter — sie hat die Utility
+     ueberstimmt (gemessen 08.08.2026: 30025 Pixel auf /events). Der Standard
+     `inherit` aendert nichts; erst eine Auswahl im Studio setzt etwas. */
+  :where(.style-card, .style-interactive-card, .style-tile) { text-align: var(--av-card-align); }
+
+  /* Kachel: die Flaeche einer Karte, ohne das, was sie zur Karte macht.
+     Kein Radius, kein Schatten, kein Rahmen — eine Karte hebt sich vom Grund
+     ab und traegt ihre Grenze selbst, eine Kachel liegt IN einer Ordnung und
+     laesst sich von ihr begrenzen: von der Luecke, von einer Trennlinie oder
+     vom Nachbarn, an den sie bei Spaltenabstand „Keiner" stoesst.
+
+     Genau die drei weggelassenen Eigenschaften vertragen sich nicht mit
+     .dividers-v: ein Radius biegt die Naht auf, ein Schatten legt sich in die
+     Luecke und schluckt die Haarlinie, ein Rahmen verdoppelt sich an jeder
+     Stossstelle.
+
+     Fläche und Polsterung kommen aus dem Karten-Vokabular, nicht aus eigenen
+     Tokens: „Karten" im Studio soll auch die Kacheln bewegen — es ist
+     dieselbe Materialfrage, nur ohne Auszeichnung. */
+  .style-tile {
+    background: var(--av-card-bg);
+
+    /* Senkrecht mittig — der Normalfall, nicht die Ausnahme. Eine Kachel in
+       einem Raster ist so hoch wie die hoechste ihrer Zeile; oben klebender
+       Text laesst kurze Kacheln neben langen unfertig aussehen.
+
+       align-content statt display:flex/grid: seit die Eigenschaft auch fuer
+       Block-Container gilt, braucht es dafuer keinen Wechsel des Layoutmodus.
+       Das ist hier entscheidend — .style-tile kann auch auf einer
+       Elementgruppe stehen, und ein display:grid wuerde dort mit
+       .layout-columns-* um dieselbe Eigenschaft streiten. In Browsern ohne
+       Unterstuetzung bleibt der Inhalt schlicht oben: kein Bruch. */
+    align-content: center;
+  }
+
+  /* Der nachlaufende Aussenabstand des letzten Absatzes kollabiert aus dem
+     Inhalt heraus und zaehlt beim Zentrieren mit: gemessen 83px oben zu 99px
+     unten, obwohl align-content korrekt rechnet. Zwei Ebenen genuegen — die
+     zweite fasst Contaos .rte-Wrapper, in dem der Text tatsaechlich steckt.
+     Nur fuer die Kachel: bei .style-card haengt an dem Abstand seit jeher
+     bestehendes Aussehen. */
+  .style-tile > :last-child,
+  .style-tile > * > :last-child {
+    margin-block-end: 0;
+  }
+
+  /* Bilder in einer Kachel wachsen NICHT mit der Spalte.
+     Sonst kehrt sich die Groessenordnung beim Umbruch um: die Deckelung des
+     Themes ist die Spaltenbreite, und Spalten werden BREITER, wenn sie
+     zusammenfallen. Gemessen an einem Piktogramm mit Bildgroesse 500×500:
+     242px bei vier Spalten, 366px bei zweien, 420px bei einer — auf dem
+     Telefon also am groessten, wo am wenigsten Platz ist.
+
+     Gedeckelt wird die HOEHE, nicht die Breite: die Breite ist die Groesse,
+     die sich mit dem Raster aendert, und genau die soll nicht mehr fuehren.
+
+     inline-size: auto gehoert zwingend dazu. Contao schreibt width/height als
+     Attribute ans <img>; ohne das Zuruecksetzen bleibt die Breite stehen und
+     nur die Hoehe faellt — das Piktogramm wurde flachgedrueckt (gemessen
+     420×128 statt 128×128).
+
+     Als Token in tokens.css, weil eine Kachel auch ein Foto tragen kann: per
+     „Inline-Styles" am Element mit --av-tile-media-max: 16rem heraufsetzen. */
+  .style-tile :is(img, svg) {
+    max-block-size: var(--av-tile-media-max);
+    inline-size: auto;
+  }
+
+  /* Gleich hohe Zeilen, sobald Kacheln im Raster liegen.
+     Ohne das ist nur JEDE ZEILE in sich gleich hoch: gemessen 163/163/163 in
+     der ersten und 77/77 in der zweiten — die Ordnung, die eine Kachel
+     verspricht, endet am Umbruch.
+
+     grid-auto-rows: 1fr statt aspect-ratio: 1 an der Kachel. Ein Quadrat
+     koppelt die Hoehe an die SPALTENBREITE statt an den Inhalt: bei sechs
+     Spalten winzige Kaestchen, bei zweien Riesenflaechen, und beim Umbruch auf
+     eine Spalte wurde dieselbe Gruppe 1800px statt 383px hoch (gemessen bei
+     360px Breite). 1fr gleicht ebenso an, bleibt aber inhaltsgetrieben.
+
+     Erst ab 769px: auf einer Spalte gleicht 1fr alles an die hoechste Kachel
+     an (595 statt 383px) — dort ist Gleichmaessigkeit nichts wert, weil nie
+     zwei Kacheln nebeneinander stehen. Dieselbe Grenze, an der die grossen
+     space-box-Stufen schon eine Stufe zuruecknehmen.
+
+     Zwei Ebenen im :has(), weil das Bild-CE seine Kachel auf die <figure>
+     legt und nicht auf den Wrapper (siehe image.html.twig). Nur die
+     gleichspaltigen Familien: bei .layout-sidebar oder .layout-feature ist
+     Ungleichheit der Zweck. */
+  @media (min-width: 769px) {
+    :is(.layout-columns-2, .layout-columns-3, .layout-columns-4,
+        .layout-columns-6, .layout-auto-grid, .layout-grid
+    ):has(> .style-tile, > * > .style-tile) {
+      grid-auto-rows: 1fr;
+    }
+  }
+
+  .style-card {
+    background: var(--av-card-bg);
+    /* Token-driven like the interactive card, so a glass/persona border can
+       override it; falls back to the default border. */
+    border: var(--av-card-border);
+    border-radius: var(--av-card-radius);
+    box-shadow: var(--av-card-shadow);
+  }
+
+  /* Polsterung als Standard, nicht als Ansage.
+     :where() gibt der Regel die Spezifitaet null — sie greift, solange niemand
+     etwas anderes waehlt, und weicht jeder ausdruecklichen Angabe. Vorher
+     gewann die Karte still: wer „Abstand: Sehr gross" setzte UND einen
+     Kartenstil, bekam die Kartenpolsterung, ohne dass irgendetwas darauf
+     hinwies (gemessen: 24px statt 48px). Eine Auswahl, die wirkungslos bleibt,
+     ist schlimmer als eine, die es nicht gibt.
+
+     Deshalb ausserhalb des Stilblocks: Flaeche, Rahmen, Radius und Schatten
+     BLEIBEN Ansage — sie machen die Karte aus. Nur die Polsterung ist eine
+     Voreinstellung.
+
+     .media-card ist bewusst nicht dabei: deren Innenpolsterung ist
+     strukturell — sie polstert den Koerper, waehrend das Bild randlos bis an
+     die Kanten laeuft. Ohne sie waere es keine Media-Karte mehr. */
+  :where(.style-card, .style-interactive-card, .style-tile) {
+    padding: var(--av-card-padding);
+  }
+
+  .style-shadow   { box-shadow: var(--av-shadow-lg); }
+
+  /* Granular box-shadow utilities (token-driven → the Theme-Editor's
+     "shadow depth" control scales all of them). .style-shadow stays the
+     opinionated large default used by cards/images. */
+  .shadow    { box-shadow: var(--av-shadow-md); }
+  .shadow-sm { box-shadow: var(--av-shadow-sm); }
+  .shadow-md { box-shadow: var(--av-shadow-md); }
+  .shadow-lg { box-shadow: var(--av-shadow-lg); }
+  .shadow-none { box-shadow: none; }
+
+  /* Leuchten — dieselbe Staffel wie die Schatten, ohne Versatz und farbig.
+     Ein Element kann nur EINEN box-shadow tragen, also sind .glow-* und
+     .shadow-* Alternativen, keine Ergaenzungen. */
+  .glow      { box-shadow: var(--av-glow-md); }
+  .glow-sm   { box-shadow: var(--av-glow-sm); }
+  .glow-md   { box-shadow: var(--av-glow-md); }
+  .glow-lg   { box-shadow: var(--av-glow-lg); }
+  .glow-none { box-shadow: none; }
+
+  .style-rounded  { border-radius: var(--av-radius-lg); overflow: hidden; }
+  /* Element squircle: generous rounding, clearly softer than .style-rounded.
+     Baseline = circular-arc radius, which every browser draws and which works
+     with borders + shadow. Tune via --av-squircle-card.
+
+     Derived from the radius scale so the shape follows the brand: at scale 1
+     --av-radius-xl is 4rem, and x0.75 lands on the 3rem this used to hardcode —
+     unchanged look, but a "radius 0" brand no longer gets a heavily rounded
+     card. clamp() keeps it meaningful at both ends: a floor so an explicitly
+     chosen Squircle still reads as one, a ceiling so a maxed-out radius does
+     not turn the card into a pill. */
+  .style-squircle {
+    border-radius: var(--av-squircle-card, clamp(1rem, var(--av-radius-xl) * 0.75, 4rem));
+    overflow: hidden;
+  }
+
+  /* Progressive enhancement: Chromium 139+ draws a REAL superellipse here.
+     The earlier objection (border not following the corner, leaving a dark
+     sliver) was an early-implementation bug — re-verified in Chrome 150 at 6x
+     zoom with an 8px border: border thickness stays constant around the corner,
+     no gap, and the overflow:hidden clip follows the same curve.
+     corner-shape is Chromium-only and NOT Baseline (no Safari/Firefox timeline
+     as of mid-2026), hence the @supports gate.
+
+     50% is the canonical squircle and only valid WITH corner-shape — the same
+     value on the baseline path would turn the box into a full ellipse, so it
+     must never leave this block. Safari/Firefox keep the circular-arc radius
+     above; the two renderings therefore differ by design (hence "experimental"
+     in the backend label).
+
+     Override chain: --av-squircle-card-super wins here; otherwise an explicit
+     --av-squircle-card applies to BOTH paths (so tuning the class keeps the
+     browsers in sync); only the untouched default diverges 3rem / 50%. */
+  @supports (corner-shape: squircle) {
+    .style-squircle {
+      corner-shape: squircle;
+      border-radius: var(--av-squircle-card-super, var(--av-squircle-card, 50%));
+    }
+  }
+
+  /* .style-pop lives in animations.css (layer av.animations) so it composes
+     with the scroll-in .animate utility — see there.
+
+
+     ── Image CE frame presets ─────────────────────────────────────────
+     style-rounded / style-shadow must hug the picture itself, not the
+     <figure>. The figure is fit-content but can also carry a <figcaption>
+     below the image (and padding) — a frame on the figure would wrap the
+     caption too. So the radius/shadow go on the <img> and are stripped from
+     the carrier, whether the class sits on the .content-image wrapper (generic
+     CSS-class field) or on the <figure> (Element-Stil dropdown).
+     Exception: a <figure> that is itself a surface (own bg-* class or inline
+     padding, e.g. a padded coloured image card) stays the frame. */
+  :is(
+    .content-image.style-rounded,
+    .content-image figure.style-rounded:not([class*="bg-"]):not([style*="padding"])
+  ) img { border-radius: var(--av-radius-lg); }
+
+  :is(
+    .content-image.style-shadow,
+    .content-image figure.style-shadow:not([class*="bg-"]):not([style*="padding"])
+  ) img { box-shadow: var(--av-shadow-lg); }
+
+  .content-image.style-rounded,
+  .content-image figure.style-rounded:not([class*="bg-"]):not([style*="padding"]) {
+    border-radius: 0;
+    overflow: visible;
+  }
+  .content-image.style-shadow,
+  .content-image figure.style-shadow:not([class*="bg-"]):not([style*="padding"]) {
+    box-shadow: none;
+  }
+
+  /* ── Border accents ─────────────────────────────────────────────────
+     Token-driven coloured border for any .style-card / .style-interactive-card
+     (or a standalone element). Sets both the direct border and --av-card-border
+     so it works whichever card base is used. .border-strong bumps the width.
+     Follows persona / dark mode via the colour tokens. */
+  .border-primary {
+    --av-card-border: var(--av-card-border-width) solid var(--av-color-primary-text);
+    --av-tile-border: var(--av-card-border);
+    border: var(--av-border-width, 1px) solid var(--av-color-primary-text);
+  }
+  .border-secondary {
+    --av-card-border: var(--av-card-border-width) solid var(--av-color-secondary-text);
+    --av-tile-border: var(--av-card-border);
+    border: var(--av-border-width, 1px) solid var(--av-color-secondary-text);
+  }
+  .border-strong { --av-border-width: 2px; }
+
+  /* Remove a border (e.g. off a style-card / media-card / event card). In
+     av.layout, which sits after av.theme/av.components, so it wins over those
+     card borders; neutralises --av-card-border too. */
+  .border-none {
+    border: 0;
+    --av-card-border: none;
+    --av-tile-border: none;
+  }
+
+  /* ── Single-side border utilities ──────────────────────────────────
+   * Add --av-border (token: 1px solid --av-color-border) to one side.
+   * Combine freely: border-top border-bottom */
+  .border-top    { border-block-start:  var(--av-border); }
+  .border-bottom { border-block-end:    var(--av-border); }
+  .border-left   { border-inline-start: var(--av-border); }
+  .border-right  { border-inline-end:   var(--av-border); }
+
+  /* ── Image shapes ───────────────────────────────────────────────────
+     Applied to an <img> — via the Image CE "Bildform" field (lands on the img)
+     or by adding the class to an <img> in the RTE (Text CE). In av.layout so it
+     wins over the .content-image img rules (av.components). Optional frame:
+     .shape-border (follows the shape, tunable via --av-img-border-*). */
+  .shape-rounded  { border-radius: var(--av-radius-lg); }
+  /* Baseline "squircle" = a soft, generously rounded shape with visibly curved
+     sides (large circular-arc radius), sitting between .shape-rounded and a
+     circle. Tune the roundness with --av-squircle (higher = closer to an oval).
+     NB the percentage resolves against width horizontally and height vertically,
+     so on a wide image the corner is a stretched ellipse quadrant — that is the
+     nature of the circular-arc fallback, not a bug. */
+  .shape-squircle { border-radius: var(--av-squircle, 38%); }
+  /* Real superellipse in Chromium 139+ — see the .style-squircle block below for
+     the full rationale and the same override chain. 50% is squircle-only. */
+  @supports (corner-shape: squircle) {
+    .shape-squircle {
+      corner-shape: squircle;
+      border-radius: var(--av-squircle-super, var(--av-squircle, 50%));
+    }
+  }
+  .shape-blob     { border-radius: 42% 58% 68% 32% / 42% 45% 55% 58%; }
+  .shape-circle   { border-radius: 50%; aspect-ratio: 1; object-fit: cover; }
+
+  /* Frame variants (follow the shape). --av-img-border-color defaults to
+     primary; the modifiers just retint it. .shape-shadow is a soft drop shadow
+     instead of a line (also follows the border-radius). */
+  .shape-border            { border: var(--av-img-border-width) solid var(--av-img-border-color); }
+  .shape-border--secondary { --av-img-border-color: var(--av-color-secondary-text); }
+  .shape-border--light     { --av-img-border-color: oklch(100% 0 0 / 85%); }
+  .shape-border--dark      { --av-img-border-color: oklch(0% 0 0 / 70%); }
+  .shape-shadow            { box-shadow: var(--av-shadow-lg); }
+
+  /* A shaped image's shadow/border must not be clipped by an ancestor figure
+     (.image--cover uses overflow:hidden). The crop happens via the img's own
+     object-fit, so the figure can stay unclipped when a shadow/border is set. */
+  .content-image figure:has(.shape-shadow),
+  .content-image figure:has(.shape-border) { overflow: visible; }
+
+  .style-dark {
+    background-color: var(--av-color-dark-surface);
+    color: var(--av-color-on-dark-surface);
+    --av-section-color:    var(--av-color-on-dark-surface);
+    --av-color-text:       var(--av-color-on-dark-surface);
+    --av-color-text-muted: oklch(from var(--av-color-on-dark-surface) l c h / var(--av-muted-strength-inv));
+    --av-color-surface-2:  oklch(100% 0 0 / 8%);
+    --av-card-bg:         var(--av-color-surface-2);
+    --av-color-surface-3:  oklch(100% 0 0 / 14%);
+    --av-color-border:     oklch(100% 0 0 / 18%);
+    --av-border:     var(--av-border-width) solid var(--av-color-border);
+    --av-card-border: var(--av-card-border-width) solid var(--av-color-border);
+  }
+
+  .style-primary {
+    background-color: var(--av-color-primary);
+    color: var(--av-color-text-on-primary);
+    --av-section-color:    var(--av-color-text-on-primary);
+  }
+
+  /* Waagerecht: ein Strich UEBER dem Element, quer zum Textfluss. */
+  .style-divider  {
+    border: none;
+    border-block-start: var(--av-border);
+    margin-block: var(--av-space-lg);
+  }
+
+  /* Senkrecht: Striche ZWISCHEN den Spalten einer Elementgruppe.
+     Die Klasse sitzt auf dem CONTAINER und wirkt auf die Kinder — in Contao
+     sind die Kacheln eigenstaendige Inhaltselemente, eine Auswahl pro Kachel
+     waere im Backend nicht zumutbar.
+
+     Der naheliegende Weg waere `> *:not(:first-child)` — und der ist falsch,
+     sobald das Raster umbricht: die erste Kachel der ZWEITEN Zeile ist kein
+     erstes Kind und truege dann einen Strich an der Aussenkante.
+
+     Stattdessen: jede Kachel bringt ihren Strich mit, und der Container
+     schneidet die erste SPALTE weg. Das geht, weil alle Kacheln der ersten
+     Spalte an derselben Stelle beginnen — gleich in welcher Zeile. Der Strich
+     liegt eine halbe Luecke links der Kachel, bei der ersten Spalte also
+     ausserhalb des Rasters, und wird weggeschnitten; in jeder Zeile zugleich.
+     Faellt das Raster auf EINE Spalte zusammen, liegt jede Kachel in Spalte
+     eins — es bleibt keine Linie uebrig, was dort genau richtig ist.
+
+     Der Strich ist ein Pseudo-Element in der LUECKE, kein border an der
+     Kachel. Erst stand hier `border-inline-start` — das war fuer schlichte
+     Textspalten gedacht und ging an Karten unter: `border-radius: 32px` bog
+     ihn zu einem Splitter an der Ecke, und auf einer deckenden Flaeche las er
+     sich als Teil der Karte statt als Trennung zwischen zweien.
+
+     --av-divider-color wird am CONTAINER aufgeloest, nicht am Kind. Sonst
+     kippt eine Kachel mit .bg-primary ihr eigenes --av-color-border auf die
+     Hell-auf-Dunkel-Variante, und der Strich kam als Weiss mit 28 % heraus —
+     unsichtbar auf hellem Grund.
+
+     overflow-x: clip statt overflow: hidden. `hidden` beschnitt auch senkrecht
+     und kappte die Schatten der Kacheln an der Unterkante (sichtbar als harte
+     Linie). `clip` ist die einzige Ueberlauf-Art, neben der die andere Achse
+     `visible` bleiben darf.
+
+     padding-inline: 0 gehoert zwingend dazu, nicht als Geschmacksfrage.
+     Geschnitten wird an der PADDING-Box, nicht an der Content-Box: mit
+     seitlicher Polsterung landet der Strich der ersten Spalte INNERHALB der
+     Polsterung und bleibt stehen (gemessen: Schnittkante 85px, Strich 108px
+     bei einer Gruppe mit .style-card). Erst stand hier eine Aufzaehlung
+     `:is(.space-box-sm, …)` — die versagt still, sobald irgendeine andere
+     Klasse polstert (.style-card tut es). Bedingungslos ist die sichere Form.
+
+     Die halbe Luecke wird mit demselben Ausdruck gerechnet wie oben im
+     Raster. Fuer .layout-feature/-asymmetric, die einen groesseren eigenen
+     Standard haben, sitzt der Strich dadurch leicht ausserhalb der Mitte. */
+  .dividers-v {
+    overflow-x: clip;
+    overflow-y: visible;
+    padding-inline: 0;
+    --av-divider-color: var(--av-color-border);
+  }
+
+  .dividers-v > * { position: relative; }
+
+  .dividers-v > *::before {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: calc(
+      -0.5 * var(--av-layout-gap, var(--av-space-md)) * var(--av-layout-gap-scale, 1)
+      - 0.5 * var(--av-border-width, 1px)
+    );
+    inline-size: var(--av-border-width, 1px);
+    background: var(--av-divider-color);
+  }
+
+  /* ── Button context: dark sections ────────────────────────────────
+
+     Default (primary) button only — explicit colour variants (glass/soft/dark)
+     keep their own styling on dark sections; outline is handled separately below. */
+  :is(.style-light, .bg-image-dark, .bg-image-brand, .bg-image-secondary, .bg-image-gradient, .style-dark, .style-primary, .bg-primary, .bg-secondary, .bg-gradient-primary, .bg-gradient-secondary, .bg-gradient-dark, .style-glass-dark) :is(
+    a.btn:not(.btn--glass):not(.btn--soft):not(.btn--dark):not(.btn--outline):not(.btn--outline-secondary),
+    button.btn:not(.btn--glass):not(.btn--soft):not(.btn--dark):not(.btn--outline):not(.btn--outline-secondary),
+    :not(a,button).btn:not(.btn--glass):not(.btn--soft):not(.btn--dark):not(.btn--outline):not(.btn--outline-secondary) > a,
+    :not(.btn--outline, .btn--outline-secondary) > button[type="submit"]:not(.btn--outline):not(.btn--outline-secondary),
+    :not(.btn--outline, .btn--outline-secondary) > input[type="submit"]:not(.btn--outline):not(.btn--outline-secondary)) {
+    background-color: white;
+    /* Der Chip ist WEISS, in beiden Schemata — also braucht der Text darauf den
+       hellen Zweig unbedingt, nicht über light-dark(). Mit der rohen Marke las
+       midnight 1,86, studio 3,81, basic 4,20; mit -on-light 5,27 aufwärts. */
+    color: var(--av-color-primary-on-light);
+    border-color: transparent;
+
+    &:hover        { background-color: oklch(100% 0 0 / 85%); }
+    &:focus-visible { box-shadow: 0 0 0 3px oklch(100% 0 0 / 40%); }
+  }
+
+  /* Both outline variants get a white outline on coloured/dark sections. */
+  :is(.style-light, .bg-image-dark, .bg-image-brand, .bg-image-secondary, .bg-image-gradient, .style-dark, .style-primary, .bg-primary, .bg-secondary, .bg-gradient-primary, .bg-gradient-secondary, .bg-gradient-dark, .style-glass-dark) :is(
+    a.btn--outline, button.btn--outline, :not(a,button).btn--outline > a, :not(a,button).btn--outline > button,
+    a.btn--outline-secondary, button.btn--outline-secondary, :not(a,button).btn--outline-secondary > a, :not(a,button).btn--outline-secondary > button) {
+    background-color: transparent;
+    color: white;
+    border-color: white;
+
+    &:hover { background-color: oklch(100% 0 0 / 15%); color: white; }
+  }
+
+  /* Content links on coloured/dark sections: a primary-coloured link vanishes
+     against the background, so switch to the section's on-colour (white).
+     Buttons (.btn / .btn--outline) are handled above and out-specify this rule. */
+  :is(.style-light, .bg-image-dark, .bg-image-brand, .bg-image-secondary, .bg-image-gradient, .style-dark, .style-primary, .bg-primary, .bg-secondary, .bg-gradient-primary, .bg-gradient-secondary, .bg-gradient-dark, .style-glass-dark) a:not(.btn) {
+    color: white;
+    /* Hover-Effekt „Invertiert": ein Block in Markenfarbe verschwände auf
+       einer Fläche in Markenfarbe. Hier wird er zu einem hellen Schleier unter
+       der weissen Schrift. Strich und Marker rechnen ohnehin mit der
+       Schriftfarbe (currentColor) und brauchen nichts. */
+    --av-link-block: oklch(100% 0 0 / 22%);
+
+    &:hover { color: oklch(100% 0 0 / 80%); }
+  }
+
+  /* ── order-* ────────────────────────────────────────────────────── */
+  .order-first { order: -1; }
+  .order-last  { order: 999; }
+  .order-1     { order: 1; }
+  .order-2     { order: 2; }
+  .order-3     { order: 3; }
+  .order-4     { order: 4; }
+
+  @media (max-width: 768px) {
+    .order-first--mobile { order: -1; }
+    .order-last--mobile  { order: 999; }
+    .order-1--mobile     { order: 1; }
+    .order-2--mobile     { order: 2; }
+  }
+
+  /* ── ratio-* ────────────────────────────────────────────────────── */
+  .ratio-16-9 { aspect-ratio: 16 / 9; }
+  .ratio-4-3  { aspect-ratio: 4 / 3; }
+  .ratio-3-2  { aspect-ratio: 3 / 2; }
+  .ratio-1-1  { aspect-ratio: 1 / 1; }
+
+  .ratio-16-9 > *, .ratio-4-3 > *,
+  .ratio-3-2 > *, .ratio-1-1 > * {
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+  }
+
+  /* ── bg-* ─────────────────────────────────────────────────────────
+
+     --av-card-bg is set alongside background-color so child .style-card
+     elements can inherit the right background via var(--av-card-bg). */
+  .bg-surface-1     { background-color: var(--av-color-surface);   --av-card-bg: var(--av-color-surface); }
+  .bg-surface-2     { background-color: var(--av-color-surface-2); --av-card-bg: var(--av-color-surface-2); }
+  .bg-surface-3     { background-color: var(--av-color-surface-3); --av-card-bg: var(--av-color-surface-3); }
+  .bg-primary         { background-color: var(--av-color-primary); color: var(--av-color-text-on-primary); --av-color-text: var(--av-color-text-on-primary); --av-section-color: var(--av-color-text-on-primary); --av-card-bg: var(--av-color-primary); }
+  .bg-primary-light   { background-color: var(--av-color-primary-light); --av-card-bg: var(--av-color-primary-light); }
+  .bg-secondary       { background-color: var(--av-color-secondary); color: var(--av-color-text-on-secondary); --av-color-text: var(--av-color-text-on-secondary); --av-section-color: var(--av-color-text-on-secondary); --av-card-bg: var(--av-color-secondary); }
+  .bg-secondary-light { background-color: var(--av-color-secondary-light); --av-card-bg: var(--av-color-secondary-light); }
+
+  /* On coloured (white-text) backgrounds, remap the surface/border/muted tokens
+     to translucent white — like .style-dark/.style-light — so tables (th), card
+     fills, borders and row-hover adapt instead of rendering as opaque light-mode
+     surfaces (which caused white-on-light contrast failures in th/td). */
+  :is(.style-primary, .bg-primary, .bg-secondary, .bg-gradient-primary, .bg-gradient-secondary) {
+    --av-color-text-muted: oklch(100% 0 0 / var(--av-muted-strength-inv));
+    --av-color-surface-2:  oklch(100% 0 0 / 14%);
+    --av-card-bg:         var(--av-color-surface-2);
+    --av-color-surface-3:  oklch(100% 0 0 / 22%);
+    --av-color-border:     oklch(100% 0 0 / 28%);
+    --av-border:     var(--av-border-width) solid var(--av-color-border);
+    --av-card-border: var(--av-card-border-width) solid var(--av-color-border);
+
+    /* .text-primary means "say this in the brand colour". On the brand surface
+       itself there is no colour left to say it with: the utility sets
+       --av-el-color, which by design beats --av-section-color (an element's own
+       instruction should outrank its section's), so the text lands on its own
+       background — measured at exactly 1.00:1 in every preset, .text-secondary
+       at 1.4–2.2. Same remapping as the four tokens above, and the same reason:
+       on a coloured surface the light-mode meaning of a token is no longer the
+       useful one. Emphasis is lost here, but it was never visible anyway. */
+    & :is(.text-primary, .text-secondary) { --av-el-color: var(--av-section-color); }
+  }
+
+  /* Gradient backgrounds */
+  .bg-gradient-primary {
+    background: linear-gradient(var(--av-gradient-angle),
+      var(--av-color-primary),
+      color-mix(in oklch, var(--av-color-primary) 75%, black));
+    color: var(--av-color-text-on-primary);
+    --av-color-text:     var(--av-color-text-on-primary);
+    --av-section-color:  var(--av-color-text-on-primary);
+    --av-color-border: oklch(100% 0 0 / 25%);
+    --av-border: var(--av-border-width) solid var(--av-color-border);
+    --av-card-border: var(--av-card-border-width) solid var(--av-color-border);
+    --av-card-bg: color-mix(in oklch, var(--av-color-primary) 85%, black);
+  }
+
+  .bg-gradient-secondary {
+    background: linear-gradient(var(--av-gradient-angle),
+      var(--av-color-secondary),
+      color-mix(in oklch, var(--av-color-secondary) 75%, black));
+    color: var(--av-color-text-on-secondary);
+    --av-color-text:     var(--av-color-text-on-secondary);
+    --av-section-color:  var(--av-color-text-on-secondary);
+    --av-color-border: oklch(100% 0 0 / 25%);
+    --av-border: var(--av-border-width) solid var(--av-color-border);
+    --av-card-border: var(--av-card-border-width) solid var(--av-color-border);
+    --av-card-bg: color-mix(in oklch, var(--av-color-secondary) 85%, black);
+  }
+
+  .bg-gradient-dark {
+    background: linear-gradient(var(--av-gradient-angle), var(--av-gradient-dark-from) 0%, var(--av-gradient-dark-to) 100%);
+    color: white;
+    --av-color-text:       white;
+    --av-section-color:    white;
+    --av-color-text-muted: oklch(100% 0 0 / var(--av-muted-strength-inv));
+    --av-color-surface-2:  oklch(100% 0 0 / 8%);
+    --av-color-border:     oklch(100% 0 0 / 18%);
+    --av-border:     var(--av-border-width) solid var(--av-color-border);
+    --av-card-border: var(--av-card-border-width) solid var(--av-color-border);
+    --av-card-bg:          oklch(100% 0 0 / 10%);
+  }
+
+  .bg-gradient-subtle {
+    background: linear-gradient(180deg,
+      var(--av-color-surface) 0%,
+      var(--av-color-surface-2) 100%);
+    --av-card-bg: var(--av-color-surface-2);
+  }
+
+  .bg-gradient-animated {
+    /* Brand-driven: derived from --av-color-primary so the animation re-themes
+       with the active brand colour. Override these four vars to opt out. */
+    --bg-anim-color-1: var(--av-color-primary);
+    --bg-anim-color-2: color-mix(in oklch, var(--av-color-primary), white 22%);
+    --bg-anim-color-3: color-mix(in oklch, var(--av-color-primary), black 30%);
+    --bg-anim-color-4: var(--gray-8);
+    position: relative;
+    overflow: clip;
+    background:
+      radial-gradient(ellipse 55% 55% at center, var(--bg-anim-color-3) 0%, transparent 70%),
+      var(--bg-anim-color-4);
+    background-size: 180% 180%, auto;
+    background-position: 20% 80%, 0 0;
+    animation: av-blob-c 11s ease-in-out infinite;
+
+    &::before,
+    &::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(60px);
+      opacity: 0.75;
+      pointer-events: none;
+    }
+
+    /* Blob A: blue — 13s prime-number cadence, drifts diagonally */
+    &::before {
+      width: 30%;
+      aspect-ratio: 1;
+      background: var(--bg-anim-color-1);
+      top: 5%;
+      left: 5%;
+      animation: av-blob-a 13s ease-in-out infinite;
+    }
+
+    /* Blob B: teal — 17s prime-number cadence, phase-shifted */
+    &::after {
+      width: 28%;
+      aspect-ratio: 1;
+      background: var(--bg-anim-color-2);
+      bottom: 5%;
+      right: 8%;
+      animation: av-blob-b 17s ease-in-out infinite;
+      animation-delay: -5s;
+    }
+
+    & > * { position: relative; z-index: 1; }
+  }
+
+  @keyframes av-blob-a {
+    0%   { transform: translate(0,    0)    scale(1);    }
+    15%  { transform: translate(45%,  20%)  scale(1.08); }
+    32%  { transform: translate(85%,  8%)   scale(0.94); }
+    50%  { transform: translate(65%,  50%)  scale(1.06); }
+    68%  { transform: translate(15%,  65%)  scale(0.96); }
+    82%  { transform: translate(-8%,  30%)  scale(1.04); }
+    100% { transform: translate(0,    0)    scale(1);    }
+  }
+
+  @keyframes av-blob-b {
+    0%   { transform: translate(0,    0)    scale(1);    }
+    18%  { transform: translate(-55%, -22%) scale(1.1);  }
+    38%  { transform: translate(-20%, -60%) scale(0.92); }
+    55%  { transform: translate(-75%, -40%) scale(1.05); }
+    72%  { transform: translate(-90%, -15%) scale(0.95); }
+    88%  { transform: translate(-40%, -8%)  scale(1.03); }
+    100% { transform: translate(0,    0)    scale(1);    }
+  }
+
+  @keyframes av-blob-c {
+    0%, 100% { background-position: 20%  80%,  0 0; }
+    28%       { background-position: 75%  15%,  0 0; }
+    55%       { background-position: 90%  70%,  0 0; }
+    78%       { background-position: 30%  20%,  0 0; }
+  }
+
+  .av-anim-paused,
+  .av-anim-paused::before,
+  .av-anim-paused::after { animation-play-state: paused; }
+
+  .bg-gradient-animated { content-visibility: auto; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bg-gradient-animated,
+    .bg-gradient-animated::before,
+    .bg-gradient-animated::after { animation: none; }
+  }
+
+  /* Nimmt eine Flaeche WEG, statt keine zu setzen — das ist nicht dasselbe.
+     „Standard" im Backend heisst: keine bg-Klasse. Das laesst aber stehen, was
+     ein Element-Stil selbst mitbringt: .style-card und .style-tile setzen
+     `background: var(--av-card-bg)` aus eigenem Recht. Ohne Gegen-Klasse gab
+     es keinen Weg zu einer Kachel ohne Flaeche — nur zu einer Kachel, deren
+     Flaeche man nicht ausgewaehlt hat.
+
+     Steht hinter den Farb- und Verlaufsklassen, nicht davor: alle bg-* haben
+     dieselbe Spezifitaet, es entscheidet also die Reihenfolge. Weiter oben
+     gemessen: .bg-gradient-primary.bg-none behielt den Verlauf.
+
+     Die Kurzform statt background-color raeumt auch background-image weg, also
+     die Verlaeufe. Die BILD-Varianten legen ihr Overlay in ::before/::after —
+     die bleiben stehen. Ueber das Backend ist die Kombination ohnehin nicht
+     erreichbar (ein Auswahlfeld, ein Wert); wer beides von Hand setzt, meint
+     vermutlich etwas anderes.
+
+     --av-card-bg bleibt bewusst unberuehrt. Sonst wuerde die Klasse auf einer
+     GRUPPE auch deren Karten-Kinder durchsichtig machen — eine Fernwirkung,
+     die niemand bestellt hat, wenn er „Hintergrund: Keiner" waehlt. */
+  .bg-none { background: none; }
+
+  /* ── Responsive background image routing ───────────────────────────
+   * Templates inject --section-bg-sm/md/lg and add .has-bg-image.
+   * This class maps the viewport-appropriate variable to --section-bg-image,
+   * which all bg-image* variants consume. */
+  .has-bg-image {
+    --section-bg-image: var(--section-bg-sm, none);
+  }
+  @media (min-width: 768px) {
+    .has-bg-image {
+      --section-bg-image: var(--section-bg-md, none);
+    }
+  }
+  @media (min-width: 1200px) {
+    .has-bg-image {
+      --section-bg-image: var(--section-bg-lg, none);
+    }
+  }
+
+  /* ── Background image variants ─────────────────────────────────────
+   * --section-bg-image is set by .has-bg-image (see above) via responsive
+   * CSS variables. All variants share the base layout. */
+  :is(.bg-image, .bg-image-dark, .bg-image-light, .bg-image-brand, .bg-image-secondary, .bg-image-gradient) {
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  .bg-image {
+    background-image: var(--section-bg-image, none);
+  }
+
+  /* All image-overlay opacities scale together via --av-bg-overlay-scale
+     (Theme-Editor, bounded so the legibility scrims never fully disappear).
+     dark/light stay gradients (top lighter → bottom stronger) for text contrast;
+     brand/secondary are flat, uniform tints.
+
+     Der Schleier steht als --av-bg-overlay EINMAL da und wird dreifach
+     gelesen: als background-image-Ebene beim Bild, als ::after bei .bg-blur
+     (wo das Bild unscharf im ::before liegt) und als ::after beim Video (wo
+     ein <video> darunter liegt, das kein background sein kann). Vorher stand
+     er doppelt; mit Video waere es die dritte Kopie derselben acht Zahlen
+     geworden — und die naechste Aenderung haette zwei davon getroffen. */
+  :is(.bg-image-dark, .bg-video-dark) {
+    --av-bg-overlay: linear-gradient(to bottom,
+      oklch(0% 0 0 / calc(48% * var(--av-bg-overlay-scale, 1))),
+      oklch(0% 0 0 / calc(80% * var(--av-bg-overlay-scale, 1))));
+  }
+  .bg-image-dark {
+    background-image: var(--av-bg-overlay), var(--section-bg-image, none);
+  }
+
+  /* Der helle Schleier KEHRT SICH im Dunkelmodus um — er wird zu genau dem von
+     .bg-image-dark.
+     Grund: Der Text folgte dem Schema schon immer (er liest --av-color-text),
+     der Schleier nicht. Im Dunkelmodus stand damit heller Text auf weissem
+     Schleier. Die Klasse brauchte deshalb .text-on-light als Partner, und
+     nichts erzwang ihn — ein Name, der seinen Look verspricht und ihn nicht
+     hält. Kehrt der Schleier mit um, sind beide Hälften von selbst im
+     Gleichschritt und die Partnerklasse entfällt.
+     Wer BEWUSST eine helle Sektion auf einer dunklen Seite will, sagt das mit
+     .bg-image-light.text-on-light — der unübliche Fall soll der sein, den man
+     ausspricht. */
+  :is(.bg-image-light, .bg-video-light) {
+    --av-bg-overlay: linear-gradient(to bottom,
+      light-dark(oklch(100% 0 0 / calc(66% * var(--av-bg-overlay-scale, 1))),
+                 oklch(  0% 0 0 / calc(48% * var(--av-bg-overlay-scale, 1)))),
+      light-dark(oklch(100% 0 0 / calc(90% * var(--av-bg-overlay-scale, 1))),
+                 oklch(  0% 0 0 / calc(80% * var(--av-bg-overlay-scale, 1)))));
+  }
+  /* Ausgesprochener Sonderfall: hell bleiben, egal welches Schema. */
+  :is(.bg-image-light, .bg-video-light).text-on-light {
+    --av-bg-overlay: linear-gradient(to bottom,
+      oklch(100% 0 0 / calc(66% * var(--av-bg-overlay-scale, 1))),
+      oklch(100% 0 0 / calc(90% * var(--av-bg-overlay-scale, 1))));
+  }
+  .bg-image-light {
+    background-image: var(--av-bg-overlay), var(--section-bg-image, none);
+  }
+
+  :is(.bg-image-brand, .bg-video-brand) {
+    --_ov: color-mix(in oklch, var(--av-color-primary) calc(80% * var(--av-bg-overlay-scale, 1)), transparent);
+    --av-bg-overlay: linear-gradient(var(--_ov), var(--_ov));
+  }
+  .bg-image-brand {
+    background-image: var(--av-bg-overlay), var(--section-bg-image, none);
+  }
+
+  :is(.bg-image-secondary, .bg-video-secondary) {
+    --_ov: color-mix(in oklch, var(--av-color-secondary) calc(80% * var(--av-bg-overlay-scale, 1)), transparent);
+    --av-bg-overlay: linear-gradient(var(--_ov), var(--_ov));
+  }
+  .bg-image-secondary {
+    background-image: var(--av-bg-overlay), var(--section-bg-image, none);
+  }
+
+  :is(.bg-image-gradient, .bg-video-gradient) {
+    --av-bg-overlay: linear-gradient(180deg,
+      color-mix(in oklch, var(--av-color-primary) calc(84% * var(--av-bg-overlay-scale, 1)), transparent),
+      oklch(0% 0 0 / calc(73% * var(--av-bg-overlay-scale, 1))));
+  }
+  .bg-image-gradient {
+    background-image: var(--av-bg-overlay), var(--section-bg-image, none);
+  }
+
+  /* ── Video-Hintergrund ─────────────────────────────────────────────
+     Ein <video> statt background-image: Videos lassen sich nicht als
+     Hintergrund malen, und sie muessen steuerbar bleiben — WCAG 2.2.2
+     verlangt fuer alles, was laenger als fuenf Sekunden von selbst laeuft,
+     eine Moeglichkeit zum Anhalten.
+
+     Die Schleier sind dieselben wie beim Bild (--av-bg-overlay), nur als
+     ::after statt als background-Ebene, weil darunter ein Element liegt
+     und keine Farbe.
+
+     Kein autoplay-Attribut im Markup: das Abspielen startet video-bg.js,
+     und nur wenn prefers-reduced-motion es zulaesst. Ohne JavaScript bleibt
+     das Standbild stehen — der ruhige Zustand ist damit der Standard, nicht
+     der Notfall. */
+  .has-bg-video {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+  }
+
+  .section-video {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    /* Das Standbild traegt, solange das Video laedt, pausiert oder fehlt. */
+    background-size: cover;
+    background-position: center;
+  }
+
+  :is(.bg-video-dark, .bg-video-light, .bg-video-brand,
+      .bg-video-secondary, .bg-video-gradient).has-bg-video::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: var(--av-bg-overlay);
+  }
+
+  /* Inhalt ueber Video und Schleier. Video UND Knopf sind ausgenommen: das
+     Video hoebe sich sonst mit an, und der Knopf verlor sein `absolute` —
+     diese Regel ist mit (0,2,0) spezifischer als seine eigene Klasse, `bottom`
+     und `right` wirkten dann als Verschiebung aus dem Textfluss statt als
+     Verankerung, und er landete oben links (gemessen: -16,207). */
+  .has-bg-video > *:not(.section-video, .section-video__toggle) {
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Der Steuerknopf. Unten in der Ecke, weil er dort keinen Inhalt verdeckt
+     und trotzdem im selben Blickfeld liegt wie das, was er anhaelt.
+     Eigene Flaeche statt .btn: er muss auf JEDEM Video lesbar sein, also auf
+     unbekanntem Grund — dafuer ist ein dunkler Chip mit weissem Zeichen die
+     einzige Wahl, die nicht raet. */
+  .section-video__toggle {
+    position: absolute;
+    z-index: 3;
+    inset-block-end: var(--av-space-sm);
+    inset-inline-end: var(--av-space-sm);
+    display: grid;
+    place-items: center;
+    inline-size: 2.75rem;
+    block-size: 2.75rem;
+    border: 1px solid oklch(100% 0 0 / 35%);
+    border-radius: 50%;
+    background: oklch(0% 0 0 / 42%);
+    color: oklch(100% 0 0);
+    cursor: pointer;
+  }
+
+  .section-video__toggle:hover { background: oklch(0% 0 0 / 75%); }
+
+  .section-video__toggle:focus-visible {
+    outline: 2px solid oklch(100% 0 0);
+    outline-offset: 2px;
+  }
+
+  .section-video__toggle svg {
+    inline-size: 1.125rem;
+    block-size: 1.125rem;
+    fill: currentColor;
+  }
+
+  /* Ein Zeichen ist immer verborgen — welches, sagt der Zustand am Abschnitt. */
+  .section-video__icon--play  { display: none; }
+  .is-video-paused .section-video__icon--play  { display: block; }
+  .is-video-paused .section-video__icon--pause { display: none; }
+
+  /* ── .bg-blur — blurred background image ────────────────────────────
+   * Combine with any .bg-image* variant. Tune with --av-bg-blur (default 8px).
+   * Layer order: ::before (blurred image) → ::after (gradient overlay) → content.
+   * isolation:isolate keeps z-indices contained within the section. */
+  .bg-blur {
+    --av-bg-blur: 8px;
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+  }
+
+  /* Remove image from element's own background — rendered in ::before instead */
+  :is(.bg-image, .bg-image-dark, .bg-image-light, .bg-image-brand, .bg-image-secondary, .bg-image-gradient).bg-blur {
+    background-image: none;
+  }
+
+  /* Layer 1: blurred background image. Overshoots edges to hide blur artefacts. */
+  .bg-blur::before {
+    content: '';
+    position: absolute;
+    inset: calc(var(--av-bg-blur) * -2);
+    z-index: 1;
+    background-image: var(--section-bg-sm, none);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    filter: blur(var(--av-bg-blur));
+  }
+  @media (min-width: 768px)  { .bg-blur::before { background-image: var(--section-bg-md, none); } }
+  @media (min-width: 1200px) { .bg-blur::before { background-image: var(--section-bg-lg, none); } }
+
+  /* Layer 2: gradient overlays for variants that have one */
+  .bg-image-dark.bg-blur::after,
+  .bg-image-light.bg-blur::after,
+  .bg-image-brand.bg-blur::after,
+  .bg-image-secondary.bg-blur::after,
+  .bg-image-gradient.bg-blur::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+  }
+  /* Eine Zeile statt fuenf Kopien: der Schleier steht schon an der Variante. */
+  :is(.bg-image-dark, .bg-image-light, .bg-image-brand, .bg-image-secondary, .bg-image-gradient).bg-blur::after {
+    background: var(--av-bg-overlay);
+  }
+
+  /* Layer 3: content above both pseudo-elements */
+  .bg-blur > * { position: relative; z-index: 3; }
+
+  /* Shared "white-on-dark" token set, consolidated from bg-image-dark / -brand /
+     -gradient and bg-gradient-animated (all used the same values). style-light
+     and text-on-light below intentionally override for combos; bg-gradient-dark
+     and bg-gradient-primary keep their own tuned values. */
+  :is(.bg-image-dark, .bg-image-brand, .bg-image-secondary, .bg-image-gradient, .bg-gradient-animated, .bg-gradient-secondary) {
+    color: white;
+    --av-section-color:    white;
+    --av-color-text:       white;
+    --av-color-text-muted: oklch(100% 0 0 / var(--av-muted-strength-inv));
+    --av-color-surface-2:  oklch(100% 0 0 / 12%);
+    --av-color-surface-3:  oklch(100% 0 0 / 20%);
+    --av-color-border:     oklch(100% 0 0 / 25%);
+    --av-border:     var(--av-border-width) solid var(--av-color-border);
+    --av-card-border: var(--av-card-border-width) solid var(--av-color-border);
+    --av-card-bg:          oklch(100% 0 0 / 15%);
+  }
+
+  /* ── section_color overrides ────────────────────────────────────────
+   * Placed AFTER bg-* so they can override any bg-* color declaration.
+   * style-light:   force white text (for dark backgrounds)
+   * text-on-light: force dark text  (e.g. bg-hero with a light image)
+   */
+  .style-light {
+    color: white;
+    --av-section-color:    white;
+    --av-color-text:       white;
+    --av-color-text-muted: oklch(100% 0 0 / var(--av-muted-strength-inv));
+    --av-color-surface-2:  oklch(100% 0 0 / 12%);
+    --av-card-bg:         var(--av-color-surface-2);
+    --av-color-surface-3:  oklch(100% 0 0 / 20%);
+    --av-color-border:     oklch(100% 0 0 / 25%);
+    --av-border:     var(--av-border-width) solid var(--av-color-border);
+    --av-card-border: var(--av-card-border-width) solid var(--av-color-border);
+  }
+
+  .text-on-light {
+    color: var(--gray-9);
+    --av-section-color:    var(--gray-9);
+    --av-color-text:       var(--gray-9);
+    --av-color-text-muted: color-mix(in oklch, var(--gray-9) var(--av-muted-strength), transparent);
+    --av-color-border:     oklch(0% 0 0 / 20%);
+    --av-border:     var(--av-border-width) solid var(--av-color-border);
+    --av-card-border: var(--av-card-border-width) solid var(--av-color-border);
+  }
+
+  /* Immer dunkle Sektionen: die Markenfarbe als Typo muss gehoben werden.
+     light-dark() kennt das SCHEMA, nicht die SEKTION — im Hellmodus liefert
+     --av-color-*-text also den hellen Zweig, die dunkle Farbe, auf dunklen
+     Grund. Gemessen als .text-primary im Hellmodus: 15 von 16 Vorlagen unter
+     4,5 auf .style-dark (luxury 1,28, refined 1,48), auf
+     .bg-gradient-dark bis hinunter zu 1,05.
+
+     Nur die dunklen, NICHT die markenfarbigen Sektionen: auf .bg-primary,
+     .bg-image-brand & Co. ist die Marke schon die Fläche, dort hat .text-primary
+     keine Farbe mehr zu sagen und wird weiter auf die Sektionsfarbe gelegt
+     (Regel weiter oben). .text-on-light dreht die Sektion wieder auf hellen
+     Grund und ist deshalb ausgenommen. */
+  :is(.style-dark, .style-light, .bg-gradient-dark, .bg-image-dark, .style-glass-dark):not(.text-on-light) {
+    --av-color-primary-text:   var(--av-color-primary-on-dark);
+    --av-color-secondary-text: var(--av-color-secondary-on-dark);
+  }
+
+  .color-primary {
+    color: var(--av-color-primary-text);
+    --av-section-color: var(--av-color-primary-text);
+    --av-color-text:    var(--av-color-primary-text);
+  }
+
+  .color-secondary {
+    color: var(--av-color-secondary-text);
+    --av-section-color: var(--av-color-secondary-text);
+    --av-color-text:    var(--av-color-secondary-text);
+  }
+
+  /* Opaque card surfaces on a dark / background-image section. Dark & image
+     sections map the card surfaces to translucent white ("glass") — elegant
+     over a plain gradient, but a busy background image then shows through the
+     cards. Add .cards-solid to the section to make event / news / media /
+     style-card surfaces opaque. Placed last so it wins over the per-section
+     surface remaps above (same specificity, later source order).
+
+     Opaque card surfaces, derived from theme tokens (not fixed greys). Each
+     variant tints the cards from a different base, kept dark enough that the
+     section's white text stays readable. */
+  .cards-solid {
+    --av-color-surface-2: color-mix(in oklch, var(--av-color-surface), black 80%);
+    --av-color-surface-3: color-mix(in oklch, var(--av-color-surface), black 74%);
+    --av-card-bg:         color-mix(in oklch, var(--av-color-surface), black 80%);
+  }
+  .cards-primary {
+    --av-color-surface-2: color-mix(in oklch, var(--av-color-primary), black 62%);
+    --av-color-surface-3: color-mix(in oklch, var(--av-color-primary), black 54%);
+    --av-card-bg:         color-mix(in oklch, var(--av-color-primary), black 62%);
+  }
+  .cards-secondary {
+    --av-color-surface-2: color-mix(in oklch, var(--av-color-secondary), black 62%);
+    --av-color-surface-3: color-mix(in oklch, var(--av-color-secondary), black 54%);
+    --av-card-bg:         color-mix(in oklch, var(--av-color-secondary), black 62%);
+  }
+
+
+  /* ── Media card (build event/blog-style cards from content elements) ──
+     Add .media-card (CSS-class field) to an ELEMENT GROUP (Layout: Stapel)
+     that starts with an Image CE followed by a Text CE. The leading image
+     bleeds to the card edges like .event--upcoming / .news--card; everything
+     after it becomes a padded body. The card clips + rounds the corners, so no
+     style-card needed. Add .image--cover on the Image CE for a uniform ratio.
+
+     Lag bis 10.08.2026 im Starter-Theme und musste dort unlayered stehen, um
+     die Bild-Regeln zu ueberstimmen. Hier braucht es den Kniff nicht:
+     av.layout kommt ohnehin nach av.components. Umgezogen, weil das Backend
+     die Media-Karte jetzt als Stil anbietet — eine Auswahl, deren CSS in einer
+     loeschbaren Datei liegt, waere eine tote Option. */
+  .media-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 0;
+    overflow: hidden;
+    background: var(--av-card-bg);
+    border: var(--av-card-border);
+    border-radius: var(--av-card-radius);
+    box-shadow: var(--av-card-shadow);
+    /* Der Uebergang steht in animations.css hinter `.animate` — Begruendung
+       dort. Kurz: die Media-Karte traegt in aller Regel `animate`, und
+       `transition` ist eine Liste pro Element, keine Sammlung. */
+  }
+
+  .media-card:hover {
+    box-shadow: var(--av-card-shadow-hover);
+    transform: translateY(calc(-1 * var(--av-card-lift)));
+  }
+
+  /* Leading image → edge to edge (full width, natural height) */
+  .media-card > .content-image:first-child figure {
+    inline-size: 100%;
+    max-inline-size: none;
+    margin: 0;
+  }
+  .media-card > .content-image:first-child :is(a, picture) { display: block; }
+  .media-card > .content-image:first-child img {
+    display: block;
+    inline-size: 100%;
+    block-size: auto;
+  }
+
+  /* Everything after the image → padded body */
+  .media-card > :not(.content-image:first-child) {
+    padding: var(--av-card-padding);
+    text-align: var(--av-card-align);
+  }
+}

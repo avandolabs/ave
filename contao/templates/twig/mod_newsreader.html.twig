@@ -1,0 +1,31 @@
+{#
+ # Avando AVE override of mod_newsreader.html.twig.
+ # - Strips the block_searchable wrapper (<div class="mod_newsreader block">) so
+ #   the item's <section> is a direct child of the article container, enabling the
+ #   CSS full-bleed breakout on .ave-reader.section to work correctly.
+ # - When a back link (referer) is present, it is injected INSIDE the item's
+ #   <section> before the closing tag — so it sits on the section's background
+ #   instead of creating a white strip below a coloured section.
+ # - Comments are rendered after the item, outside the section, as before.
+ #}
+{%- set _item = articles|raw -%}
+{%- if referer|default -%}
+    {%- set _back -%}<!-- indexer::stop --><p class="back"><a href="{{ referer }}" title="{{ back }}">{{ back }}</a></p><!-- indexer::continue -->{%- endset -%}
+    {%- if '<!-- [ave-reader-end] -->' in _item -%}
+        {{ _item|replace({'<!-- [ave-reader-end] -->': _back})|raw }}
+    {%- else -%}
+        {{ _item|replace({'</section>': _back ~ '</section>'})|raw }}
+    {%- endif -%}
+{%- else -%}
+    {{ _item|replace({'<!-- [ave-reader-end] -->': ''})|raw }}
+{%- endif -%}
+
+{% if allowComments|default %}
+    <div class="ce_comments block">
+        <{{ hlc }}>{{ hlcText }}</{{ hlc }}>
+        {{ comments|join|raw }}
+        {{ pagination|default|raw }}
+        <{{ hlc }}>{{ addComment }}</{{ hlc }}>
+        {{ include('@Contao/mod_comment_form.html.twig', ignore_missing: true) }}
+    </div>
+{% endif %}

@@ -1,0 +1,34 @@
+{#
+  Logo, das seine Farbe aus der Umgebung nimmt: Klasse `logo-tint` im Feld
+  „CSS-Klasse" des Elements. Eine SVG wird dafür als Code eingebettet (siehe
+  InlineSvgExtension); components.css färbt ihre Teile `.logo-mark` und
+  `.logo-word`. Eine SVG ohne diese Teile behält ihre eigenen Farben.
+  PNG, WebP, GIF und AVIF dienen als einfarbige Schablone. Ohne die Klasse
+  bleibt es das gewöhnliche Bild.
+
+  Ein JPG wird NIE zur Schablone, auch mit der Klasse nicht: es hat keine
+  durchsichtigen Stellen, die Schablone ergäbe ein volles Rechteck statt eines
+  Logos. Dann lieber das Bild, wie es ist.
+
+  Ein Baustein für drei Elemente, denn ein Logo steht je nach Stelle in einem
+  anderen: Hyperlink (Kopf, verlinkt auf die Startseite), Bild (Hero), Text
+  mit Bild (Fuss, neben der Unterzeile). Eingebunden per `use` — der Block
+  ersetzt `media` aus component/_figure. Zurück zum gewöhnlichen Bild geht es
+  über block('picture_component') — genau das tut der ersetzte Block; parent()
+  erlaubt Twig in einem per `use` eingebundenen Baustein nicht.
+#}
+{% block media %}
+    {%- set _logo_ext = figure.image.filePath|split('.')|last|lower -%}
+    {%- if 'logo-tint' in (element_css_classes|default('')|split(' ')) -%}
+        {%- set _logo_svg = ave_inline_svg(figure) -%}
+        {%- if _logo_svg -%}
+            {{ _logo_svg }}
+        {%- elseif _logo_ext in ['png', 'webp', 'gif', 'avif', 'svg'] -%}
+            <span class="logo-mask" style="--_logo-src: url('{{ figure.image.img.src|e('css') }}')">{{ block('picture_component') }}</span>
+        {%- else -%}
+            {{ block('picture_component') }}
+        {%- endif -%}
+    {%- else -%}
+        {{ block('picture_component') }}
+    {%- endif -%}
+{% endblock %}

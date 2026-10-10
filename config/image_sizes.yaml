@@ -1,0 +1,108 @@
+# Image sizes of the Avando AVE theme. Prepended to the contao config by
+# AvandoAveExtension, so they exist on every install. A project can override
+# a size by redefining it under contao.image.sizes in its own config.
+contao:
+    image:
+        sizes:
+
+            # ── Card layouts (16:9) ─────────────────────────────────────────
+            card_1col:
+                width: 1280
+                height: 720
+                resize_mode: crop
+                densities: '1x, 2x'
+                sizes: '100vw'
+                formats:
+                    jpg: [webp, jpg]
+                    png: [webp, png]
+
+            card_2col:
+                width: 800
+                height: 450
+                resize_mode: crop
+                densities: '1x, 2x'
+                sizes: '(max-width: 640px) 100vw, 50vw'
+                formats:
+                    jpg: [webp, jpg]
+                    png: [webp, png]
+
+            card_3col:
+                width: 600
+                height: 338
+                resize_mode: crop
+                densities: '1x, 2x'
+                sizes: '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw'
+                formats:
+                    jpg: [webp, jpg]
+                    png: [webp, png]
+
+            card_4col:
+                width: 480
+                height: 270
+                resize_mode: crop
+                densities: '1x, 2x'
+                sizes: '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw'
+                formats:
+                    jpg: [webp, jpg]
+                    png: [webp, png]
+
+            # ── Content elements ────────────────────────────────────────────
+            content_wide:
+                width: 1280
+                height: 640
+                resize_mode: crop
+                densities: '1x, 2x'
+                sizes: '100vw'
+                formats:
+                    jpg: [webp, jpg]
+                    png: [webp, png]
+
+            content_half:
+                width: 800
+                height: 533
+                resize_mode: crop
+                densities: '1x, 2x'
+                sizes: '(max-width: 640px) 100vw, 50vw'
+                formats:
+                    jpg: [webp, jpg]
+                    png: [webp, png]
+
+            content_third:
+                width: 600
+                height: 400
+                resize_mode: crop
+                densities: '1x, 2x'
+                sizes: '(max-width: 640px) 100vw, 33vw'
+                formats:
+                    jpg: [webp, jpg]
+                    png: [webp, png]
+
+            content_square:
+                width: 600
+                height: 600
+                resize_mode: crop
+                densities: '1x, 2x'
+                sizes: '(max-width: 640px) 50vw, 25vw'
+                formats:
+                    jpg: [webp, jpg]
+                    png: [webp, png]
+
+            content_portrait:
+                width: 480
+                height: 640
+                resize_mode: crop
+                densities: '1x, 2x'
+                sizes: '(max-width: 640px) 100vw, 33vw'
+                formats:
+                    jpg: [webp, jpg]
+                    png: [webp, png]
+
+            # ── List thumbnail (4:3) ────────────────────────────────────────
+            list_thumbnail:
+                width: 240
+                height: 180
+                resize_mode: crop
+                densities: '1x, 2x'
+                formats:
+                    jpg: [webp, jpg]
+                    png: [webp, png]

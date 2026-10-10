@@ -1,0 +1,33 @@
+{% extends "@Contao/content_element/text.html.twig" %}
+{% use '@Contao/component/_logo_tint.html.twig' %}
+
+{# Attach the image shape + optional border (shape-* / shape-border) to the
+   text CE's optional image, mirroring the Image CE. #}
+{% block text_media %}
+    {% if image %}
+        {%- set _img_shape = [data.ce_img_shape|default, data.ce_img_border|default]|filter(v => v)|join(' ') -%}
+        {% with {figure: image, img_attributes: attrs().addClass(_img_shape)} %}{{ block('figure_component') }}{% endwith %}
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    {{ parent() }}
+    {% if image and image.hasLightbox %}
+        {% add 'glightbox-css' to stylesheets %}
+            <link rel="stylesheet" href="{{ asset('bundles/avandoave/glightbox/glightbox.min.css') }}">
+        {% endadd %}
+        {% add 'glightbox-js' to body %}
+            <script src="{{ asset('bundles/avandoave/glightbox/glightbox.min.js') }}"></script>
+        {% endadd %}
+        {% add 'glightbox-init' to body %}
+            <script{{ attrs().setIfExists('nonce', csp_nonce('script-src')) }}>
+            document.addEventListener('DOMContentLoaded', function () {
+                document.querySelectorAll('a[data-lightbox]').forEach(function (a) {
+                    a.dataset.gallery = a.dataset.lightbox;
+                });
+                GLightbox({ selector: 'a[data-lightbox]' });
+            });
+            </script>
+        {% endadd %}
+    {% endif %}
+{% endblock %}

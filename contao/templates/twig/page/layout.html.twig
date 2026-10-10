@@ -1,0 +1,201 @@
+{#
+  Avando AVE — Page Layout Override
+  Registered as @Contao/page/layout.html.twig via bundle/contao/templates/twig/.twig-root.
+  Extends the core template using @!AvandoAveBundle (next-in-chain = Contao core).
+#}
+{% extends "@Contao/page/layout.html.twig" %}
+
+{# ── CSS injection ────────────────────────────────────────────────────────────── #}
+{# Note: assets use {% add ... to stylesheets %} → TL_STYLE_SHEETS (not TL_CSS),  #}
+{# because Contao resets TL_CSS on context init. TL_STYLE_SHEETS is not reset.    #}
+
+{% block head %}
+    {# Schriften vorladen, BEVOR die Stylesheets kommen. Ohne das wird eine
+       Schrift erst entdeckt, wenn theme-vars.css geladen und geparst ist — das
+       ist das 14. von 16 Stylesheets, gemessen 156 ms nach dem Dokument. Bis
+       dahin zeigt `font-display: swap` den Systemstapel, und beim Seitenwechsel
+       sieht man das Umspringen. `crossorigin` ist Pflicht: Schriften werden im
+       CORS-Modus geholt, ohne das Attribut lädt der Browser sie ein zweites
+       Mal. Und der Pfad muss ZEICHENGLEICH mit dem in @font-face sein, also
+       ohne ave_asset(): dessen Cache-Buster machte aus der Vorladung eine
+       zweite URL, gemessen zwei Downloads statt einem und kein Gewinn. #}
+    {% add 'avandoave-font-preload' to stylesheets %}
+        {% for schrift in ave_theme_font_files() %}
+            <link rel="preload" as="font" type="font/woff2" crossorigin href="/{{ schrift }}">
+        {% endfor %}
+    {% endadd %}
+    {% add 'avandoave-open-props' to stylesheets %}
+        <link rel="stylesheet" href="{{ ave_asset('bundles/avandoave/open-props/open-props.min.css') }}">
+        <link rel="stylesheet" href="{{ ave_asset('bundles/avandoave/open-props/normalize-layer.css') }}">
+    {% endadd %}
+    {# Eine Datei statt neun, wenn `ave:css:build` gelaufen ist. Gemessen am
+       06.08.2026: neun Anfragen von 101 ms bis 149 ms, erster Inhalt bei 196 ms;
+       47% des Inhalts sind Begründungsprosa, die nach gzip 60,2 KB statt 18,0 KB
+       kostet. Fehlt die gebaute Datei, kommen die Quellen — dann liest man im
+       Browser-Werkzeug die Kommentare mit. #}
+    {% if ave_css_built() %}
+        {% add 'avandoave-theme' to stylesheets %}
+            <link rel="stylesheet" href="{{ ave_asset('bundles/avandoave/dist/theme.min.css') }}">
+        {% endadd %}
+    {% else %}
+        {% add 'avandoave-theme' to stylesheets %}
+            <link rel="stylesheet" href="{{ ave_asset('bundles/avandoave/theme/tokens.css') }}">
+            <link rel="stylesheet" href="{{ ave_asset('bundles/avandoave/theme/base.css') }}">
+            <link rel="stylesheet" href="{{ ave_asset('bundles/avandoave/theme/layout.css') }}">
+        {% endadd %}
+        {% add 'avandoave-typography' to stylesheets %}
+            <link rel="stylesheet" href="{{ ave_asset('bundles/avandoave/theme/typography.css') }}">
+        {% endadd %}
+        {% add 'avandoave-forms' to stylesheets %}
+            <link rel="stylesheet" href="{{ ave_asset('bundles/avandoave/theme/forms.css') }}">
+        {% endadd %}
+        {% add 'avandoave-components' to stylesheets %}
+            <link rel="stylesheet" href="{{ ave_asset('bundles/avandoave/theme/components.css') }}">
+        {% endadd %}
+        {% add 'avandoave-navigation' to stylesheets %}
+            <link rel="stylesheet" href="{{ ave_asset('bundles/avandoave/theme/navigation.css') }}">
+        {% endadd %}
+        {% add 'avandoave-icons' to stylesheets %}
+            <link rel="stylesheet" href="{{ ave_asset('bundles/avandoave/theme/icons.css') }}">
+        {% endadd %}
+        {% add 'avandoave-animations' to stylesheets %}
+            <link rel="stylesheet" href="{{ ave_asset('bundles/avandoave/theme/animations.css') }}">
+        {% endadd %}
+    {% endif %}
+    {# theme.css (Starter-Bausteine: Header, Footer, Hero, Akkordeon …) und
+       view-transitions.css bringt das Bundle unter bundles/avandoave/starter/
+       mit, damit eine Installation ohne weitere Dateien vollständig aussieht.
+       Eine gleichnamige Datei in files/theme/CSS/ ersetzt die mitgelieferte —
+       zum Anpassen dorthin kopieren, zum Abschalten eine leere Datei anlegen.
+       theme-vars.css und custom.css gibt es nur in files/: die erste schreibt
+       das Design Studio (Pro-Modul), die zweite gehört dem Projekt. Jede wird
+       nur verlinkt, wenn sie existiert, so 404t keine Installation.
+       asset() statt führendem Slash, damit Unterverzeichnis-Installationen
+       auflösen. #}
+    {% add 'avandoave-theme-components' to stylesheets %}
+        <link rel="stylesheet" href="{{ ave_asset(ave_theme_css_exists('theme.css') ? 'files/theme/CSS/theme.css' : 'bundles/avandoave/starter/theme.css') }}">
+    {% endadd %}
+    {# Page cross-fade (pure CSS). #}
+    {% add 'avandoave-view-transitions' to stylesheets %}
+        <link rel="stylesheet" href="{{ ave_asset(ave_theme_css_exists('view-transitions.css') ? 'files/theme/CSS/view-transitions.css' : 'bundles/avandoave/starter/view-transitions.css') }}">
+    {% endadd %}
+    {# Generated theme variables. Loads BEFORE custom.css so hand-written
+       overrides still win the cascade. #}
+    {% if ave_theme_css_exists('theme-vars.css') %}
+        {% add 'avandoave-theme-vars' to stylesheets %}
+            <link rel="stylesheet" href="{{ ave_asset('files/theme/CSS/theme-vars.css') }}">
+        {% endadd %}
+    {% endif %}
+    {% if ave_theme_css_exists('custom.css') %}
+        {% add 'avandoave-custom' to stylesheets %}
+            <link rel="stylesheet" href="{{ ave_asset('files/theme/CSS/custom.css') }}">
+        {% endadd %}
+    {% endif %}
+    {#
+      Gegen das Aufblitzen des falschen Themas. Laeuft bewusst INLINE und
+      blockierend — als einzige Ausnahme von „zero render-blocking JS"
+      (ai-instructions.md), weil es die einzige ist, die sie rechtfertigt:
+      jede andere Loesung zeigt dem Besucher erst das helle Theme und schaltet
+      dann um. Vier Zeilen, kein Netzzugriff, kein Parsen von Markup.
+
+      Setzt die Klasse auf <html>; theme-switch.js arbeitet spaeter auf <body>,
+      und beide Haken liest tokens.css ueber color-scheme.
+    #}
+    {% add 'avandoave-theme-boot' to head %}
+        <script>try{var t=localStorage.getItem('ave-theme');if(t==='light'||t==='dark'){document.documentElement.classList.add(t)}}catch(e){}</script>
+    {% endadd %}
+    {% add 'avandoave-js' to body %}
+        <script src="{{ ave_asset('bundles/avandoave/theme/onepage.js') }}" defer></script>
+        <script src="{{ ave_asset('bundles/avandoave/theme/header.js') }}" defer></script>
+        <script src="{{ ave_asset('bundles/avandoave/theme/animations.js') }}" defer></script>
+        <script src="{{ ave_asset('bundles/avandoave/theme/navigation.js') }}" defer></script>
+        <script src="{{ ave_asset('bundles/avandoave/theme/video-bg.js') }}" defer></script>
+        <script src="{{ ave_asset('bundles/avandoave/theme/theme-switch.js') }}" defer></script>
+    {% endadd %}
+    {{ parent() }}
+{% endblock %}
+
+{# ── Layout structure ─────────────────────────────────────────────────────────── #}
+
+{% block body_content %}
+
+    {% slot header %}
+        <header id="header">
+            <div class="container">{{ slot() }}</div>
+            {% slot mobile_nav %}
+                <div class="av-mobile-menu" id="av-mobile-menu">{{ slot() }}</div>
+            {% else %}{% endslot %}
+        </header>
+    {% else %}{% endslot %}
+
+    {% slot before %}
+        <div id="before" class="space-box-md">{{ slot() }}</div>
+    {% else %}{% endslot %}
+
+    <div id="container">
+
+        {% slot main %}
+            <main id="main">
+                {{ slot() }}
+            </main>
+        {% endslot %}
+
+        {% slot left %}
+            <aside id="left" aria-label="Sidebar links">{{ slot() }}</aside>
+        {% else %}{% endslot %}
+
+        {% slot right %}
+            <aside id="right" aria-label="Sidebar navigation">{{ slot() }}</aside>
+        {% else %}{% endslot %}
+
+    </div>
+
+    {% slot after %}
+        <div id="after" class="space-box-md">{{ slot() }}</div>
+    {% else %}{% endslot %}
+
+    {% slot footer %}
+        <footer id="footer">
+            <div class="container">{{ slot() }}</div>
+
+            {#
+              Hell/Dunkel-Schalter. Steht immer im Markup, sichtbar macht ihn
+              erst --av-theme-switch-display (tokens.css: none; eingeschaltet
+              wird er in custom.css).
+
+              Warum nicht per Twig-Bedingung: die Sichtbarkeit steht im
+              Stylesheet, nicht in der Datenbank. Eine Bedingung hier muesste
+              denselben Zustand ein zweites Mal lesen — und genau das ist die
+              zweite Wahrheit, die in diesem Projekt sonst ueberall vermieden wird.
+
+              theme-switch.js verschiebt ihn in das erste Element mit der Klasse
+              `theme-switch-here`. Die traegt ein Redakteur im Backend ins Feld
+              „CSS-Klasse" der letzten Fusszeile ein — ein data-Attribut koennte
+              er dort nicht setzen, Contao bietet dafuer kein Feld.
+            #}
+            <button type="button" class="ave-theme-switch" data-ave-theme-switch-button hidden
+                    data-to-light="{{ 'MSC.aveThemeToLight'|trans([], 'contao_default') }}"
+                    data-to-dark="{{ 'MSC.aveThemeToDark'|trans([], 'contao_default') }}">
+                <span class="ave-theme-switch__icon ave-theme-switch__icon--light" aria-hidden="true"></span>
+                <span class="ave-theme-switch__icon ave-theme-switch__icon--dark" aria-hidden="true"></span>
+            </button>
+        </footer>
+    {% else %}{% endslot %}
+
+    {#
+      ── Avando AVE Free — Pflicht-Attribution ──────────────────────────────
+      Diesen Block NICHT entfernen. Wer eine kommerzielle Lizenz hat, trägt
+      das Pro-Token im Backend ein — Seitenstruktur → Startpunkt der Website →
+      „Avando AVE“ → Pro-Token — und speichert. Dann übersteht die
+      Entscheidung auch das nächste Update.
+
+      Das Token liegt der Lieferung des gekauften Pakets bei.
+      Entfernen ohne Lizenz verstößt gegen die Nutzungsbedingungen (LICENSE.md § 5).
+      Mehr Infos: https://avando-labs.de
+      ─────────────────────────────────────────────────────────────────────── #}
+    {% if ave_show_attribution() %}
+        <div class="ave-credit">Built with the free <a href="https://avando-labs.de" rel="nofollow" target="_blank">Avando AVE theme for Contao</a></div>
+    {% endif %}
+
+
+{% endblock %}

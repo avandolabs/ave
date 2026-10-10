@@ -1,0 +1,405 @@
+/*
+ * Avando AVE — Typography
+ * Layer av.typography: display text, prose container, text utilities.
+ */
+
+@layer av.typography {
+
+  /*
+   * ── CE cascade boundary ──────────────────────────────────────────────
+   * Contao CE wrappers have a `content-*` class (content-text, content-image …).
+   * We reset the bridge variables HERE with :where() (specificity 0) so that
+   * variables set on a parent <section> cannot accidentally cascade into CE content.
+   *
+   * Utility classes applied DIRECTLY to a CE (e.g. .text-lg on div.content-text)
+   * have specificity (0,1,0) and therefore always override this reset.
+   *
+   * Result:
+   *   section.text-lg > div.content-text > p  →  p uses default size  ✓
+   *   section > div.content-text.text-lg > p  →  p uses text-lg        ✓
+   */
+  :where([class*="content-"]) {
+    --av-el-font-size:   initial;
+    --av-el-color:       initial;
+    --av-el-line-height: initial;
+    --av-el-soft:        initial;
+  }
+
+  /* ── Display text ─────────────────────────────────────────────────
+   *
+   * Bridge variables cascade through the CE boundary (specificity 0,1,0 > :where()).
+   * No descendant selectors needed — headings in CE wrappers pick up size + line-height
+   * via var(--av-el-font-size) and var(--av-el-line-height) defined in base.css.
+   */
+  .display-1 {
+    text-transform: var(--av-display-transform);
+    --av-el-font-size:   var(--av-text-display-1);
+    --av-el-line-height: var(--av-leading-display);
+    font-weight: var(--av-heading-weight);
+    letter-spacing: var(--av-tracking-tight);
+    text-wrap: balance;
+  }
+
+  .display-2 {
+    text-transform: var(--av-display-transform);
+    --av-el-font-size:   var(--av-text-display-2);
+    --av-el-line-height: var(--av-leading-display);
+    font-weight: var(--av-heading-weight);
+    letter-spacing: var(--av-tracking-tight);
+    text-wrap: balance;
+  }
+
+  .display-3 {
+    text-transform: var(--av-display-transform);
+    --av-el-font-size:   var(--av-text-display-3);
+    --av-el-line-height: var(--av-leading-tight);
+    font-weight: var(--av-heading-weight);
+    letter-spacing: var(--av-tracking-tight);
+    text-wrap: balance;
+  }
+
+  /* ── Lead / Intro text ──────────────────────────────────────────── */
+  .lead {
+    --av-el-font-size: var(--av-text-lg);
+    /* Softens the *inherited* text colour (not a fixed grey), so a lead follows
+       whatever colour is in play — default text, .text-primary, a tinted section
+       or the active persona. Base.css mixes this via --av-el-soft.
+       The amount is --av-muted-strength so the "Gedämpfter Text" control reaches
+       it; the literal stays as the fallback for a theme without the editor. */
+    --av-el-soft:      var(--av-muted-strength, 70%);
+    line-height: var(--av-leading-snug);
+    text-wrap: pretty;
+    max-inline-size: var(--av-prose-width);
+  }
+
+  /* ── Text size utilities ──────────────────────────────────────────
+   *
+   * Sets --av-el-font-size which h1-h6 read via var(--av-el-font-size, default).
+   * CSS custom properties are inherited, so one class on a CE wrapper
+   * overrides all child headings and paragraphs without selector lists.
+   */
+  .text-xs   { --av-el-font-size: var(--av-text-xs); }
+  .text-sm   { --av-el-font-size: var(--av-text-sm); }
+  .text-base { --av-el-font-size: var(--av-text-base); }
+  .text-md   { --av-el-font-size: var(--av-text-md); }
+  .text-lg   { --av-el-font-size: var(--av-text-lg); }
+  .text-xl   { --av-el-font-size: var(--av-text-xl); }
+  .text-2xl  { --av-el-font-size: var(--av-text-2xl); }
+  .text-3xl  { --av-el-font-size: var(--av-text-3xl); }
+
+  /* ── Text colour utilities ────────────────────────────────────────
+
+     Softens the *inherited* colour rather than forcing a fixed grey, so
+     muted text follows .text-primary, a tinted section or the persona —
+     same mechanism as .lead. (--av-color-text-muted stays for UI/meta.)
+
+     The 70% used to be a literal, which meant the editor's "Gedämpfter Text"
+     slider moved --av-color-text-muted while THIS — the class an author
+     actually applies to a content element — never budged. Same quantity, two
+     places: exactly the split that made the control feel broken. */
+  .text-muted     { --av-el-soft: var(--av-muted-strength, 70%); }
+  .text-base      { --av-el-color: var(--av-color-text); }
+  .text-primary   { --av-el-color: var(--av-color-primary-text); }
+  .text-secondary { --av-el-color: var(--av-color-secondary-text); }
+
+  /* ── Text shadow ────────────────────────────────────────────────────
+     Add .text-shadow (or -sm / -lg) to headings/text — most useful on light
+     text over images. Intensity is token-driven, so the Theme-Editor's
+     "text shadow" control can dial all of them off/soft/strong globally. */
+  .text-shadow    { text-shadow: var(--av-text-shadow-md); }
+  .text-shadow-sm { text-shadow: var(--av-text-shadow-sm); }
+  .text-shadow-md { text-shadow: var(--av-text-shadow-md); }
+  .text-shadow-lg { text-shadow: var(--av-text-shadow-lg); }
+
+  /* Textleuchten — enger gefasst als das Kastenleuchten, sonst verwischt die
+     Buchstabenform. Wie oben: eine Alternative zu .text-shadow-*, kein Zusatz. */
+  .text-glow    { text-shadow: var(--av-text-glow-md); }
+  .text-glow-sm { text-shadow: var(--av-text-glow-sm); }
+  .text-glow-md { text-shadow: var(--av-text-glow-md); }
+  .text-glow-lg { text-shadow: var(--av-text-glow-lg); }
+
+  /* ── Section label ────────────────────────────────────────────────
+
+     Small uppercase column/section header — footer, sidebar, anywhere. */
+  .section-label {
+    --av-el-font-size: var(--av-text-xs);
+    font-weight: var(--av-weight-bold);
+    text-transform: uppercase;
+    letter-spacing: var(--av-tracking-wide);
+    color: var(--av-color-text-muted);
+    margin-block-end: var(--av-space-sm);
+  }
+
+  /* ── Eyebrow / Overline ───────────────────────────────────────────
+
+     Small uppercase label above a section heading. Bewusst OHNE eigene
+     Schriftfamilie: die Auszeichnung liegt in Versalien und Laufweite, nicht
+     in einem Wechsel auf Mono. Ein Monospace-Schnitt haette hier die
+     Display-Schrift der Vorlage ueberstimmt, die genau dafuer gewaehlt ist. */
+  .eyebrow {
+    --av-el-font-size: var(--av-text-sm);
+    letter-spacing: var(--av-tracking-widest);
+    text-transform: uppercase;
+    /* Stays fully opaque (small caps + tracking → transparency would cost too
+       much contrast for WCAG). Colour flows through the --av-el-color bridge,
+       so an .eyebrow follows .text-primary / the persona instead of a fixed grey. */
+    margin-block-end: var(--av-space-lg);
+
+    /* Direct text element (e.g. <p class="eyebrow">) */
+    &:not(:has(p)) {
+      border-block-end: var(--av-border);
+      padding-block-end: var(--av-space-xs);
+    }
+
+    /* CE wrapper context: border on the paragraph, suppress its own margin */
+    & p {
+      border-block-end: var(--av-border);
+      padding-block-end: var(--av-space-xs);
+      margin-block-end: 0;
+    }
+  }
+
+  /* ── Link-Unterstriche als Ausnahme ───────────────────────────────
+     Drei Klassen für die drei klassischen Stellungen: nie, erst beim
+     Überfahren, immer. Sie setzen Token, keine Eigenschaften — deshalb dürfen
+     sie an einem Absatz, einem Inhaltselement oder einer ganzen Sektion stehen
+     und gelten für alle Links darin. Dieselbe Bauart wie image--original und
+     btn--hover-flat: nicht über Selektoren streiten, das Token umschalten.
+
+     Seit es Hover-Effekte gibt (Studio: „Beim Überfahren"), stellen sie den
+     Effekt im Bereich auch zurück: kein Streifen, gerader dünner Strich,
+     gewöhnliche Hover-Farbe. Wer eine Ausnahme setzt, will ein ruhiges
+     Verhalten, nicht den Marker der Persona mit anderem Strich. */
+  :is(.links-plain, .links-hover-underline, .links-underline) {
+    --av-link-underline-style-hover: solid;
+    --av-link-thickness-hover: 1px;
+    --av-link-mark: transparent;
+    --av-link-mark-size: 0% 0%;
+    --av-link-mark-size-hover: 0% 0%;
+    --av-link-hover-ink: var(--av-link-hover);
+    --av-link-pad: 0;
+    --av-link-block: var(--av-link);
+  }
+  .links-plain {
+    --av-link-underline: none;
+    --av-link-underline-hover: none;
+  }
+  .links-hover-underline {
+    --av-link-underline: none;
+    --av-link-underline-hover: underline;
+  }
+  .links-underline {
+    --av-link-underline: underline;
+    --av-link-underline-hover: underline;
+  }
+
+  /* ── Badge ────────────────────────────────────────────────────────
+
+     Inline label/chip, e.g. for section tags or status indicators */
+  .badge {
+    display: inline-block;
+    align-self: flex-start;
+    font-size: var(--av-text-xs);
+    background: var(--av-color-primary);
+    color: var(--av-color-text-on-primary);
+    padding: .15em .5em;
+    border-radius: var(--av-radius-sm);
+    letter-spacing: var(--av-tracking-wide);
+    text-transform: uppercase;
+  }
+
+  /* ── Section-level text scale ────────────────────────────────────
+   *
+   * Applied to <section>, use descendant selectors to bypass the
+   * :where([class*="content-"]) CE cascade boundary reset.
+   */
+  .text-scale--sm h1 { font-size: var(--av-text-2xl); }
+  .text-scale--sm h2 { font-size: var(--av-text-xl); }
+  .text-scale--sm h3 { font-size: var(--av-text-lg); }
+
+  /* Auch diese lesen auf DISPLAY-Groesse und folgen deshalb dem Display-
+     Schalter, nicht dem fuer normale Ueberschriften. Beim ersten Anlauf
+     uebersehen — die Rolle steckt in der Groesse, nicht im Klassennamen. */
+  :is(.text-scale--lg h1, .text-scale--lg h2, .text-scale--lg h3) { text-transform: var(--av-display-transform); }
+
+  .text-scale--lg h1 { font-size: var(--av-text-display-1); }
+  .text-scale--lg h2 { font-size: var(--av-text-display-1); }
+  .text-scale--lg h3 { font-size: var(--av-text-display-2); }
+
+  /* Eine Stufe kräftiger als normale Überschriften — aber ABGELEITET, nicht
+     festgeschrieben. Vorher stand hier var(--av-weight-black), also feste 900:
+     der Regler „Überschriften-Gewicht" erreichte damit ausgerechnet die
+     Hero-Überschrift nicht, also genau die, auf die man beim Ziehen schaut.
+     Gemessen: h2/h3 folgten dem Regler (300→300, 900→900), h1 blieb auf 900.
+     Dasselbe Muster wie --av-muted-strength (Anteil + 17): ein Aufschlag auf
+     den Regler statt eines zweiten, unerreichbaren Werts.
+
+     Bei der Vorgabe 800 ergibt das exakt die bisherigen 900 — das Aussehen
+     ändert sich erst, wenn jemand den Regler bewegt. min() deckelt, sonst
+     verlangte ein Regler auf 900 ein Gewicht von 1000.
+
+     Und in einer Display-Sektion LIEST eine Überschrift als Display — also
+     folgt sie auch dem Display-Schalter für Versalien, nicht dem für normale
+     Überschriften. Genau hier wäre ein Schalter je Tag auseinandergelaufen. */
+  :is(.text-scale--display h1, .text-scale--display h2, .text-scale--display h3) { text-transform: var(--av-display-transform); }
+
+  .text-scale--display h1 { font-size: var(--av-text-display-1); letter-spacing: var(--av-tracking-tight); font-weight: min(900, calc(var(--av-heading-weight) + 100)); }
+  .text-scale--display h2 { font-size: var(--av-text-display-1); letter-spacing: var(--av-tracking-tight); font-weight: min(900, calc(var(--av-heading-weight) + 100)); }
+  .text-scale--display h3 { font-size: var(--av-text-display-2); letter-spacing: var(--av-tracking-tight); }
+
+  /* ── Heading measure (line-length cap) ──────────────────────────────
+     Headings are unconstrained by default (--av-heading-measure: none).
+     Opt IN to a comfortable measure with .measure (on the heading itself, or
+     on any wrapper/section — the token inherits). .measure-none forces it off
+     again, e.g. inside a section where the token was set globally. */
+  .measure      { --av-heading-measure: var(--av-heading-measure-on); }
+  .measure-none { --av-heading-measure: none; }
+
+  /* Numeric variants cap line length (max characters per line) on the element
+     they sit on — general, works on any block (.lead, p, div …). Unlike bare
+     .measure (which caps descendant headings via the token), these set
+     max-inline-size directly. Defined after .lead so they win over its default. */
+  .measure-45 { max-inline-size: 45ch; }
+  .measure-50 { max-inline-size: 50ch; }
+  .measure-60 { max-inline-size: 60ch; }
+  .measure-70 { max-inline-size: 70ch; }
+
+  /* ── Text wrap utilities ────────────────────────────────────────── */
+  .text-balance { text-wrap: balance; }
+  .text-pretty  { text-wrap: pretty; }
+  .text-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* ── Weight utilities ───────────────────────────────────────────── */
+  .font-light  { font-weight: var(--av-weight-light); }
+  .font-normal { font-weight: var(--av-weight-normal); }
+  .font-medium { font-weight: var(--av-weight-medium); }
+  .font-semi   { font-weight: var(--av-weight-semi); }
+  .font-bold   { font-weight: var(--av-weight-bold); }
+  .font-extrabold { font-weight: var(--av-weight-extra); }
+  .font-black     { font-weight: var(--av-weight-black); }
+
+  /* ── Tracking utilities ─────────────────────────────────────────── */
+  .tracking-tight   { letter-spacing: var(--av-tracking-tight); }
+  .tracking-normal  { letter-spacing: var(--av-tracking-normal); }
+  .tracking-wide    { letter-spacing: var(--av-tracking-wide); }
+  .tracking-widest  { letter-spacing: var(--av-tracking-widest); }
+
+  /* ── Line-height (leading) utilities ────────────────────────────────
+     Set both the direct line-height (for inheriting body text) and the
+     --av-el-line-height bridge var (which headings read past the CE cascade
+     boundary), so one class tightens/loosens headings AND paragraphs. */
+  .leading-none    { line-height: var(--av-leading-none);    --av-el-line-height: var(--av-leading-none); }
+  .leading-display { line-height: var(--av-leading-display); --av-el-line-height: var(--av-leading-display); }
+  .leading-tight   { line-height: var(--av-leading-tight);   --av-el-line-height: var(--av-leading-tight); }
+  .leading-snug    { line-height: var(--av-leading-snug);    --av-el-line-height: var(--av-leading-snug); }
+  .leading-body    { line-height: var(--av-leading-body);    --av-el-line-height: var(--av-leading-body); }
+  .leading-loose   { line-height: var(--av-leading-loose);   --av-el-line-height: var(--av-leading-loose); }
+
+  /* ── Prose container ──────────────────────────────────────────────
+   *
+   * Apply .prose to any wrapper that contains CMS-generated HTML.
+   * All descendant elements get readable, well-spaced styles.
+   * Contao content elements that render long-form text should
+   * wrap their output in a <div class="prose"> in their template.
+   */
+  .prose {
+    max-inline-size: var(--av-prose-width);
+    line-height: var(--av-leading-body);
+
+    /* Vertical rhythm: consistent spacing between all block elements */
+    & > * + * {
+      margin-block-start: var(--av-space-sm);
+    }
+
+    /* Headings */
+    & h2 {
+      font-size: var(--av-text-2xl);
+      margin-block: var(--av-space-xl) var(--av-space-sm);
+    }
+
+    & h3 {
+      font-size: var(--av-text-xl);
+      margin-block: var(--av-space-lg) var(--av-space-xs);
+    }
+
+    & h4 {
+      font-size: var(--av-text-lg);
+      margin-block: var(--av-space-md) var(--av-space-xs);
+    }
+
+    /* Paragraphs */
+    & p {
+      margin-block: 0 var(--av-space-sm);
+    }
+
+    /* Lists */
+    & ul, & ol {
+      padding-inline-start: var(--av-space-lg);
+      margin-block: 0 var(--av-space-md);
+    }
+
+    & li + li {
+      margin-block-start: var(--av-space-2xs);
+    }
+
+    /* Blockquote */
+    & blockquote {
+      border-inline-start: 3px solid var(--av-color-primary-text);
+      margin-inline: 0;
+      padding-inline: var(--av-space-md);
+      padding-block: var(--av-space-xs);
+      margin-block: var(--av-space-md);
+      font-style: italic;
+      font-size: var(--av-text-lg);
+      color: var(--av-color-text-muted);
+    }
+
+    /* Code */
+    & pre {
+      margin-block: var(--av-space-md);
+    }
+
+    /* Table — responsive via scroll wrapper */
+    & table {
+      min-inline-size: 100%;
+    }
+
+    & .table-wrapper {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin-block: var(--av-space-md);
+    }
+
+    /* Figure */
+    & figure {
+      margin-block: var(--av-space-md);
+    }
+
+    /* HR */
+    & hr {
+      margin-block: var(--av-space-xl);
+    }
+
+    /* Links: underline in prose for readability */
+    & a {
+      text-decoration: underline;
+      text-underline-offset: .2em;
+    }
+  }
+
+  /* ── Prose size variants ────────────────────────────────────────── */
+  .prose--sm {
+    font-size: var(--av-text-sm);
+    --av-prose-width: 60ch;
+  }
+
+  .prose--lg {
+    font-size: var(--av-text-md);
+    --av-prose-width: 72ch;
+  }
+
+}

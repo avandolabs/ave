@@ -1,0 +1,52 @@
+{#
+ # Vion override of content_element/element_group.html.twig
+ #
+ # Applies section design fields (section_bg, section_color, section_size,
+ # section_layout, section_align, section_text) to the wrapper element,
+ # mirroring the preset logic of mod_article.html.twig.
+ #
+ # In Contao 5 modern CE controllers, model row data is available under the
+ # `data` key (not as top-level variables), so we read data.section_*.
+ #
+ # The wrapper gets `section` for standardised vertical padding.
+ # layout-* classes act as grid/flex container for child CEs directly.
+ # extra_style (expert legend) is forwarded as inline style.
+ #}
+{% extends '@Contao/content_element/element_group.html.twig' %}
+
+{% block attributes %}
+    {#- space-inline-none-mobile verhindert, dass Box-Inset und Section-Gutter
+        sich auf dem Handy verdoppeln. Das gilt aber nur für eine unsichtbare
+        Gruppe: Hat sie eine eigene Fläche (Hintergrund oder Karte/Kachel),
+        klebt der Inhalt ohne Innenabstand am Rand der Fläche. -#}
+    {%- set _eg_has_surface = (data.section_bg|default and data.section_bg != 'bg-none') or data.ce_style|default -%}
+    {%- set _eg_preset = [
+        data.section_bg|default,
+        data.section_color|default,
+        data.section_size|default,
+        (data.section_size|default and not _eg_has_surface ? 'space-inline-none-mobile' : null),
+        data.section_layout|default,
+        data.section_gap|default,
+        data.section_dividers|default,
+        data.section_align_x|default,
+        data.section_align_y|default,
+        data.section_align|default,
+        data.section_text|default,
+        data.section_height|default,
+        data.ce_space_below|default,
+        data.ce_span|default,
+        data.ce_style|default
+    ]|filter(v => v)|join(' ') -%}
+    {%- set _eg_bg_style = '' -%}
+    {%- set _eg_bg_class = '' -%}
+    {%- if (data.section_bg|default) starts with 'bg-image' and data.section_bg_image|default -%}
+        {%- set _bg_sm = figure(data.section_bg_image, [600,  0, 'proportional']) -%}
+        {%- set _bg_md = figure(data.section_bg_image, [1200, 0, 'proportional']) -%}
+        {%- set _bg_lg = figure(data.section_bg_image, [1920, 0, 'proportional']) -%}
+        {%- if _bg_sm -%}
+            {%- set _eg_bg_class = 'has-bg-image' -%}
+            {%- set _eg_bg_style = '--section-bg-sm: url(' ~ _bg_sm.image.img.src ~ '); --section-bg-md: url(' ~ _bg_md.image.img.src ~ '); --section-bg-lg: url(' ~ _bg_lg.image.img.src ~ ')' -%}
+        {%- endif -%}
+    {%- endif -%}
+    {{- attributes.addClass([_eg_preset, _eg_bg_class]|filter(v => v)|join(' ')).addStyle(data.extra_style|default).addStyle(_eg_bg_style) -}}
+{% endblock %}

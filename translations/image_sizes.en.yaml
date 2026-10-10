@@ -1,0 +1,14 @@
+# Labels of the image sizes in config/image_sizes.yaml. Contao reads them
+# from the image_sizes translation domain and appends the dimensions itself.
+# Pattern: format aspect ratio · size. Deliberately no column count, which
+# only holds on desktop; narrow screens are handled by the sizes attribute.
+card_1col: 'Card 16:9 · XL'
+card_2col: 'Card 16:9 · L'
+card_3col: 'Card 16:9 · M'
+card_4col: 'Card 16:9 · S'
+content_wide: 'Wide 2:1 · large'
+content_half: 'Landscape 3:2 · medium'
+content_third: 'Landscape 3:2 · small'
+content_square: 'Square 1:1'
+content_portrait: 'Portrait 3:4'
+list_thumbnail: 'Thumbnail 4:3 · mini'

@@ -1,0 +1,29 @@
+{% extends '@Contao/content_element/_base.html.twig' %}
+{% use '@Contao/component/_headline.html.twig' %}
+
+{#
+ # AVE override of content_element/headline.html.twig
+ #
+ # The headline CE has no wrapper element — the core template applies `attributes`
+ # directly to the <h*> and therefore bypasses the {% block attributes %} of our
+ # _base override, where ce_style/ce_span/ce_align/ce_bg/ce_color + extra_style are
+ # normally merged. We replicate that merge here so the design fields (Textfarbe,
+ # Textausrichtung …) actually reach the heading element.
+ #}
+{% block wrapper %}
+    {%- set _ce_preset = [
+        data.ce_style|default,
+        data.ce_span|default,
+        data.ce_align|default,
+        data.ce_size|default,
+        data.ce_tracking|default,
+        data.ce_bg|default,
+        data.ce_color|default,
+        data.ce_space_below|default
+    ]|filter(v => v)|join(' ') -%}
+    {% with {headline: headline|default(_context)|merge({
+        attributes: attributes.addClass(_ce_preset).addStyle(data.extra_style|default)
+    })} %}
+        {{ block('headline_component') }}
+    {% endwith %}
+{% endblock %}

@@ -1,0 +1,34 @@
+{#
+ # Avando AVE — One-page navigation
+ #
+ # Renders the SAME markup as the standard mod_navigation (.mod_navigation >
+ # .level_1). The globally loaded navigation.js / navigation.css then enhance and
+ # style it identically to the standard nav — including the mobile burger and the
+ # {% slot mobile_nav %} (#av-mobile-menu), which navigation.js moves into the
+ # open mobile panel. So no module-specific scripts, styles or nav tokens here.
+ #
+ # Items come from the controller: the manual "Label | #anchor" list, or — when
+ # that is empty — auto-discovered from every article on the page with a CSS ID.
+ # The scroll-spy (onepage.js) marks the active item via `.mod_navigation a[href*="#"]`.
+ #}
+{#
+ # CSS ID, classes and headline come from the module settings. A Twig fragment
+ # template gets them as element_html_id / element_css_classes / headline.text
+ # (Contao 5.7 and 6 alike) — not as cssID / class, which only legacy .html5
+ # templates know.
+ #}
+{% set wrapper_attributes = attrs()
+    .setIfExists('id', element_html_id|default)
+    .addClass([element_css_classes|default, 'mod_navigation', 'block'])
+    .mergeWith(wrapper_attributes|default)
+%}
+
+<nav{{ wrapper_attributes }}{% if headline.text|default %} aria-label="{{ headline.text }}"{% endif %}>
+    <ul class="level_1">
+        {% for item in items %}
+            <li class="{{ loop.first ? 'first ' : '' }}{{ loop.last ? 'last' : '' }}">
+                <a href="{{ item.href }}">{{ item.label }}</a>
+            </li>
+        {% endfor %}
+    </ul>
+</nav>

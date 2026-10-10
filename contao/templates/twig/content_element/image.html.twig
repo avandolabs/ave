@@ -1,0 +1,51 @@
+{% extends "@Contao/content_element/image.html.twig" %}
+{% use '@Contao/component/_logo_tint.html.twig' %}
+
+{#
+ # AVE override of content_element/image.html.twig
+ #
+ # Ce presets (ce_style, ce_bg, ce_color) AND extra_style are applied to <figure>,
+ # not the outer wrapper div. This ensures box-shadow, border-radius etc. frame
+ # the image tightly rather than the full-width block container.
+ #}
+
+{% block attributes %}
+    {#- ce_span (grid column span) and ce_space_below belong on the wrapper, i.e.
+        the grid item / block — not on the figure, which gets the framing presets
+        (ce_style/ce_bg/ce_color) in block content. -#}
+    {{- attributes.addClass([data.ce_span|default, data.ce_self_align|default, data.ce_space_below|default]|filter(v => v)|join(' ')) -}}
+{% endblock %}
+
+{% block content %}
+    {%- set _ce_preset = [data.ce_style|default, data.ce_bg|default, data.ce_color|default]|filter(v => v)|join(' ') -%}
+    {% if images %}
+        {%- set _fig = images|first -%}
+        {%- set _w = _fig.image.img.width|default(0) -%}
+        {%- set _h = _fig.image.img.height|default(0) -%}
+        {%- set _arStyle = (_w and _h) ? '--av-fig-ar:' ~ _w ~ '/' ~ _h : '' -%}
+        {#- Bildform + optionaler Rahmen landen auf dem <img> (shape-* / shape-border) -#}
+        {%- set _img_shape = [data.ce_img_shape|default, data.ce_img_border|default]|filter(v => v)|join(' ') -%}
+        {% with {figure: _fig, figure_attributes: attrs().addClass(_ce_preset).addStyle(data.extra_style|default).addStyle(_arStyle), img_attributes: attrs().addClass(_img_shape)} %}
+            {{ block('figure_component') }}
+        {% endwith %}
+    {% endif %}
+    {% if images is not empty and images|first.hasLightbox %}
+        {% add 'glightbox-css' to stylesheets %}
+            <link rel="stylesheet" href="{{ asset('bundles/avandoave/glightbox/glightbox.min.css') }}">
+        {% endadd %}
+        {% add 'glightbox-js' to body %}
+            <script src="{{ asset('bundles/avandoave/glightbox/glightbox.min.js') }}"></script>
+        {% endadd %}
+        {% add 'glightbox-init' to body %}
+            <script{{ attrs().setIfExists('nonce', csp_nonce('script-src')) }}>
+            document.addEventListener('DOMContentLoaded', function () {
+                document.querySelectorAll('a[data-lightbox]').forEach(function (a) {
+                    a.dataset.gallery = a.dataset.lightbox;
+                });
+                GLightbox({ selector: 'a[data-lightbox]' });
+            });
+            </script>
+        {% endadd %}
+    {% endif %}
+{% endblock %}
+

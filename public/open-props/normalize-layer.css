@@ -1,0 +1,6 @@
+/*
+ * Wraps Open Props normalize.min.css into @layer av.normalize.
+ * This gives it the LOWEST cascade priority — our theme layers always win.
+ * av.normalize is declared first in tokens.css layer order.
+ */
+@import url("normalize.min.css") layer(av.normalize);

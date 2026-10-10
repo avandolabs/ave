@@ -1,0 +1,23 @@
+{% extends "@Contao/content_element/downloads.html.twig" %}
+
+{% block content %}
+    {% with {items: downloads, limit: limit|default(0), items_per_page: items_per_page|default(0)} %}
+        {{ block('list_component') }}
+    {% endwith %}
+{% endblock %}
+
+{% block download_link %}
+    {% set download_link_attributes = attrs(download.link_attributes|default)
+        .set('href', download.href)
+        .setIfExists('title', title)
+        .setIfExists('type', download.file.mimeType(''))
+        .mergeWith(download_link_attributes|default)
+    %}
+    <a{{ download_link_attributes }}>
+        <span class="icon icon--download" aria-hidden="true"></span>
+        <span class="download-text">{{ text }}</span>
+    </a>
+    {%- if download.file.mimeType('') is not empty %}
+        <span class="download-ext">{{ download.file.extension(true)|upper }}</span>
+    {%- endif %}
+{% endblock %}

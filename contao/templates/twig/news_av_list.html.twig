@@ -1,0 +1,24 @@
+<article class="news news--list{{ class }}">
+    {%- if addImage %}
+        {{ include('@Contao/image.html.twig') }}
+    {%- endif %}
+    <div class="news--list__body">
+        <p class="news--list__meta">
+            <time class="news--list__date" datetime="{{ datetime }}">{{ date }}</time>
+            {%- if author %}<span class="news--list__author">{{ author }}</span>{% endif %}
+        </p>
+        <h2 class="news--list__title">
+            {%- if link|default %}
+                <a href="{{ link }}" title="{{ newsHeadline }}">{{ newsHeadline }}</a>
+            {%- else %}
+                {{- newsHeadline }}
+            {%- endif %}
+        </h2>
+        {%- if hasTeaser %}
+            <p class="news--list__teaser">{{ teaser|striptags|trim }}</p>
+        {%- endif %}
+    </div>
+</article>
+{%- if not hasReader %}
+    {%- do add_schema_org(getSchemaOrgData.invoke()) %}
+{%- endif %}

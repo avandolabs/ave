@@ -1,0 +1,255 @@
+/*
+ * Avando AVE — Icons
+ * Tabler Icons via CSS mask-image.
+ * Color follows currentColor, size follows font-size.
+ *
+ * Usage:  <span class="icon--arrow-left" aria-hidden="true"></span>
+ *         <span class="icon--check" role="img" aria-label="Done"></span>
+ *   (the base .icon class is optional on a bare <span>/<i>; still valid:
+ *    <span class="icon icon--check">. On a <button>/hyperlink CE the icon--*
+ *    class paints an ::after pseudo-element instead — see bottom of file.)
+ *
+ * Add a new icon: drop the SVG in bundle/public/icons/ and add one line below.
+ *
+ * Wrapped in @layer av.components so icon rules participate in the cascade
+ * layers like every other theme file. Previously unlayered, which made them
+ * beat ALL layered rules regardless of specificity (e.g. the pagination
+ * first/last chevron size override was silently ignored).
+ */
+
+@layer av.components {
+
+/* .icon is the explicit base. A bare <span>/<i> carrying only an icon--*
+   modifier also renders as a standalone icon (single-class convenience) —
+   scoped to span/i so it never collides with the button / .content-hyperlink
+   pattern below, which paints the icon as an ::after/::before pseudo-element. */
+.icon,
+:where(span, i)[class*="icon--"] {
+  display: inline-block;
+  width:  1em;
+  height: 1em;
+  background-color: currentColor;
+  -webkit-mask-image:    var(--icon-src, linear-gradient(#0000, #0000));
+  -webkit-mask-repeat:   no-repeat;
+  -webkit-mask-size:     contain;
+  -webkit-mask-position: center;
+  mask-image:    var(--icon-src, linear-gradient(#0000, #0000));
+  mask-repeat:   no-repeat;
+  mask-size:     contain;
+  mask-position: center;
+  flex-shrink: 0;
+  vertical-align: -0.125em; /* optical baseline alignment */
+}
+
+/* ── Navigation ─────────────────────────────────────────────────────── */
+.icon--arrow-left    { --icon-src: url(../icons/arrow-left.svg);    }
+.icon--arrow-right   { --icon-src: url(../icons/arrow-right.svg);   }
+.icon--arrow-up      { --icon-src: url(../icons/arrow-up.svg);      }
+.icon--arrow-down    { --icon-src: url(../icons/arrow-down.svg);    }
+.icon--chevron-left  { --icon-src: url(../icons/chevron-left.svg);  }
+.icon--chevron-right { --icon-src: url(../icons/chevron-right.svg); }
+.icon--chevron-up    { --icon-src: url(../icons/chevron-up.svg);    }
+.icon--chevron-down  { --icon-src: url(../icons/chevron-down.svg);  }
+.icon--home          { --icon-src: url(../icons/home.svg);          }
+
+/* ── UI Actions ─────────────────────────────────────────────────────── */
+.icon--plus                   { --icon-src: url(../icons/plus.svg);                   }
+.icon--moon          { --icon-src: url(../icons/moon.svg);          }
+.icon--minus                  { --icon-src: url(../icons/minus.svg);                  }
+.icon--check                  { --icon-src: url(../icons/check.svg);                  }
+.icon--x                      { --icon-src: url(../icons/x.svg);                      }
+.icon--search                 { --icon-src: url(../icons/search.svg);                 }
+.icon--filter                 { --icon-src: url(../icons/filter.svg);                 }
+.icon--adjustments-horizontal { --icon-src: url(../icons/adjustments-horizontal.svg); }
+.icon--external-link          { --icon-src: url(../icons/external-link.svg);          }
+.icon--link                   { --icon-src: url(../icons/link.svg);                   }
+.icon--refresh                { --icon-src: url(../icons/refresh.svg);                }
+
+/* ── Editing ────────────────────────────────────────────────────────── */
+.icon--edit     { --icon-src: url(../icons/edit.svg);     }
+.icon--trash    { --icon-src: url(../icons/trash.svg);    }
+.icon--copy     { --icon-src: url(../icons/copy.svg);     }
+.icon--download { --icon-src: url(../icons/download.svg); }
+.icon--upload   { --icon-src: url(../icons/upload.svg);   }
+
+/* ── Status & Feedback ──────────────────────────────────────────────── */
+.icon--info-circle    { --icon-src: url(../icons/info-circle.svg);    }
+.icon--alert-circle   { --icon-src: url(../icons/alert-circle.svg);   }
+.icon--alert-triangle { --icon-src: url(../icons/alert-triangle.svg); }
+.icon--circle-check   { --icon-src: url(../icons/circle-check.svg);   }
+.icon--circle-x       { --icon-src: url(../icons/circle-x.svg);       }
+.icon--eye            { --icon-src: url(../icons/eye.svg);             }
+.icon--eye-off        { --icon-src: url(../icons/eye-off.svg);         }
+.icon--loader-2       { --icon-src: url(../icons/loader-2.svg);        }
+
+/* ── Media & Files ──────────────────────────────────────────────────── */
+.icon--photo    { --icon-src: url(../icons/photo.svg);    }
+.icon--video    { --icon-src: url(../icons/video.svg);    }
+.icon--file     { --icon-src: url(../icons/file.svg);     }
+.icon--folder   { --icon-src: url(../icons/folder.svg);   }
+.icon--zoom-in  { --icon-src: url(../icons/zoom-in.svg);  }
+.icon--zoom-out { --icon-src: url(../icons/zoom-out.svg); }
+
+/* ── Communication & Social ─────────────────────────────────────────── */
+.icon--mail     { --icon-src: url(../icons/mail.svg);     }
+.icon--phone    { --icon-src: url(../icons/phone.svg);    }
+.icon--map-pin  { --icon-src: url(../icons/map-pin.svg);  }
+.icon--globe    { --icon-src: url(../icons/globe.svg);    }
+.icon--share    { --icon-src: url(../icons/share.svg);    }
+.icon--heart    { --icon-src: url(../icons/heart.svg);    }
+.icon--star     { --icon-src: url(../icons/star.svg);     }
+.icon--bookmark { --icon-src: url(../icons/bookmark.svg); }
+
+/* ── User & Auth ────────────────────────────────────────────────────── */
+.icon--user   { --icon-src: url(../icons/user.svg);   }
+.icon--users  { --icon-src: url(../icons/users.svg);  }
+.icon--login  { --icon-src: url(../icons/login.svg);  }
+.icon--logout { --icon-src: url(../icons/logout.svg); }
+.icon--lock   { --icon-src: url(../icons/lock.svg);   }
+
+/* ── UI Misc ────────────────────────────────────────────────────────── */
+.icon--settings  { --icon-src: url(../icons/settings.svg); }
+.icon--clock     { --icon-src: url(../icons/clock.svg);    }
+.icon--calendar  { --icon-src: url(../icons/calendar.svg); }
+.icon--menu-2    { --icon-src: url(../icons/menu-2.svg);   }
+
+/* ── Commerce ───────────────────────────────────────────────────────── */
+.icon--shopping-cart { --icon-src: url(../icons/shopping-cart.svg); }
+.icon--sun           { --icon-src: url(../icons/sun.svg);           }
+.icon--credit-card   { --icon-src: url(../icons/credit-card.svg);   }
+.icon--package       { --icon-src: url(../icons/package.svg);       }
+
+/* ── CE Hyperlink & Button Icons ───────────────────────────────────────
+ *
+ * Add "icon--[name]" to a CE or button to render an icon on the right (default).
+ * Add "icon--before" additionally to place the icon on the left instead.
+ */
+.content-hyperlink[class*="icon--"] a::after,
+.content-hyperlink[class*="icon--"] a::before,
+button[class*="icon--"]::after,
+button[class*="icon--"]::before {
+  content: '';
+  display: inline-block;
+  /* 1.5em, not 1em: button/CTA glyphs (envelope, arrow) are wider than tall, so
+     mask-size:contain renders them ~60% of the box height — a 1em box looks
+     small next to the label. em keeps it relative to the button's text size. */
+  width: 1.5em;
+  height: 1.5em;
+  /* …aber die 1.5em dürfen den Button nicht höher machen als einen ohne Icon:
+     .btn ist inline-flex mit line-height 1, das Label trägt also 1em bei, das
+     Icon würde 1.5em beitragen. Die negativen Block-Margins kürzen die
+     AUSSEN-Höhe des Icons wieder auf 1em (Innenmaß bleibt 1.5em) — in Flex wie
+     im Inline-Kontext. Mit/ohne Icon sind Buttons damit exakt gleich hoch. */
+  margin-block: -0.25em;
+  background-color: currentColor;
+  -webkit-mask-image: var(--icon-src, linear-gradient(#0000, #0000));
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+  -webkit-mask-position: center;
+  mask-image: var(--icon-src, linear-gradient(#0000, #0000));
+  mask-repeat: no-repeat;
+  mask-size: contain;
+  mask-position: center;
+  vertical-align: -0.28em;
+}
+
+/* Default: icon on the right */
+.content-hyperlink[class*="icon--"] a::after,
+button[class*="icon--"]::after { margin-inline-start: 0.3em; }
+
+/* Hide ::before unless .icon--before is set */
+.content-hyperlink[class*="icon--"]:not(.icon--before) a::before,
+button[class*="icon--"]:not(.icon--before)::before { display: none; }
+
+/* With .icon--before: show ::before, hide ::after */
+.content-hyperlink.icon--before[class*="icon--"] a::before,
+button.icon--before[class*="icon--"]::before { margin-inline-end: 0.3em; }
+
+.content-hyperlink.icon--before[class*="icon--"] a::after,
+button.icon--before[class*="icon--"]::after { display: none; }
+
+/* ── Icon über einer Überschrift (`.field-icon`) ──────────────────────────
+ * Für Text-CEs / Elementgruppen — Icon als Blockmarke über der Überschrift,
+ * gesetzt allein über das CSS-Klasse-Feld, ohne jedes Markup im RTE:
+ *
+ *   CSS-Klasse:  field-icon icon--globe
+ *
+ * (Ein leeres <span class="icon icon--globe"> im RTE ist KEINE Alternative:
+ * TinyMCE entfernt leere Inline-Elemente beim Speichern.)
+ *
+ * Die Regel muss in DIESER Datei stehen — nicht in theme.css oder custom.css:
+ * `icon--*` legt in --icon-src nur das Token url(../icons/x.svg) ab, und
+ * relative URLs aus Custom-Properties werden am Ort der VERWENDUNG aufgelöst.
+ * Aus /files/theme/CSS/ heraus zeigt der Pfad auf /files/theme/icons/… (404),
+ * und eine fehlgeschlagene Maske blendet das Element komplett aus. Nur hier
+ * stimmt die Basis-URL.
+ *
+ * Modifier: Größe (--xs … --xl) und Farbe (--secondary/--text/--muted/…) sind
+ * getrennt und frei kombinierbar, z. B.
+ *   field-icon field-icon--lg field-icon--secondary icon--heart
+ * Freie Werte per „Inline-Styles": --field-icon-size / -color / -gap.
+ * Eigene Grafik: --icon-src: url('/files/…/mein-icon.svg')  (absoluter Pfad)
+ * ------------------------------------------------------------------------ */
+.field-icon::before {
+  content: '';
+  display: block;
+  /* Größe in em — wie im ganzen Icon-System „size follows font-size":
+     --av-el-font-size ist die Bridge, die ein .text-* DIREKT am CE setzt (ein
+     .text-* an der Sektion wird von :where([class*="content-"]) bewusst
+     zurückgesetzt, das Icon folgt also demselben Regelwerk wie der Text).
+     Ohne Bridge ist 1em die geerbte Basisgröße — body hängt an --av-text-base,
+     die Icons skalieren damit auch am Typo-Regler des Design Studios mit.
+     Der Abstand darunter bleibt token-basiert (rem), wächst also nicht mit. */
+  font-size: var(--av-el-font-size, 1em);
+  inline-size: var(--field-icon-size, 2em);
+  block-size:  var(--field-icon-size, 2em);
+  margin-block-end: var(--field-icon-gap, var(--av-space-sm));
+  background-color: var(--field-icon-color, var(--av-color-primary));
+  -webkit-mask-image:    var(--icon-src, linear-gradient(#0000, #0000));
+  -webkit-mask-repeat:   no-repeat;
+  -webkit-mask-size:     contain;
+  -webkit-mask-position: center;
+  mask-image:    var(--icon-src, linear-gradient(#0000, #0000));
+  mask-repeat:   no-repeat;
+  mask-size:     contain;
+  mask-position: center;
+}
+
+/* Folgt der Textausrichtung — sonst klebt die Blockmarke auch in einer
+   zentrierten Sektion links. Beide Platzierungen der Klasse müssen greifen:
+   auf einem VORFAHREN (section_align, Elementgruppe) und auf dem CE SELBST
+   (ce_align landet auf .content-text, also auf demselben Element wie
+   .field-icon) — daher je zwei Selektoren. */
+:is(.align-text-center, .align-all-center) .field-icon::before,
+.field-icon:is(.align-text-center, .align-all-center)::before {
+  margin-inline: auto;
+}
+
+.align-text-end .field-icon::before,
+.field-icon.align-text-end::before {
+  margin-inline-start: auto;
+}
+
+/* Auf dunklen/farbigen Sektionen die Sektionsschrift übernehmen, damit ein
+   dunkles Primär-Icon nicht im Hintergrund verschwindet. `:where()` hält die
+   Spezifität bei 0, ein expliziter Farb-Modifier gewinnt also weiterhin. */
+:where(.style-light) .field-icon { --field-icon-color: currentColor; }
+
+/* ── Größe (Default = md, 2em) — relativ zur Textgröße, siehe oben ──────── */
+.field-icon--xs { --field-icon-size: 1.25em; --field-icon-gap: var(--av-space-2xs); }
+.field-icon--sm { --field-icon-size: 1.6em;  --field-icon-gap: var(--av-space-xs);  }
+.field-icon--md { --field-icon-size: 2em;    --field-icon-gap: var(--av-space-sm);  }
+.field-icon--lg { --field-icon-size: 2.75em; --field-icon-gap: var(--av-space-sm);  }
+.field-icon--xl { --field-icon-size: 3.5em;  --field-icon-gap: var(--av-space-md);  }
+
+/* ── Farbe (Default = Primärfarbe) ──────────────────────────────────────── */
+.field-icon--primary   { --field-icon-color: var(--av-color-primary);    }
+.field-icon--secondary { --field-icon-color: var(--av-color-secondary);  }
+.field-icon--text      { --field-icon-color: var(--av-color-text);       }
+.field-icon--muted     { --field-icon-color: var(--av-color-text-muted); }
+.field-icon--current   { --field-icon-color: currentColor;               }
+.field-icon--success   { --field-icon-color: var(--av-color-success);    }
+.field-icon--warning   { --field-icon-color: var(--av-color-warning);    }
+.field-icon--error     { --field-icon-color: var(--av-color-error);      }
+
+}

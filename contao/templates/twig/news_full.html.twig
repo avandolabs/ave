@@ -1,0 +1,93 @@
+{#
+ # Vion override of news_full.html.twig.
+ # - Adds the article-style section design fields (section_bg, section_layout,
+ #   section_color, …) to News items. The reader exposes the full row via
+ #   setData(row()), so the fields are available as top-level variables.
+ # - Mirrors mod_article: the section_* fields are concatenated into a preset and
+ #   applied to the wrapper (now a <section>); layout-*/align-* are moved onto an
+ #   inner wrapper so display contexts (grid/flex) apply to the item's children.
+ # - `.section` is only added when a design field is set, so the default output
+ #   stays a plain block (just <div> → <section>).
+ #}
+{%- set _preset = [section_bg|default, section_color|default, section_size|default, (section_size|default ? 'space-inline-none-mobile' : null), section_layout|default, section_align_x|default, section_align_y|default, section_align|default, section_text|default, section_height|default]|filter(v => v)|join(' ') -%}
+{%- set _containerClasses = _preset|split(' ')|filter(c => c starts with 'layout-' or c starts with 'align-items-' or c starts with 'align-content-' or c == 'align-all-center')|join(' ') -%}
+{%- set _sectionClasses = _preset|split(' ')|filter(c => not (c starts with 'layout-') and not (c starts with 'align-items-') and not (c starts with 'align-content-') and c != 'align-all-center')|join(' ') -%}
+{%- set _bgImageStyle = '' -%}
+{%- set _bgImageClass = '' -%}
+{%- if (section_bg|default) starts with 'bg-image' and section_bg_image|default -%}
+    {%- set _bg_sm = figure(section_bg_image, [600,  0, 'proportional']) -%}
+    {%- set _bg_md = figure(section_bg_image, [1200, 0, 'proportional']) -%}
+    {%- set _bg_lg = figure(section_bg_image, [1920, 0, 'proportional']) -%}
+    {%- if _bg_sm -%}
+        {%- set _bgImageClass = 'has-bg-image' -%}
+        {%- set _bgImageStyle = '--section-bg-sm: url(' ~ _bg_sm.image.img.src ~ '); --section-bg-md: url(' ~ _bg_md.image.img.src ~ '); --section-bg-lg: url(' ~ _bg_lg.image.img.src ~ ')' -%}
+    {%- endif -%}
+{%- endif -%}
+{%- set _wrapper = [_sectionClasses, (_sectionClasses ? 'section' : null), 'ave-reader', 'layout_full', 'block', class|default|trim, _bgImageClass]|filter(v => v)|join(' ') -%}
+
+<section class="{{ _wrapper }}"{% set _style = [extra_style|default, _bgImageStyle]|filter(v => v)|join('; ') %}{% if _style %} style="{{ _style }}"{% endif %}>
+
+    {# When a section design is active (.section is on the outer wrapper), the
+       section goes full-bleed via CSS. An inner .container reintroduces the
+       max-width and gutter so content is centred. Heading + info are inside
+       the container but above any layout grid — the same pattern as mod_article.
+       When no design is active _sectionClasses is empty, no container is added,
+       and the output is identical to standard news. #}
+    {%- if _sectionClasses %}<div class="container">{% endif %}
+
+    <h1>{{ newsHeadline }}</h1>
+
+    {% block info %}
+        <p class="info"><time datetime="{{ datetime }}">{{ date }}</time> {{ author }}</p>
+    {% endblock %}
+
+    {% if hasSubHeadline %}
+        <h2>{{ subHeadline }}</h2>
+    {% endif %}
+
+    {%- if _containerClasses %}<div class="{{ _containerClasses }}">{% endif %}
+
+    {% if hasText.invoke() %}
+        {{ text.invoke()|raw }}
+    {% else %}
+        <div class="ce_text block">
+            {% if not addBefore %}
+                {{ teaser|default|sanitize_html('contao')|csp_inline_styles|insert_tag_raw }}
+            {% endif %}
+
+            {% if addImage %}
+                {{ include('@Contao/image.html.twig') }}
+            {% endif %}
+
+            {% if addBefore %}
+                {{ teaser|default|sanitize_html('contao')|csp_inline_styles|insert_tag_raw }}
+            {% endif %}
+        </div>
+    {% endif %}
+
+    {% if enclosure %}
+        <ul class="enclosure">
+            {% for enclosure in enclosure %}
+                <li class="download-element ext-{{ enclosure.extension }}">
+                    <a href="{{ enclosure.href }}" title="{{ enclosure.title }}">{{ enclosure.link }} <span class="size">({{ enclosure.filesize }})</span></a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    {%- if _containerClasses %}</div>{% endif %}
+    <!-- [ave-reader-end] -->
+    {%- if _sectionClasses %}</div>{% endif %}
+</section>
+
+{% set schemaOrg = getSchemaOrgData.invoke() %}
+
+{% if hasText.invoke() %}
+    {% set schemaOrg = schemaOrg|merge({text: text.invoke()|html_to_plain_text}) %}
+{% endif %}
+
+{% do add_schema_org(schemaOrg) %}
+
+{% if figure|default %}
+    {% do add_schema_org({'@type': 'WebPage', primaryImageOfPage: figure.getSchemaOrgData()}) %}
+{% endif %}

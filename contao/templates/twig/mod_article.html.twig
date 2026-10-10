@@ -1,0 +1,131 @@
+{#
+ # Vion override of mod_article.html.twig.
+ # - Renders articles as <section> for semantic HTML and full-width backgrounds.
+ # - Five independent design fields (section_bg, section_size, section_layout,
+ #   section_align, section_text) are concatenated into _preset and applied to the wrapper.
+ # - extra_style (expert legend) is forwarded as inline style.
+ # - layout-* / align-items-* / av-y-* / align-all-center are mirrored onto the inner .container
+ #   so display contexts (grid/flex) apply directly to CE children.
+ # - Wraps content in <div class="container"> unless `no-container` is in cssClass.
+ #}
+{%- set _preset = [section_bg|default, section_color|default, section_size|default, (section_size|default ? 'space-inline-none-mobile' : null), section_layout|default, section_align_x|default, section_align_y|default, section_align|default, section_text|default, section_height|default]|filter(v => v)|join(' ') -%}
+{%- set _allClasses = ([class|default, _preset]|filter(v => v)|join(' ')) -%}
+{%- set _noContainer = 'no-container' in _allClasses|split(' ') -%}
+{# Classes that set display-context (grid/flex) belong on the container (direct CE parent),
+   not on the section. align-text-* and bg-*/section-* stay on the section.
+   When no-container is set the section IS the direct CE parent — keep everything on it. #}
+{%- set _containerClasses = _allClasses|split(' ')|filter(c => c starts with 'layout-' or c starts with 'align-items-' or c starts with 'align-content-' or c starts with 'av-y-' or c == 'align-all-center')|join(' ') -%}
+{%- set _sectionClasses = _noContainer ? _allClasses : (_allClasses|split(' ')|filter(c => not (c starts with 'layout-') and not (c starts with 'align-items-') and not (c starts with 'align-content-') and not (c starts with 'av-y-') and c != 'align-all-center')|join(' ')) -%}
+{%- set _bgImageStyle = '' -%}
+{%- set _bgImageClass = '' -%}
+{%- if (section_bg|default) starts with 'bg-image' and section_bg_image|default -%}
+    {%- set _bg_sm = figure(section_bg_image, [600,  0, 'proportional']) -%}
+    {%- set _bg_md = figure(section_bg_image, [1200, 0, 'proportional']) -%}
+    {%- set _bg_lg = figure(section_bg_image, [1920, 0, 'proportional']) -%}
+    {%- if _bg_sm -%}
+        {%- set _bgImageClass = 'has-bg-image' -%}
+        {%- set _bgImageStyle = '--section-bg-sm: url(' ~ _bg_sm.image.img.src ~ '); --section-bg-md: url(' ~ _bg_md.image.img.src ~ '); --section-bg-lg: url(' ~ _bg_lg.image.img.src ~ ')' -%}
+    {%- endif -%}
+{%- endif -%}
+{#- Hintergrundvideo. Das Standbild wird als poster UND als background des
+    <video> gesetzt: poster deckt das Laden ab, der background den Fall, dass
+    die Quelle gar nicht spielt. Ohne autoplay-Attribut — video-bg.js startet,
+    und nur wenn prefers-reduced-motion nicht widerspricht. -#}
+{%- set _bgVideoClass = '' -%}
+{%- set _videoSrc = '' -%}
+{%- set _posterSrc = '' -%}
+{%- if (section_bg|default) starts with 'bg-video' -%}
+    {%- if section_bg_video_poster|default -%}
+        {%- set _poster = figure(section_bg_video_poster, [1920, 0, 'proportional']) -%}
+        {%- if _poster -%}{%- set _posterSrc = _poster.image.img.src -%}{%- endif -%}
+    {%- endif -%}
+    {%- if section_bg_video|default -%}
+        {%- set _videoSrc = ave_file_url(section_bg_video) -%}
+    {%- endif -%}
+    {%- if _videoSrc -%}{%- set _bgVideoClass = 'has-bg-video' -%}{%- endif -%}
+{%- endif -%}
+{% set wrapperAttributes = attrs(cssID)
+    .addClass([_sectionClasses, _bgImageClass, _bgVideoClass, 'section', 'block']|filter(v => v))
+    .addStyle(extra_style|default)
+    .addStyle(_bgImageStyle)
+    .addStyle(style|default)
+    .mergeWith(wrapperAttributes|default)
+%}
+
+{% if teaserOnly|default %}
+
+    {% block alias %}
+        <article{{ wrapperAttributes }}>
+            <div class="ce_text block">
+                <h2>{{ headline|insert_tag_raw }}</h2>
+                <div class="teaser">
+                    {{ teaser|default|sanitize_html('contao')|csp_inline_styles|insert_tag_raw }}
+                    <p class="more"><a href="{{ href }}" title="{{ readMore }}">{{ more }} <span class="invisible">{{ headline }}</span></a></p>
+                </div>
+            </div>
+        </article>
+    {% endblock %}
+
+{% elseif noMarkup|default %}
+
+    {% block content %}
+        {{ elements|join|raw }}
+    {% endblock %}
+
+{% else %}
+
+    <section{{ wrapperAttributes }}>
+        {%- if _videoSrc -%}
+            {#- muted ist Pflicht, nicht Geschmack: ein Video mit Ton, das von
+                selbst startet, verstoesst gegen WCAG 1.4.2 — und kein Browser
+                laesst es ohnehin zu. loop, weil ein Hintergrund kein Ende
+                haben soll; playsinline, damit iOS es nicht in den Vollbild-
+                Player reisst. preload="none": ohne autoplay wird ohnehin erst
+                auf Zuruf geladen, das spart Daten auf Mobilfunk. -#}
+            <video class="section-video" muted loop playsinline preload="none"
+                   tabindex="-1" aria-hidden="true"
+                   {% if _posterSrc %}poster="{{ _posterSrc }}" style="background-image:url({{ _posterSrc }})"{% endif %}>
+                <source src="{{ _videoSrc }}">
+            </video>
+            <button type="button" class="section-video__toggle" data-ave-video-toggle
+                    aria-label="{{ 'MSC.aveVideoPause'|trans([], 'contao_default') }}"
+                    data-label-play="{{ 'MSC.aveVideoPlay'|trans([], 'contao_default') }}"
+                    data-label-pause="{{ 'MSC.aveVideoPause'|trans([], 'contao_default') }}">
+                <svg class="section-video__icon section-video__icon--pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+                <svg class="section-video__icon section-video__icon--play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+            </button>
+        {%- endif -%}
+        {%- if not _noContainer %}<div class="{{ ('container ' ~ _containerClasses)|trim }}">{% endif %}
+
+        {% if printable %}
+            {% block syndication %}
+                <!-- indexer::stop -->
+                <div class="syndication">
+                    {% if printButton %}
+                        <a href="{{ print }}" class="print" title="{{ printTitle }}" onclick="window.print();return false" data-skip-search-index>{{ backend_icon('assets/contao/images/print.svg') }}</a>
+                    {% endif %}
+                    {% if facebookButton %}
+                        <a href="{{ path('contao_frontend_share', {p: 'facebook', u: encUrl}) }}" class="facebook" rel="nofollow" title="{{ facebookTitle }}" onclick="var w=window.open(this.href,'','width=640,height=380,modal=yes,left=100,top=50,location=no,menubar=no,resizable=yes,scrollbars=yes,status=no,toolbar=no');w.opener=null;return false">{{ backend_icon('assets/contao/images/facebook.svg') }}</a>
+                    {% endif %}
+                    {% if twitterButton %}
+                        <a href="{{ path('contao_frontend_share', {p: 'twitter', u: encUrl, t: encTitle}) }}" class="twitter" rel="nofollow" title="{{ twitterTitle }}" onclick="var w=window.open(this.href,'','width=640,height=380,modal=yes,left=100,top=50,location=no,menubar=no,resizable=yes,scrollbars=yes,status=no,toolbar=no');w.opener=null;return false">{{ backend_icon('assets/contao/images/twitter.svg') }}</a>
+                    {% endif %}
+                </div>
+                <!-- indexer::continue -->
+            {% endblock %}
+        {% endif %}
+
+        {{ block('content') }}
+
+        {% if backlink %}
+            {% block backlink %}
+                <!-- indexer::stop -->
+                <p class="back"><a href="{{ backlink }}" title="{{ back }}">{{ back }}</a></p>
+                <!-- indexer::continue -->
+            {% endblock %}
+        {% endif %}
+
+        {%- if not _noContainer %}</div>{% endif %}
+    </section>
+
+{% endif %}
