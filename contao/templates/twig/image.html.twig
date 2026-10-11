@@ -1,0 +1,29 @@
+{#
+  AVE-Fassung der Legacy-Bildausgabe: hängt an KI-generierte Bilder den Hinweis
+  an (component/_ai_label, siehe AiLabelExtension).
+
+  Warum es sie gibt: component/_figure deckt die Twig-Elemente ab. Alles, was
+  noch über `$this->insert('image', …)` bzw. `@Contao/image.html.twig` läuft —
+  News- und Event-Listen, Leser, Downloads —, kommt hier durch.
+
+  Ein Template für 5.7 und 6: Contao 6 kennt nur noch image.html.twig, 5.7
+  rendert es anstelle von image.html5, solange kein .html5 davorliegt.
+
+  KEINE Kopie des Core-Markups: Das Core-Template hat keine Blöcke, und seine
+  Fassungen für 5.7 und 6 unterscheiden sich (insert_tag_raw / insert_tag_html;
+  5.7 kennt den zweiten Filter nicht). Es wird deshalb eingebunden und der
+  Hinweis vor die Bildunterschrift bzw. das Ende der figure gesetzt.
+
+  |raw: Die eingebundene Ausgabe ist fertig maskiertes HTML. Über {% set %}
+  verliert sie in Contao 5.7 (älteres Twig) die Kennzeichnung als sicher und
+  würde sonst ein zweites Mal maskiert.
+#}
+{%- set _ave_html = include('@Contao_ContaoCoreBundle/image.html.twig') -%}
+{%- set _ave_ai = ave_ai_label(figure|default(singleSRC|default)) -%}
+{%- if _ave_ai -%}
+    {%- set _ave_mark = '<figcaption' in _ave_html ? '<figcaption' : '</figure>' -%}
+    {%- set _ave_parts = _ave_html|split(_ave_mark, 2) -%}
+    {{- (_ave_parts[0] ~ include('@Contao/component/_ai_label.html.twig', {ai_label: _ave_ai}, with_context = false) ~ _ave_mark ~ _ave_parts[1])|raw -}}
+{%- else -%}
+    {{- _ave_html|raw -}}
+{%- endif -%}

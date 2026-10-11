@@ -1,0 +1,22 @@
+{#
+  AVE-Fassung von component/_figure: hängt an KI-generierte Bilder den Hinweis
+  an (component/_ai_label, Einstellungen im Startpunkt, siehe AiLabelExtension).
+
+  KEIN {% extends %}: Die Element-Templates binden diese Komponente per
+  {% use %} ein, und ein Template mit extends lässt sich nicht als Trait
+  benutzen. Deshalb wird das Core-Template seinerseits per use eingebunden und
+  sein media-Block umbenannt. Alle übrigen Blöcke bleiben die des Cores — keine
+  Kopie fremden Markups, die bei Contao-Updates auseinanderläuft.
+
+  Das Core-Template wird direkt adressiert, weil @Parent nur mit extends geht.
+
+  Der Hinweis steht im media-Block, bei verlinkten Bildern also im <a>. Gewollt:
+  so liegt er auf dem Bild. pointer-events: none (components.css) sorgt dafür,
+  dass er den Link nicht abfängt.
+#}
+{% use "@Contao_ContaoCoreBundle/component/_figure.html.twig" with media as ave_core_media %}
+
+{% block media %}
+    {{- block('ave_core_media') -}}
+    {{- include('@Contao/component/_ai_label.html.twig', {ai_label: ave_ai_label(figure|default)}, with_context = false) -}}
+{% endblock %}

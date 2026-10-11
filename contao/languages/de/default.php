@@ -15,3 +15,6 @@ $GLOBALS['TL_LANG']['MSC']['aveVideoPlay']  = 'Hintergrundvideo abspielen';
 // Hell/Dunkel-Schalter im Fuss
 $GLOBALS['TL_LANG']['MSC']['aveThemeToLight'] = 'Zur hellen Darstellung wechseln';
 $GLOBALS['TL_LANG']['MSC']['aveThemeToDark'] = 'Zur dunklen Darstellung wechseln';
+
+// Hinweis an KI-generierten Bildern (Vorgabe, im Startpunkt änderbar)
+$GLOBALS['TL_LANG']['MSC']['aveAiLabel'] = 'KI-generiert';

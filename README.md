@@ -47,6 +47,9 @@ Contao Manager bzw. `composer update avando/ave`.
 - **Datenschutz ohne Nacharbeit.** Alle Dateien liegen auf dem eigenen Server;
   der Besucher kontaktiert kein CDN und keine Schriftenbibliothek.
 - **Dunkelmodus** über `light-dark()`, ohne zweites Stylesheet.
+- **KI-Kennzeichnung.** Haken „KI-generiert“ an der Datei, sichtbarer Hinweis
+  an jeder Stelle, an der das Bild erscheint. Position, Größe und Darstellung
+  legt der Startpunkt fest.
 
 ## Anforderungen
 

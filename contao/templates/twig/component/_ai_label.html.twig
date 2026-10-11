@@ -1,0 +1,18 @@
+{#
+  Hinweis an einem KI-generierten Bild (component/_figure, image.html.twig).
+
+  Echter Text statt eines CSS-Pseudoelements: Screenreader lesen ihn vor, auch
+  wenn der Bildbereich als dekorativ ausgezeichnet ist. Einbinden NUR mit
+  eigenem Kontext (`only`), sonst überschreiben gleichnamige Variablen des
+  aufrufenden Elements die Beschriftung:
+
+      {{ include('@Contao/component/_ai_label.html.twig', {ai_label: ave_ai_label(figure)}, with_context = false) }}
+
+  ai_label: Ergebnis von ave_ai_label() — position, size, style, text.
+  Gestaltet in components.css (.ave-ai-label).
+#}
+{%- if ai_label|default -%}
+<span class="ave-ai-label ave-ai-label--{{ ai_label.position }} ave-ai-label--{{ ai_label.size }} ave-ai-label--{{ ai_label.style }}">
+    {{- ai_label.text ?: ('MSC.aveAiLabel'|trans({}, 'contao_default')) -}}
+</span>
+{%- endif -%}

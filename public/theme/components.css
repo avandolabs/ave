@@ -70,6 +70,75 @@
     object-fit: cover;
   }
 
+  /* ── KI-Kennzeichnung ──────────────────────────────────────────────
+   * Hinweis an Bildern, die in der Dateiverwaltung als „KI-generiert"
+   * markiert sind (component/_ai_label). Position, Größe und Darstellung
+   * wählt der Startpunkt; sie kommen als Modifier-Klassen an.
+   *
+   * Bezugspunkt ist das BILD, nicht die figure: Die figure ist oft breiter
+   * als ihr Bild (Text-Element mit kleinem, zentriertem Bild, Team-Karten) —
+   * ein Hinweis in ihrer Ecke stünde neben dem Bild. CSS Anchor Positioning
+   * hängt ihn an die Bildkante, ohne das Bild in einen Wrapper zu stecken
+   * (ein Wrapper mit fit-content schrumpfte Bilder, die per width: 100% die
+   * Spalte füllen). Ohne Anchor-Unterstützung greift die Ecke der figure.
+   *
+   * Ein gemeinsamer anchor-name für alle Bilder genügt: Gültig ist nur ein
+   * Anker innerhalb des eigenen Containing Blocks — der figure. */
+  figure:has(.ave-ai-label) {
+    position: relative;
+  }
+
+  .ave-ai-label {
+    --_ai-inset: var(--av-space-xs);
+    display: block;
+    inline-size: fit-content;
+    max-inline-size: calc(100% - 2 * var(--_ai-inset));
+    padding: 0.2em 0.6em;
+    border-radius: var(--av-radius-sm);
+    font-size: var(--av-text-xs);
+    font-weight: var(--av-weight-medium);
+    line-height: 1.3;
+    text-align: start;
+  }
+  .ave-ai-label--sm { font-size: calc(var(--av-text-xs) * 0.85); }
+  .ave-ai-label--lg { font-size: var(--av-text-sm); }
+
+  /* Feste Farben statt Theme-Flächen: Der Hinweis liegt auf einem Foto, nicht
+     auf der Seite — er muss auf hellen wie dunklen Motiven lesbar bleiben,
+     unabhängig vom Hell/Dunkel-Modus. */
+  .ave-ai-label--dark   { background: rgb(0 0 0 / 0.72);       color: #fff; }
+  .ave-ai-label--light  { background: rgb(255 255 255 / 0.9);  color: #111; }
+  .ave-ai-label--accent { background: var(--av-color-primary); color: var(--av-color-text-on-primary); }
+
+  .ave-ai-label:not(.ave-ai-label--below) {
+    position: absolute;
+    z-index: 1;
+    pointer-events: none;   /* liegt im Link des Bildes, soll ihn nicht abfangen */
+  }
+  .ave-ai-label--top-left     { top: var(--_ai-inset);    left: var(--_ai-inset); }
+  .ave-ai-label--top-right    { top: var(--_ai-inset);    right: var(--_ai-inset); }
+  .ave-ai-label--bottom-left  { bottom: var(--_ai-inset); left: var(--_ai-inset); }
+  .ave-ai-label--bottom-right { bottom: var(--_ai-inset); right: var(--_ai-inset); }
+
+  .ave-ai-label--below {
+    margin-block-start: var(--av-space-xs);
+  }
+
+  @supports (anchor-name: --ave-ai-img) {
+    figure:has(.ave-ai-label) img {
+      anchor-name: --ave-ai-img;
+    }
+
+    .ave-ai-label:not(.ave-ai-label--below) {
+      position-anchor: --ave-ai-img;
+      max-inline-size: calc(anchor-size(width) - 2 * var(--_ai-inset));
+    }
+    .ave-ai-label--top-left     { top: calc(anchor(top) + var(--_ai-inset));       left: calc(anchor(left) + var(--_ai-inset)); }
+    .ave-ai-label--top-right    { top: calc(anchor(top) + var(--_ai-inset));       right: calc(anchor(right) + var(--_ai-inset)); }
+    .ave-ai-label--bottom-left  { bottom: calc(anchor(bottom) + var(--_ai-inset)); left: calc(anchor(left) + var(--_ai-inset)); }
+    .ave-ai-label--bottom-right { bottom: calc(anchor(bottom) + var(--_ai-inset)); right: calc(anchor(right) + var(--_ai-inset)); }
+  }
+
   /* ── Table CE ──────────────────────────────────────────────────────
    * The table CE ships without a scroll container → wide tables break the
    * layout on mobile. The wrapper therefore scrolls horizontally instead

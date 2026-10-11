@@ -11,3 +11,6 @@ $GLOBALS['TL_LANG']['MSC']['aveVideoPlay']  = 'Play background video';
 // Hell/Dunkel-Schalter im Fuss
 $GLOBALS['TL_LANG']['MSC']['aveThemeToLight'] = 'Switch to light appearance';
 $GLOBALS['TL_LANG']['MSC']['aveThemeToDark'] = 'Switch to dark appearance';
+
+// Notice on AI-generated images (default, can be changed in the website root)
+$GLOBALS['TL_LANG']['MSC']['aveAiLabel'] = 'AI-generated';
