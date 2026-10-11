@@ -12,22 +12,22 @@
 
   Ein Baustein für drei Elemente, denn ein Logo steht je nach Stelle in einem
   anderen: Hyperlink (Kopf, verlinkt auf die Startseite), Bild (Hero), Text
-  mit Bild (Fuss, neben der Unterzeile). Eingebunden per `use` — der Block
-  ersetzt `media` aus component/_figure. Zurück zum gewöhnlichen Bild geht es
-  über block('picture_component') — genau das tut der ersetzte Block; parent()
-  erlaubt Twig in einem per `use` eingebundenen Baustein nicht.
+  mit Bild (Fuss, neben der Unterzeile). Eingebunden per `use`. Der Block heisst
+  bewusst `logo_tint` und nicht `media`: Hiesse er `media`, verdrängte er jeden
+  anderen Baustein, der `media` aus component/_figure ergänzt (z. B. den
+  Hinweis „KI-generiert" aus ex-akt/contao-ki-kennzeichnung). Die drei
+  Elemente rufen ihn deshalb nur bei gesetzter Klasse auf und geben sonst per
+  parent() das gewöhnliche Bild aus — parent() erlaubt Twig nur dort, nicht in
+  einem per `use` eingebundenen Baustein (siehe Block `media` in
+  content_element/image, text und hyperlink).
 #}
-{% block media %}
+{% block logo_tint %}
     {%- set _logo_ext = figure.image.filePath|split('.')|last|lower -%}
-    {%- if 'logo-tint' in (element_css_classes|default('')|split(' ')) -%}
-        {%- set _logo_svg = ave_inline_svg(figure) -%}
-        {%- if _logo_svg -%}
-            {{ _logo_svg }}
-        {%- elseif _logo_ext in ['png', 'webp', 'gif', 'avif', 'svg'] -%}
-            <span class="logo-mask" style="--_logo-src: url('{{ figure.image.img.src|e('css') }}')">{{ block('picture_component') }}</span>
-        {%- else -%}
-            {{ block('picture_component') }}
-        {%- endif -%}
+    {%- set _logo_svg = ave_inline_svg(figure) -%}
+    {%- if _logo_svg -%}
+        {{ _logo_svg }}
+    {%- elseif _logo_ext in ['png', 'webp', 'gif', 'avif', 'svg'] -%}
+        <span class="logo-mask" style="--_logo-src: url('{{ figure.image.img.src|e('css') }}')">{{ block('picture_component') }}</span>
     {%- else -%}
         {{ block('picture_component') }}
     {%- endif -%}

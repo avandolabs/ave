@@ -7,3 +7,13 @@
  # Nur für das eingefärbte Logo (component/_logo_tint): ein Hyperlink mit Bild
  # ist der übliche Weg, das Logo im Kopf auf die Startseite zu verlinken.
  #}
+
+{# Logo einfärben nur mit Klasse logo-tint (component/_logo_tint); sonst das
+   gewöhnliche Bild samt allem, was andere Bundles an `media` anhängen. #}
+{% block media %}
+    {%- if 'logo-tint' in (element_css_classes|default('')|split(' ')) -%}
+        {{ block('logo_tint') }}
+    {%- else -%}
+        {{ parent() }}
+    {%- endif -%}
+{% endblock %}

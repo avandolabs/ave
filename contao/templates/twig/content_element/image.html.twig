@@ -9,6 +9,16 @@
  # the image tightly rather than the full-width block container.
  #}
 
+{# Logo einfärben nur mit Klasse logo-tint (component/_logo_tint); sonst das
+   gewöhnliche Bild samt allem, was andere Bundles an `media` anhängen. #}
+{% block media %}
+    {%- if 'logo-tint' in (element_css_classes|default('')|split(' ')) -%}
+        {{ block('logo_tint') }}
+    {%- else -%}
+        {{ parent() }}
+    {%- endif -%}
+{% endblock %}
+
 {% block attributes %}
     {#- ce_span (grid column span) and ce_space_below belong on the wrapper, i.e.
         the grid item / block — not on the figure, which gets the framing presets

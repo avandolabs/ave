@@ -1,6 +1,16 @@
 {% extends "@Contao/content_element/text.html.twig" %}
 {% use '@Contao/component/_logo_tint.html.twig' %}
 
+{# Logo einfärben nur mit Klasse logo-tint (component/_logo_tint); sonst das
+   gewöhnliche Bild samt allem, was andere Bundles an `media` anhängen. #}
+{% block media %}
+    {%- if 'logo-tint' in (element_css_classes|default('')|split(' ')) -%}
+        {{ block('logo_tint') }}
+    {%- else -%}
+        {{ parent() }}
+    {%- endif -%}
+{% endblock %}
+
 {# Attach the image shape + optional border (shape-* / shape-border) to the
    text CE's optional image, mirroring the Image CE. #}
 {% block text_media %}
