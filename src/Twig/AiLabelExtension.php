@@ -39,9 +39,9 @@ use Twig\TwigFunction;
  */
 final class AiLabelExtension extends AbstractExtension
 {
-    public const POSITIONS = ['bottom-right', 'bottom-left', 'top-right', 'top-left', 'right-vertical', 'center', 'below'];
+    public const POSITIONS = ['bottom-right', 'bottom-center', 'bottom-left', 'top-right', 'top-left', 'right-vertical', 'center', 'below'];
     public const SIZES = ['sm', 'md', 'lg'];
-    public const STYLES = ['dark', 'light', 'accent'];
+    public const STYLES = ['dark', 'light', 'accent', 'none'];
 
     private const DEFAULTS = ['position' => 'bottom-right', 'size' => 'md', 'style' => 'dark', 'text' => ''];
 

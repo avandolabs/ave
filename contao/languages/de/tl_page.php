@@ -10,10 +10,11 @@ $GLOBALS['TL_LANG']['tl_page']['ave_license_invalid'] = 'Dieses Pro-Token ist un
 $GLOBALS['TL_LANG']['tl_page']['ave_ai_legend']    = 'KI-Kennzeichnung';
 $GLOBALS['TL_LANG']['tl_page']['ave_ai_position']  = ['Position', 'Wo der Hinweis an Bildern erscheint, die in der Dateiverwaltung als „KI-generiert“ markiert sind. Gilt für die ganze Website, auch für Hintergrundbilder; dort steht „Unter dem Bild“ unten rechts.'];
 $GLOBALS['TL_LANG']['tl_page']['ave_ai_size']      = ['Größe', 'Schriftgröße des Hinweises.'];
-$GLOBALS['TL_LANG']['tl_page']['ave_ai_style']     = ['Darstellung', '„Akzent“ nutzt die Primärfarbe des Designs.'];
+$GLOBALS['TL_LANG']['tl_page']['ave_ai_style']     = ['Darstellung', '„Akzent“ nutzt die Primärfarbe des Designs. „Ohne Hintergrund“ zeigt nur den Text: auf dem Bild weiß mit Schatten, unter dem Bild in der Textfarbe der Seite.'];
 $GLOBALS['TL_LANG']['tl_page']['ave_ai_text']      = ['Beschriftung', 'Leer lassen für „KI-generiert“ (englische Seiten: „AI-generated“).'];
 $GLOBALS['TL_LANG']['tl_page']['ave_ai_positions'] = [
     'bottom-right' => 'Im Bild unten rechts',
+    'bottom-center' => 'Im Bild unten Mitte',
     'bottom-left'  => 'Im Bild unten links',
     'top-right'    => 'Im Bild oben rechts',
     'top-left'     => 'Im Bild oben links',
@@ -22,4 +23,4 @@ $GLOBALS['TL_LANG']['tl_page']['ave_ai_positions'] = [
     'below'        => 'Unter dem Bild',
 ];
 $GLOBALS['TL_LANG']['tl_page']['ave_ai_sizes']     = ['sm' => 'Klein', 'md' => 'Mittel', 'lg' => 'Groß'];
-$GLOBALS['TL_LANG']['tl_page']['ave_ai_styles']    = ['dark' => 'Dunkel', 'light' => 'Hell', 'accent' => 'Akzent'];
+$GLOBALS['TL_LANG']['tl_page']['ave_ai_styles']    = ['dark' => 'Dunkel', 'light' => 'Hell', 'accent' => 'Akzent', 'none' => 'Ohne Hintergrund'];

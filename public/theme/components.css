@@ -109,6 +109,19 @@
   .ave-ai-label--dark   { background: rgb(0 0 0 / 0.72);       color: #fff; }
   .ave-ai-label--light  { background: rgb(255 255 255 / 0.9);  color: #111; }
   .ave-ai-label--accent { background: var(--av-color-primary); color: var(--av-color-text-on-primary); }
+  /* Ohne Fläche: Auf dem Bild trägt ein Schatten die Lesbarkeit — weiß mit
+     dunklem Hof bleibt auf hellen wie dunklen Stellen lesbar. Unter dem Bild
+     steht der Text auf der Seite und nimmt deren gedämpfte Textfarbe. */
+  .ave-ai-label--none {
+    background: none;
+    color: #fff;
+    text-shadow: 0 0 2px rgb(0 0 0 / 0.9), 0 1px 4px rgb(0 0 0 / 0.7);
+  }
+  .ave-ai-label--none.ave-ai-label--below {
+    padding-inline: 0;
+    color: var(--av-color-text-muted);
+    text-shadow: none;
+  }
 
   .ave-ai-label:not(.ave-ai-label--below) {
     position: absolute;
@@ -119,6 +132,7 @@
   .ave-ai-label--top-right    { top: var(--_ai-inset);    right: var(--_ai-inset); }
   .ave-ai-label--bottom-left  { bottom: var(--_ai-inset); left: var(--_ai-inset); }
   .ave-ai-label--bottom-right { bottom: var(--_ai-inset); right: var(--_ai-inset); }
+  .ave-ai-label--bottom-center { bottom: var(--_ai-inset); left: 50%; translate: -50% 0; }
   .ave-ai-label--center       { top: 50%; left: 50%; translate: -50% -50%; }
 
   /* Senkrecht am rechten Rand, auf halber Höhe, von unten nach oben zu lesen
@@ -155,6 +169,7 @@
     figure .ave-ai-label--top-right    { top: calc(anchor(top) + var(--_ai-inset));       right: calc(anchor(right) + var(--_ai-inset)); }
     figure .ave-ai-label--bottom-left  { bottom: calc(anchor(bottom) + var(--_ai-inset)); left: calc(anchor(left) + var(--_ai-inset)); }
     figure .ave-ai-label--bottom-right { bottom: calc(anchor(bottom) + var(--_ai-inset)); right: calc(anchor(right) + var(--_ai-inset)); }
+    figure .ave-ai-label--bottom-center { bottom: calc(anchor(bottom) + var(--_ai-inset)); left: anchor(center); }
     figure .ave-ai-label--center       { top: anchor(center); left: anchor(center); }
     figure .ave-ai-label--right-vertical {
       top: anchor(center);

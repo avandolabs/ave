@@ -30,7 +30,7 @@ $GLOBALS['TL_DCA']['tl_page']['fields']['ave_license'] = [
 $GLOBALS['TL_DCA']['tl_page']['fields']['ave_ai_position'] = [
     'exclude'   => true,
     'inputType' => 'select',
-    'options'   => ['bottom-right', 'bottom-left', 'top-right', 'top-left', 'right-vertical', 'center', 'below'],
+    'options'   => ['bottom-right', 'bottom-center', 'bottom-left', 'top-right', 'top-left', 'right-vertical', 'center', 'below'],
     'reference' => &$GLOBALS['TL_LANG']['tl_page']['ave_ai_positions'],
     'eval'      => ['tl_class' => 'w50'],
     'sql'       => "varchar(16) NOT NULL default 'bottom-right'",
@@ -48,7 +48,7 @@ $GLOBALS['TL_DCA']['tl_page']['fields']['ave_ai_size'] = [
 $GLOBALS['TL_DCA']['tl_page']['fields']['ave_ai_style'] = [
     'exclude'   => true,
     'inputType' => 'select',
-    'options'   => ['dark', 'light', 'accent'],
+    'options'   => ['dark', 'light', 'accent', 'none'],
     'reference' => &$GLOBALS['TL_LANG']['tl_page']['ave_ai_styles'],
     'eval'      => ['tl_class' => 'w50'],
     'sql'       => "varchar(8) NOT NULL default 'dark'",
