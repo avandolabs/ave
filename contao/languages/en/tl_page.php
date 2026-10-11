@@ -8,6 +8,7 @@ $GLOBALS['TL_LANG']['tl_page']['ave_license_invalid'] = 'This pro token is inval
 
 // AI labelling
 $GLOBALS['TL_LANG']['tl_page']['ave_ai_legend']    = 'AI labelling';
+$GLOBALS['TL_LANG']['tl_page']['ave_ai_enabled']   = ['Output AI notices', 'AVE labels images that are marked as “AI-generated” in the file manager. Switch off if Contao or an extension takes care of this itself – otherwise the notice appears twice. The checkboxes on the files are kept.'];
 $GLOBALS['TL_LANG']['tl_page']['ave_ai_position']  = ['Position', 'Where the notice appears on images that are marked as “AI-generated” in the file manager. Applies to the whole website, including background images; there “Below the image” appears bottom right.'];
 $GLOBALS['TL_LANG']['tl_page']['ave_ai_size']      = ['Size', 'Font size of the notice.'];
 $GLOBALS['TL_LANG']['tl_page']['ave_ai_style']     = ['Appearance', '“Accent” uses the primary colour of the design. “No background” shows the text only: white with a shadow on the image, in the page’s text colour below it.'];

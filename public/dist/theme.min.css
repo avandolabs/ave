@@ -2839,6 +2839,44 @@ border-color: transparent;
 .slider--overlay {
 position: relative;
 }
+.contao-cookiebar.contao-cookiebar {
+--ccb-clr:            var(--av-color-text);
+--ccb-text:           var(--av-color-text-muted);
+--ccb-bg:             var(--av-color-surface);
+--ccb-bdr:            var(--av-color-border);
+--ccb-info-bg:        var(--av-color-surface);
+--ccb-info-bdr:       var(--av-color-border);
+--ccb-cookies-bg:     var(--av-color-surface-2);
+--ccb-cookies-bdr:    var(--av-color-border);
+--ccb-detail-clr:     var(--av-color-text-muted);
+--ccb-detail-clr-hvr: var(--av-color-primary-text);
+--ccb-checked-clr:    var(--av-color-primary);
+--ccb-checked-bg:     color-mix(in srgb, var(--av-color-primary) 15%, var(--av-color-surface));
+--ccb-unchecked-clr:  var(--av-color-text-muted);
+--ccb-unchecked-bg:   var(--av-color-surface);
+--ccb-disabled-clr:   var(--av-color-border);
+--ccb-disabled-bg:    var(--av-color-surface-2);
+--ccb-focus-clr:      var(--av-color-primary);
+--ccb-box-shadow:     color-mix(in srgb, var(--av-color-text) 18%, transparent);
+font-family: var(--av-font-sans);
+}
+.contao-cookiebar.contao-cookiebar .cc-inner {
+border-radius: var(--av-radius-lg);
+}
+.contao-cookiebar.contao-cookiebar .cc-btn {
+--ccb-btn-bg:     var(--av-color-surface-2);
+--ccb-btn-bg-hvr: var(--av-color-surface-3);
+--ccb-btn-bdr:    var(--av-color-border);
+--ccb-btn-clr:    var(--av-color-text);
+border-radius: var(--av-btn-radius, var(--av-input-radius));
+font: inherit;
+}
+.contao-cookiebar.contao-cookiebar .cc-btn.success {
+--ccb-btn-bg:     var(--av-color-primary);
+--ccb-btn-bg-hvr: color-mix(in srgb, var(--av-color-primary), var(--av-color-text-on-primary) 18%);
+--ccb-btn-bdr:    var(--av-color-primary);
+--ccb-btn-clr:    var(--av-color-text-on-primary);
+}
 @layer av.components {
 .mod_navigation > .level_1 {
 display: flex;

@@ -19,4 +19,7 @@
 {% block media %}
     {{- block('ave_core_media') -}}
     {{- include('@Contao/component/_ai_label.html.twig', {ai_label: ave_ai_label(figure|default)}, with_context = false) -}}
+    {#- Maschinenlesbar: digitalSourceType im schema.org-Eintrag des Bildes.
+        Nach ave_core_media, denn dort legt Contao den Eintrag an. -#}
+    {%- do add_schema_org(ave_ai_schema_org(figure|default)) -%}
 {% endblock %}

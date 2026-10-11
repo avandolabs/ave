@@ -27,3 +27,6 @@
 {%- else -%}
     {{- _ave_html|raw -}}
 {%- endif -%}
+{#- Maschinenlesbar: digitalSourceType im schema.org-Eintrag (das
+    eingebundene Core-Template hat ihn eben angelegt) -#}
+{%- do add_schema_org(ave_ai_schema_org(figure|default)) -%}

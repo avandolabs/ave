@@ -49,7 +49,17 @@ Contao Manager bzw. `composer update avando/ave`.
 - **Dunkelmodus** über `light-dark()`, ohne zweites Stylesheet.
 - **KI-Kennzeichnung.** Haken „KI-generiert“ an der Datei, sichtbarer Hinweis
   an jeder Stelle, an der das Bild erscheint, auch als Hintergrundbild.
-  Position, Größe und Darstellung legt der Startpunkt fest.
+  Position, Größe und Darstellung legt der Startpunkt fest. Maschinenlesbar
+  über schema.org (`digitalSourceType`); die IPTC-Markierung des Generators
+  bleibt beim Verkleinern erhalten. Abschaltbar im Startpunkt oder für alle
+  Websites mit `avando_ave: ai_label: false`.
+- **Erweiterungen mit alten Seiten-Hooks.** Contao ruft bei Twig-Layouts
+  `getPageLayout`, `generatePage`, `outputFrontendTemplate` und
+  `modifyFrontendPage` nicht auf. AVE holt sie nach, damit etwa die Oveleon-
+  Cookiebar ihren Banner zeigt; die Cookiebar übernimmt dabei Farben und
+  Rundung des Themes. Erweiterungen, die Twig-Layouts selbst unterstützen,
+  bleiben außen vor. Abschaltbar mit `avando_ave: legacy_hooks: enabled: false`,
+  einzelne Rückrufe mit `legacy_hooks: skip: ['dienst::methode']`.
 
 ## Anforderungen
 

@@ -1165,3 +1165,60 @@
 .slider--overlay {
   position: relative;
 }
+
+/* ═══ Cookiebar (oveleon/contao-cookiebar), UNLAYERED ═════════════════
+   Die Cookiebar faerbt sich ueber eigene Variablen (--ccb-*). Ein Teil davon
+   steht in ihrem CSS gar nicht, nur als Ersatzwert in var(); den Rest setzt
+   sie auf .contao-cookiebar und, fuer die Buttons, auf .grayscale bzw.
+   .highlight .success. Ihr CSS ist unlayered, also steht dieser Block
+   ausserhalb jeder @layer und mit doppelter Klasse — wie beim Slider oben.
+
+   Gesetzt werden nur Variablen, keine Regeln: Aufbau, Animation und Position
+   bleiben bei der Erweiterung, Farben, Rundung und Schatten kommen aus dem
+   Theme. Hell/Dunkel und das Design Studio wirken damit von selbst. */
+
+.contao-cookiebar.contao-cookiebar {
+  --ccb-clr:            var(--av-color-text);
+  --ccb-text:           var(--av-color-text-muted);
+  --ccb-bg:             var(--av-color-surface);
+  --ccb-bdr:            var(--av-color-border);
+  --ccb-info-bg:        var(--av-color-surface);
+  --ccb-info-bdr:       var(--av-color-border);
+  --ccb-cookies-bg:     var(--av-color-surface-2);
+  --ccb-cookies-bdr:    var(--av-color-border);
+  --ccb-detail-clr:     var(--av-color-text-muted);
+  --ccb-detail-clr-hvr: var(--av-color-primary-text);
+  --ccb-checked-clr:    var(--av-color-primary);
+  --ccb-checked-bg:     color-mix(in srgb, var(--av-color-primary) 15%, var(--av-color-surface));
+  --ccb-unchecked-clr:  var(--av-color-text-muted);
+  --ccb-unchecked-bg:   var(--av-color-surface);
+  --ccb-disabled-clr:   var(--av-color-border);
+  --ccb-disabled-bg:    var(--av-color-surface-2);
+  --ccb-focus-clr:      var(--av-color-primary);
+  /* Nur die Farbe: die Cookiebar schreibt `var(--ccb-box-shadow) 0 2px 8px 0`. */
+  --ccb-box-shadow:     color-mix(in srgb, var(--av-color-text) 18%, transparent);
+  font-family: var(--av-font-sans);
+}
+
+.contao-cookiebar.contao-cookiebar .cc-inner {
+  border-radius: var(--av-radius-lg);
+}
+
+/* Auf dem Button selbst, nicht auf .contao-cookiebar: die Farbschemata der
+   Cookiebar setzen die Button-Variablen eine Ebene tiefer (.cc-footer.grayscale)
+   und gewaennen sonst durch Vererbung. */
+.contao-cookiebar.contao-cookiebar .cc-btn {
+  --ccb-btn-bg:     var(--av-color-surface-2);
+  --ccb-btn-bg-hvr: var(--av-color-surface-3);
+  --ccb-btn-bdr:    var(--av-color-border);
+  --ccb-btn-clr:    var(--av-color-text);
+  border-radius: var(--av-btn-radius, var(--av-input-radius));
+  font: inherit;
+}
+
+.contao-cookiebar.contao-cookiebar .cc-btn.success {
+  --ccb-btn-bg:     var(--av-color-primary);
+  --ccb-btn-bg-hvr: color-mix(in srgb, var(--av-color-primary), var(--av-color-text-on-primary) 18%);
+  --ccb-btn-bdr:    var(--av-color-primary);
+  --ccb-btn-clr:    var(--av-color-text-on-primary);
+}

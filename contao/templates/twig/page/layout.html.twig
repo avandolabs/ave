@@ -102,7 +102,7 @@
       und beide Haken liest tokens.css ueber color-scheme.
     #}
     {% add 'avandoave-theme-boot' to head %}
-        <script>try{var t=localStorage.getItem('ave-theme');if(t==='light'||t==='dark'){document.documentElement.classList.add(t)}}catch(e){}</script>
+        <script{{ attrs().setIfExists('nonce', csp_nonce('script-src')) }}>try{var t=localStorage.getItem('ave-theme');if(t==='light'||t==='dark'){document.documentElement.classList.add(t)}}catch(e){}</script>
     {% endadd %}
     {% add 'avandoave-js' to body %}
         <script src="{{ ave_asset('bundles/avandoave/theme/onepage.js') }}" defer></script>

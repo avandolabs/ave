@@ -27,6 +27,19 @@ $GLOBALS['TL_DCA']['tl_page']['fields']['ave_license'] = [
  * Werte (Startpunkt vor dem Update angelegt) fallen in AiLabelExtension auf
  * die Vorgaben zurück. Ausgewertet in AiLabelExtension.
  */
+/*
+ * Ausschalter: Falls Contao oder eine Erweiterung KI-Bilder einmal selbst
+ * kennzeichnet, erschiene der Hinweis sonst doppelt. Standard an — auch für
+ * Startpunkte, die es vor dem Feld schon gab (Spaltenvorgabe '1').
+ */
+$GLOBALS['TL_DCA']['tl_page']['fields']['ave_ai_enabled'] = [
+    'exclude'   => true,
+    'inputType' => 'checkbox',
+    'default'   => '1',
+    'eval'      => ['submitOnChange' => true, 'tl_class' => 'clr'],
+    'sql'       => "char(1) NOT NULL default '1'",
+];
+
 $GLOBALS['TL_DCA']['tl_page']['fields']['ave_ai_position'] = [
     'exclude'   => true,
     'inputType' => 'select',
@@ -65,7 +78,11 @@ PaletteManipulator::create()
     ->addLegend('ave_legend', 'website_legend', PaletteManipulator::POSITION_AFTER)
     ->addField('ave_license', 'ave_legend', PaletteManipulator::POSITION_APPEND)
     ->addLegend('ave_ai_legend', 'ave_legend', PaletteManipulator::POSITION_AFTER)
-    ->addField(['ave_ai_position', 'ave_ai_size', 'ave_ai_style', 'ave_ai_text'], 'ave_ai_legend', PaletteManipulator::POSITION_APPEND)
+    ->addField('ave_ai_enabled', 'ave_ai_legend', PaletteManipulator::POSITION_APPEND)
     ->applyToPalette('root', 'tl_page')
     ->applyToPalette('rootfallback', 'tl_page')
 ;
+
+// Darstellung nur zeigen, solange AVE die Hinweise ausgibt
+$GLOBALS['TL_DCA']['tl_page']['palettes']['__selector__'][] = 'ave_ai_enabled';
+$GLOBALS['TL_DCA']['tl_page']['subpalettes']['ave_ai_enabled'] = 'ave_ai_position,ave_ai_size,ave_ai_style,ave_ai_text';

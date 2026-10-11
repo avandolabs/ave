@@ -35,6 +35,9 @@ class AvandoAveExtension extends Extension implements PrependExtensionInterface
         // Als Parameter, damit AttributionExtension ihn per #[Autowire] bekommt
         // und kein Dienst die ganze Konfiguration kennen muss.
         $container->setParameter('avando_ave.license', $config['license'] ?? '');
+        $container->setParameter('avando_ave.ai_label', $config['ai_label']);
+        $container->setParameter('avando_ave.legacy_hooks.enabled', $config['legacy_hooks']['enabled']);
+        $container->setParameter('avando_ave.legacy_hooks.skip', $config['legacy_hooks']['skip']);
 
         $loader = new PhpFileLoader($container, new FileLocator(\dirname(__DIR__, 2).'/config'));
         $loader->load('services.php');

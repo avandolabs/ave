@@ -36,6 +36,12 @@ use Twig\TwigFunction;
  *
  * Fehlt die Spalte noch (Update eingespielt, contao:migrate nicht gelaufen),
  * erscheint kein Hinweis — die Seite bricht nicht ab.
+ *
+ * ABSCHALTBAR, damit AVE Platz machen kann, falls Contao oder eine Erweiterung
+ * KI-Bilder einmal selbst kennzeichnet — sonst stünde der Hinweis doppelt da:
+ * im Startpunkt (ave_ai_enabled, je Website) oder für alle Websites per
+ * `avando_ave: ai_label: false`. Abgeschaltet liefert label() immer null, und
+ * die Templates geben exakt die Contao-Ausgabe weiter.
  */
 final class AiLabelExtension extends AbstractExtension
 {
@@ -43,12 +49,19 @@ final class AiLabelExtension extends AbstractExtension
     public const SIZES = ['sm', 'md', 'lg'];
     public const STYLES = ['dark', 'light', 'accent', 'none'];
 
-    private const DEFAULTS = ['position' => 'bottom-right', 'size' => 'md', 'style' => 'dark', 'text' => ''];
+    /**
+     * schema.org-Wert für „mit KI erzeugt“ (IPTC Digital Source Type). Der
+     * Haken unterscheidet nicht zwischen ganz und teilweise erzeugt; gewählt
+     * ist der allgemeine Fall, den auch die Generatoren selbst eintragen.
+     */
+    public const SCHEMA_DIGITAL_SOURCE = 'https://schema.org/TrainedAlgorithmicMediaDigitalSource';
+
+    private const DEFAULTS = ['enabled' => true, 'position' => 'bottom-right', 'size' => 'md', 'style' => 'dark', 'text' => ''];
 
     /** @var array<string, bool> je Datei nur eine Abfrage pro Request */
     private array $flags = [];
 
-    /** @var array<int, array{position: string, size: string, style: string, text: string}> */
+    /** @var array<int, array{enabled: bool, position: string, size: string, style: string, text: string}> */
     private array $settings = [];
 
     public function __construct(
@@ -56,6 +69,8 @@ final class AiLabelExtension extends AbstractExtension
         private readonly RequestStack $requestStack,
         #[Autowire('%kernel.project_dir%')]
         private readonly string $projectDir,
+        #[Autowire('%avando_ave.ai_label%')]
+        private readonly bool $enabled = true,
     ) {
     }
 
@@ -63,6 +78,7 @@ final class AiLabelExtension extends AbstractExtension
     {
         return [
             new TwigFunction('ave_ai_label', $this->label(...)),
+            new TwigFunction('ave_ai_schema_org', $this->schemaOrg(...)),
         ];
     }
 
@@ -71,15 +87,43 @@ final class AiLabelExtension extends AbstractExtension
      */
     public function label(mixed $image): array|null
     {
+        if (!$this->enabled) {
+            return null;
+        }
+
+        $rootId = $this->rootId();
+        $settings = $this->settings[$rootId] ??= $this->loadSettings($rootId);
+
+        if (!$settings['enabled']) {
+            return null;
+        }
+
         $path = $this->path($image);
 
         if (null === $path || !($this->flags[$path] ??= $this->isFlagged($path))) {
             return null;
         }
 
-        $rootId = $this->rootId();
+        unset($settings['enabled']);
 
-        return $this->settings[$rootId] ??= $this->loadSettings($rootId);
+        return $settings;
+    }
+
+    /**
+     * Die schema.org-Daten der Figure, ergänzt um digitalSourceType — oder
+     * null, wenn das Bild keinen Hinweis bekommt. Contao legt den Eintrag
+     * schon an (component/_picture, image.html.twig); add_schema_org() mit
+     * derselben Kennung ersetzt ihn, statt einen zweiten anzulegen.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function schemaOrg(mixed $figure): array|null
+    {
+        if (!$figure instanceof Figure || null === $this->label($figure)) {
+            return null;
+        }
+
+        return [...$figure->getSchemaOrgData(), 'digitalSourceType' => self::SCHEMA_DIGITAL_SOURCE];
     }
 
     /**
@@ -152,7 +196,7 @@ final class AiLabelExtension extends AbstractExtension
      * Unbekannte oder leere Werte fallen auf die Vorgaben zurück — der Hinweis
      * erscheint also immer, auch wenn der Startpunkt nie gespeichert wurde.
      *
-     * @return array{position: string, size: string, style: string, text: string}
+     * @return array{enabled: bool, position: string, size: string, style: string, text: string}
      */
     private function loadSettings(int $rootId): array
     {
@@ -162,7 +206,7 @@ final class AiLabelExtension extends AbstractExtension
 
         try {
             $row = $this->connection->fetchAssociative(
-                'SELECT ave_ai_position, ave_ai_size, ave_ai_style, ave_ai_text FROM tl_page WHERE id = ?',
+                'SELECT ave_ai_enabled, ave_ai_position, ave_ai_size, ave_ai_style, ave_ai_text FROM tl_page WHERE id = ?',
                 [$rootId],
             );
         } catch (DbalException) {
@@ -174,6 +218,7 @@ final class AiLabelExtension extends AbstractExtension
         }
 
         return [
+            'enabled' => '' !== (string) ($row['ave_ai_enabled'] ?? '1'),
             'position' => \in_array($row['ave_ai_position'], self::POSITIONS, true) ? $row['ave_ai_position'] : self::DEFAULTS['position'],
             'size' => \in_array($row['ave_ai_size'], self::SIZES, true) ? $row['ave_ai_size'] : self::DEFAULTS['size'],
             'style' => \in_array($row['ave_ai_style'], self::STYLES, true) ? $row['ave_ai_style'] : self::DEFAULTS['style'],

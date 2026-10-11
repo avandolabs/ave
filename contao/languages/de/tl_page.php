@@ -8,6 +8,7 @@ $GLOBALS['TL_LANG']['tl_page']['ave_license_invalid'] = 'Dieses Pro-Token ist un
 
 // KI-Kennzeichnung
 $GLOBALS['TL_LANG']['tl_page']['ave_ai_legend']    = 'KI-Kennzeichnung';
+$GLOBALS['TL_LANG']['tl_page']['ave_ai_enabled']   = ['KI-Hinweise ausgeben', 'AVE kennzeichnet Bilder, die in der Dateiverwaltung als „KI-generiert“ markiert sind. Abschalten, wenn Contao oder eine Erweiterung das selbst übernimmt – sonst erscheint der Hinweis doppelt. Die Haken an den Dateien bleiben erhalten.'];
 $GLOBALS['TL_LANG']['tl_page']['ave_ai_position']  = ['Position', 'Wo der Hinweis an Bildern erscheint, die in der Dateiverwaltung als „KI-generiert“ markiert sind. Gilt für die ganze Website, auch für Hintergrundbilder; dort steht „Unter dem Bild“ unten rechts.'];
 $GLOBALS['TL_LANG']['tl_page']['ave_ai_size']      = ['Größe', 'Schriftgröße des Hinweises.'];
 $GLOBALS['TL_LANG']['tl_page']['ave_ai_style']     = ['Darstellung', '„Akzent“ nutzt die Primärfarbe des Designs. „Ohne Hintergrund“ zeigt nur den Text: auf dem Bild weiß mit Schatten, unter dem Bild in der Textfarbe der Seite.'];
