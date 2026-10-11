@@ -48,8 +48,8 @@ Contao Manager bzw. `composer update avando/ave`.
   der Besucher kontaktiert kein CDN und keine Schriftenbibliothek.
 - **Dunkelmodus** über `light-dark()`, ohne zweites Stylesheet.
 - **KI-Kennzeichnung.** Haken „KI-generiert“ an der Datei, sichtbarer Hinweis
-  an jeder Stelle, an der das Bild erscheint. Position, Größe und Darstellung
-  legt der Startpunkt fest.
+  an jeder Stelle, an der das Bild erscheint, auch als Hintergrundbild.
+  Position, Größe und Darstellung legt der Startpunkt fest.
 
 ## Anforderungen
 

@@ -119,24 +119,48 @@
   .ave-ai-label--top-right    { top: var(--_ai-inset);    right: var(--_ai-inset); }
   .ave-ai-label--bottom-left  { bottom: var(--_ai-inset); left: var(--_ai-inset); }
   .ave-ai-label--bottom-right { bottom: var(--_ai-inset); right: var(--_ai-inset); }
+  .ave-ai-label--center       { top: 50%; left: 50%; translate: -50% -50%; }
+
+  /* Senkrecht am rechten Rand, auf halber Höhe, von unten nach oben zu lesen
+     (wie ein Bildnachweis). vertical-rl allein läse von oben nach unten;
+     rotate dreht um die eigene Mitte, die Verankerung bleibt also stehen.
+     max-inline-size ist hier die HÖHE — sie bezieht sich auf die Höhe des
+     Bezugsrahmens. */
+  .ave-ai-label--right-vertical {
+    right: var(--_ai-inset);
+    top: 50%;
+    translate: 0 -50%;
+    writing-mode: vertical-rl;
+    rotate: 180deg;
+    padding: 0.6em 0.2em;
+  }
 
   .ave-ai-label--below {
     margin-block-start: var(--av-space-xs);
   }
 
+  /* Anker nur INNERHALB einer figure: Ein Hinweis an einem Hintergrundbild
+     (.ave-ai-label--bg, layout.css) steht in derselben Sektion wie deren
+     Inhaltsbilder und dürfte sich nicht an eines davon hängen. */
   @supports (anchor-name: --ave-ai-img) {
     figure:has(.ave-ai-label) img {
       anchor-name: --ave-ai-img;
     }
 
-    .ave-ai-label:not(.ave-ai-label--below) {
+    figure .ave-ai-label:not(.ave-ai-label--below) {
       position-anchor: --ave-ai-img;
       max-inline-size: calc(anchor-size(width) - 2 * var(--_ai-inset));
     }
-    .ave-ai-label--top-left     { top: calc(anchor(top) + var(--_ai-inset));       left: calc(anchor(left) + var(--_ai-inset)); }
-    .ave-ai-label--top-right    { top: calc(anchor(top) + var(--_ai-inset));       right: calc(anchor(right) + var(--_ai-inset)); }
-    .ave-ai-label--bottom-left  { bottom: calc(anchor(bottom) + var(--_ai-inset)); left: calc(anchor(left) + var(--_ai-inset)); }
-    .ave-ai-label--bottom-right { bottom: calc(anchor(bottom) + var(--_ai-inset)); right: calc(anchor(right) + var(--_ai-inset)); }
+    figure .ave-ai-label--top-left     { top: calc(anchor(top) + var(--_ai-inset));       left: calc(anchor(left) + var(--_ai-inset)); }
+    figure .ave-ai-label--top-right    { top: calc(anchor(top) + var(--_ai-inset));       right: calc(anchor(right) + var(--_ai-inset)); }
+    figure .ave-ai-label--bottom-left  { bottom: calc(anchor(bottom) + var(--_ai-inset)); left: calc(anchor(left) + var(--_ai-inset)); }
+    figure .ave-ai-label--bottom-right { bottom: calc(anchor(bottom) + var(--_ai-inset)); right: calc(anchor(right) + var(--_ai-inset)); }
+    figure .ave-ai-label--center       { top: anchor(center); left: anchor(center); }
+    figure .ave-ai-label--right-vertical {
+      top: anchor(center);
+      right: calc(anchor(right) + var(--_ai-inset));
+      max-inline-size: calc(anchor-size(height) - 2 * var(--_ai-inset));
+    }
   }
 
   /* ── Table CE ──────────────────────────────────────────────────────

@@ -44,6 +44,9 @@
     {%- endif -%}
     {%- if _videoSrc -%}{%- set _bgVideoClass = 'has-bg-video' -%}{%- endif -%}
 {%- endif -%}
+{#- KI-Hinweis am Hintergrund: das Bild der Sektion bzw. das Standbild des
+    Videos (component/_ai_label, AiLabelExtension). -#}
+{%- set _aiBg = _bgImageClass ? ave_ai_label(section_bg_image) : (_bgVideoClass and section_bg_video_poster|default ? ave_ai_label(section_bg_video_poster) : null) -%}
 {% set wrapperAttributes = attrs(cssID)
     .addClass([_sectionClasses, _bgImageClass, _bgVideoClass, 'section', 'block']|filter(v => v))
     .addStyle(extra_style|default)
@@ -126,6 +129,9 @@
         {% endif %}
 
         {%- if not _noContainer %}</div>{% endif %}
+        {#- Als LETZTES Kind: .animate--hero staffelt seine Kinder per
+            nth-child — ein Hinweis davor verschöbe die Verzögerung des Inhalts. -#}
+        {{- include('@Contao/component/_ai_label.html.twig', {ai_label: _aiBg, ai_background: true}, with_context = false) }}
     </section>
 
 {% endif %}

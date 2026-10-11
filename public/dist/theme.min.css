@@ -1390,6 +1390,18 @@ animation-delay: -5s;
 --section-bg-image: var(--section-bg-lg, none);
 }
 }
+:where(.has-bg-image, .has-bg-video):has(> .ave-ai-label--bg) {
+position: relative;
+}
+:is(.has-bg-image, .has-bg-video) > .ave-ai-label.ave-ai-label--bg {
+--_ai-inset: var(--av-space-sm);
+position: absolute;
+z-index: 4;
+}
+.has-bg-video > .ave-ai-label.ave-ai-label--bg.ave-ai-label--bottom-right {
+right: calc(var(--av-space-sm) + 2.75rem + var(--av-space-xs));
+bottom: calc(var(--av-space-sm) + (2.75rem - 1.3em - 0.4em) / 2);
+}
 :is(.bg-image, .bg-image-dark, .bg-image-light, .bg-image-brand, .bg-image-secondary, .bg-image-gradient) {
 background-size: cover;
 background-position: center;
@@ -2188,6 +2200,15 @@ pointer-events: none;
 .ave-ai-label--top-right    { top: var(--_ai-inset);    right: var(--_ai-inset); }
 .ave-ai-label--bottom-left  { bottom: var(--_ai-inset); left: var(--_ai-inset); }
 .ave-ai-label--bottom-right { bottom: var(--_ai-inset); right: var(--_ai-inset); }
+.ave-ai-label--center       { top: 50%; left: 50%; translate: -50% -50%; }
+.ave-ai-label--right-vertical {
+right: var(--_ai-inset);
+top: 50%;
+translate: 0 -50%;
+writing-mode: vertical-rl;
+rotate: 180deg;
+padding: 0.6em 0.2em;
+}
 .ave-ai-label--below {
 margin-block-start: var(--av-space-xs);
 }
@@ -2195,14 +2216,20 @@ margin-block-start: var(--av-space-xs);
 figure:has(.ave-ai-label) img {
 anchor-name: --ave-ai-img;
 }
-.ave-ai-label:not(.ave-ai-label--below) {
+figure .ave-ai-label:not(.ave-ai-label--below) {
 position-anchor: --ave-ai-img;
 max-inline-size: calc(anchor-size(width) - 2 * var(--_ai-inset));
 }
-.ave-ai-label--top-left     { top: calc(anchor(top) + var(--_ai-inset));       left: calc(anchor(left) + var(--_ai-inset)); }
-.ave-ai-label--top-right    { top: calc(anchor(top) + var(--_ai-inset));       right: calc(anchor(right) + var(--_ai-inset)); }
-.ave-ai-label--bottom-left  { bottom: calc(anchor(bottom) + var(--_ai-inset)); left: calc(anchor(left) + var(--_ai-inset)); }
-.ave-ai-label--bottom-right { bottom: calc(anchor(bottom) + var(--_ai-inset)); right: calc(anchor(right) + var(--_ai-inset)); }
+figure .ave-ai-label--top-left     { top: calc(anchor(top) + var(--_ai-inset));       left: calc(anchor(left) + var(--_ai-inset)); }
+figure .ave-ai-label--top-right    { top: calc(anchor(top) + var(--_ai-inset));       right: calc(anchor(right) + var(--_ai-inset)); }
+figure .ave-ai-label--bottom-left  { bottom: calc(anchor(bottom) + var(--_ai-inset)); left: calc(anchor(left) + var(--_ai-inset)); }
+figure .ave-ai-label--bottom-right { bottom: calc(anchor(bottom) + var(--_ai-inset)); right: calc(anchor(right) + var(--_ai-inset)); }
+figure .ave-ai-label--center       { top: anchor(center); left: anchor(center); }
+figure .ave-ai-label--right-vertical {
+top: anchor(center);
+right: calc(anchor(right) + var(--_ai-inset));
+max-inline-size: calc(anchor-size(height) - 2 * var(--_ai-inset));
+}
 }
 .content-table {
 overflow-x: auto;
@@ -3342,7 +3369,7 @@ translate: 0 0;
 from { opacity: 0; translate: 0 2rem; }
 to   { opacity: 1; translate: 0 0; }
 }
-.animate--hero > * {
+.animate--hero > :not(.ave-ai-label) {
 opacity: 0;
 animation: av-hero-enter calc(var(--av-duration-scale) * 800ms) var(--av-animate-ease) forwards;
 }

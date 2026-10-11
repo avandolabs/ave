@@ -8,7 +8,7 @@ $GLOBALS['TL_LANG']['tl_page']['ave_license_invalid'] = 'This pro token is inval
 
 // AI labelling
 $GLOBALS['TL_LANG']['tl_page']['ave_ai_legend']    = 'AI labelling';
-$GLOBALS['TL_LANG']['tl_page']['ave_ai_position']  = ['Position', 'Where the notice appears on images that are marked as “AI-generated” in the file manager. Applies to the whole website.'];
+$GLOBALS['TL_LANG']['tl_page']['ave_ai_position']  = ['Position', 'Where the notice appears on images that are marked as “AI-generated” in the file manager. Applies to the whole website, including background images; there “Below the image” appears bottom right.'];
 $GLOBALS['TL_LANG']['tl_page']['ave_ai_size']      = ['Size', 'Font size of the notice.'];
 $GLOBALS['TL_LANG']['tl_page']['ave_ai_style']     = ['Appearance', '“Accent” uses the primary colour of the design.'];
 $GLOBALS['TL_LANG']['tl_page']['ave_ai_text']      = ['Label', 'Leave empty for “AI-generated” (German pages: “KI-generiert”).'];
@@ -17,6 +17,8 @@ $GLOBALS['TL_LANG']['tl_page']['ave_ai_positions'] = [
     'bottom-left'  => 'On the image, bottom left',
     'top-right'    => 'On the image, top right',
     'top-left'     => 'On the image, top left',
+    'right-vertical' => 'On the image, right edge, vertical',
+    'center'       => 'In the centre of the image',
     'below'        => 'Below the image',
 ];
 $GLOBALS['TL_LANG']['tl_page']['ave_ai_sizes']     = ['sm' => 'Small', 'md' => 'Medium', 'lg' => 'Large'];

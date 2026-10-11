@@ -55,7 +55,11 @@
       to   { opacity: 1; translate: 0 0; }
     }
 
-    .animate--hero > * {
+    /* Der KI-Hinweis eines Hintergrundbilds (.ave-ai-label) ist ausgenommen:
+       Er soll sofort dastehen, und die Animation endet mit `forwards` auf
+       translate: 0 — das bliebe stehen und risse die Positionen „Mitte“ und
+       „rechts senkrecht“ (die translate brauchen) dauerhaft aus der Lage. */
+    .animate--hero > :not(.ave-ai-label) {
       opacity: 0;
       animation: av-hero-enter calc(var(--av-duration-scale) * 800ms) var(--av-animate-ease) forwards;
     }

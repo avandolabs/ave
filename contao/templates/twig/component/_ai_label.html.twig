@@ -8,11 +8,16 @@
 
       {{ include('@Contao/component/_ai_label.html.twig', {ai_label: ave_ai_label(figure)}, with_context = false) }}
 
-  ai_label: Ergebnis von ave_ai_label() — position, size, style, text.
-  Gestaltet in components.css (.ave-ai-label).
+  ai_label:      Ergebnis von ave_ai_label() — position, size, style, text.
+  ai_background: true für ein Hintergrundbild (Sektion, Elementgruppe,
+                 Inhaltselement). Bezugsrahmen ist dann das Element selbst;
+                 „unter dem Bild“ gibt es dort nicht und wird zu unten rechts.
+
+  Gestaltet in components.css (.ave-ai-label), Hintergründe in layout.css.
 #}
 {%- if ai_label|default -%}
-<span class="ave-ai-label ave-ai-label--{{ ai_label.position }} ave-ai-label--{{ ai_label.size }} ave-ai-label--{{ ai_label.style }}">
+{%- set _pos = ai_background|default and ai_label.position == 'below' ? 'bottom-right' : ai_label.position -%}
+<span class="ave-ai-label ave-ai-label--{{ _pos }} ave-ai-label--{{ ai_label.size }} ave-ai-label--{{ ai_label.style }}{{ ai_background|default ? ' ave-ai-label--bg' }}">
     {{- ai_label.text ?: ('MSC.aveAiLabel'|trans({}, 'contao_default')) -}}
 </span>
 {%- endif -%}

@@ -80,6 +80,11 @@
     {%- if _containerClasses %}</div>{% endif %}
     <!-- [ave-reader-end] -->
     {%- if _sectionClasses %}</div>{% endif %}
+    {#- KI-Hinweis am Hintergrundbild der Sektion (component/_ai_label), als
+        letztes Kind wie in mod_article -#}
+    {%- if _bgImageClass -%}
+        {{- include('@Contao/component/_ai_label.html.twig', {ai_label: ave_ai_label(section_bg_image), ai_background: true}, with_context = false) -}}
+    {%- endif %}
 </section>
 
 {% set schemaOrg = getSchemaOrgData.invoke() %}

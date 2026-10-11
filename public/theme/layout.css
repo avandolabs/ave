@@ -1412,6 +1412,30 @@
     }
   }
 
+  /* ── KI-Hinweis an Hintergrundbildern ──────────────────────────────
+   * Gestaltung und Positionen: components.css (.ave-ai-label). Hier nur, was
+   * der Hintergrund anders braucht. Bezugsrahmen ist das Element mit dem
+   * Hintergrund (Sektion, Elementgruppe, Inhaltselement), kein Bild.
+   *
+   * Die Regeln MÜSSEN in dieser Ebene stehen: .bg-blur, .has-bg-video und
+   * der animierte Hintergrund setzen allen direkten Kindern position:
+   * relative — in av.layout, das nach av.components kommt und damit jede
+   * Regel dort schlägt, egal wie spezifisch. (0,3,0) schlägt hier ihre
+   * (0,1,0) bzw. (0,2,0); z-index 4 liegt über deren Inhalt (bis 3). */
+  :where(.has-bg-image, .has-bg-video):has(> .ave-ai-label--bg) {
+    position: relative;
+  }
+  :is(.has-bg-image, .has-bg-video) > .ave-ai-label.ave-ai-label--bg {
+    --_ai-inset: var(--av-space-sm);
+    position: absolute;
+    z-index: 4;
+  }
+  /* Unten rechts sitzt beim Video der Pause-Knopf (2.75rem, siehe unten). */
+  .has-bg-video > .ave-ai-label.ave-ai-label--bg.ave-ai-label--bottom-right {
+    right: calc(var(--av-space-sm) + 2.75rem + var(--av-space-xs));
+    bottom: calc(var(--av-space-sm) + (2.75rem - 1.3em - 0.4em) / 2);
+  }
+
   /* ── Background image variants ─────────────────────────────────────
    * --section-bg-image is set by .has-bg-image (see above) via responsive
    * CSS variables. All variants share the base layout. */

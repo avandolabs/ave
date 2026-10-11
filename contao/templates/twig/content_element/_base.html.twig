@@ -33,4 +33,15 @@
     {%- if headline.text %}{{ block('headline_component') }}
     {% endif -%}
     {%- block content %}{% endblock -%}
+    {#- KI-Hinweis am Hintergrundbild des Elements (ce_bg_image) bzw. der
+        Elementgruppe (section_bg_image) — dieselbe Bedingung wie in
+        block attributes, dort entsteht der Hintergrund. -#}
+    {%- if 'element_group' == (data.type|default) -%}
+        {%- set _ai_bg_image = (data.section_bg|default) starts with 'bg-image' ? data.section_bg_image|default : null -%}
+    {%- else -%}
+        {%- set _ai_bg_image = (data.ce_bg|default) starts with 'bg-image' ? data.ce_bg_image|default : null -%}
+    {%- endif -%}
+    {%- if _ai_bg_image -%}
+        {{- include('@Contao/component/_ai_label.html.twig', {ai_label: ave_ai_label(_ai_bg_image), ai_background: true}, with_context = false) -}}
+    {%- endif -%}
 {%- endblock %}
