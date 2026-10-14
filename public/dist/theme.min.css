@@ -227,6 +227,7 @@ clamp(0, (0.1791 - (0.2126 * r + 0.7152 * g + 0.0722 * b)) * 100000, 1));
 --av-btn-scale: 1;
 --av-header-position:   sticky;              
 --av-header-inset:      auto;                
+--av-header-hide:       1;
 --av-header-height:     initial;
 --av-header-bg:         var(--av-color-surface);           
 --av-header-color:      var(--av-color-text);
@@ -2523,7 +2524,7 @@ backdrop-filter: var(--av-header-backdrop, blur(var(--av-glass-blur)));
 -webkit-backdrop-filter: var(--av-header-backdrop, blur(var(--av-glass-blur)));
 }
 &.header--hidden {
-top: calc(-1 * var(--av-header-measured, var(--av-header-height, 100px)));
+top: calc(-1 * var(--av-header-hide, 1) * var(--av-header-measured, var(--av-header-height, 100px)));
 }
 & .container {
 display: flex;

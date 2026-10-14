@@ -4,6 +4,7 @@
  *    (kept separate from the editor-configured --av-header-height to avoid a
  *    measure→min-height→measure feedback loop)
  *  - hides the header on scroll-down, reveals on scroll-up
+ *    (the slide itself is CSS: --av-header-hide 0 = Studio switch "off")
  *    (never while a mobile menu is open: body.navigation-open)
  */
 (function () {

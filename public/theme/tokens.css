@@ -850,6 +850,9 @@
        install until that CSS moves into the bundle. */
     --av-header-position:   sticky;              /* (*) */
     --av-header-inset:      auto;                /* (*) */
+    /* 1 = header slides away on scroll-down (default), 0 = always visible.
+       A multiplier on the .header--hidden offset, set by the Studio switch. */
+    --av-header-hide:       1;
     /* Deliberately UNSET: the header takes its natural height until the Design
        Studio's "header height" control activates it. `initial` makes the custom
        property guaranteed-invalid, so `var(--av-header-height)` without a

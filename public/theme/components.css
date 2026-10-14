@@ -590,7 +590,8 @@
     }
 
     &.header--hidden {
-      top: calc(-1 * var(--av-header-measured, var(--av-header-height, 100px)));
+      /* --av-header-hide: 1 = slide away, 0 = stay put (Studio switch). */
+      top: calc(-1 * var(--av-header-hide, 1) * var(--av-header-measured, var(--av-header-height, 100px)));
     }
 
     & .container {
