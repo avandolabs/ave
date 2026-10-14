@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Avando\AveBundle\Twig;
 
+use Contao\CoreBundle\File\Metadata;
 use Contao\CoreBundle\Image\Studio\Figure;
 use enshrined\svgSanitize\Sanitizer;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -62,13 +63,35 @@ final class InlineSvgExtension extends AbstractExtension
 
         return $this->render(
             $image->getFilePath(true),
-            $image->getImg(),
+            self::withAlt($image->getImg(), $figure->hasMetadata() ? $figure->getMetadata() : null),
             static function () use ($image): array {
                 $size = $image->getOriginalDimensions()->getSize();
 
                 return [$size->getWidth(), $size->getHeight()];
             },
         );
+    }
+
+    /**
+     * Den Alt-Text aus den Metadaten der Figure ins img-Array holen.
+     *
+     * Contao führt ihn NICHT in getImg(), sondern in den Metadaten (Datei-
+     * verwaltung oder „Metadaten überschreiben“ am Element). render() las nur
+     * $img['alt'] — und bekam darum nie einen. Jedes eingebettete Logo war
+     * aria-hidden, ein Logo-Link damit ohne Namen, auch mit gepflegtem
+     * Alt-Text. Gefunden am 14.10.2026 mit Lighthouse („link-name“) auf der Demo.
+     *
+     * @param array<string, mixed> $img
+     *
+     * @return array<string, mixed>
+     */
+    public static function withAlt(array $img, ?Metadata $metadata): array
+    {
+        if (null !== $metadata && '' === trim((string) ($img['alt'] ?? ''))) {
+            $img['alt'] = $metadata->getAlt();
+        }
+
+        return $img;
     }
 
     /**
