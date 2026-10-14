@@ -20,7 +20,10 @@
             <p class="news__teaser">{{ teaser|striptags|trim }}</p>
         {%- endif %}
         {%- if (hasText.invoke() or hasTeaser) and link|default %}
-            <p class="news__cta"><a href="{{ link }}">Weiterlesen</a></p>
+            {#- Der unsichtbare Zusatz macht aus „Weiterlesen“ einen Linktext, der
+                ohne Umgebung verständlich ist (Screenreader-Linkliste, WCAG 2.4.4;
+                Lighthouse „link-text“ bemängelte ihn am 14.10.2026). -#}
+            <p class="news__cta"><a href="{{ link }}">Weiterlesen<span class="invisible">: {{ newsHeadline }}</span></a></p>
         {%- endif %}
     </div>
 </article>
