@@ -182,14 +182,17 @@
   }
   .links-plain {
     --av-link-underline: none;
+    --av-link-underline-prose: none;
     --av-link-underline-hover: none;
   }
   .links-hover-underline {
     --av-link-underline: none;
+    --av-link-underline-prose: none;
     --av-link-underline-hover: underline;
   }
   .links-underline {
     --av-link-underline: underline;
+    --av-link-underline-prose: underline;
     --av-link-underline-hover: underline;
   }
 
@@ -384,10 +387,14 @@
       margin-block: var(--av-space-xl);
     }
 
-    /* Links: underline in prose for readability */
-    & a {
-      text-decoration: underline;
-      text-underline-offset: .2em;
+    /* Links: underline in prose for readability — at REST only, and as a
+       token. The old `text-decoration: underline` shorthand overrode the
+       whole link system: Marker / „Strich wächst" drew their strip on top of
+       it (double line, avandolabs.com 14.10.2026), Dick/Wellig never showed
+       in prose, and .links-plain had no effect. Effects with their own rest
+       form switch the token off (Studio); hover stays base.css's. */
+    & a:not(:hover) {
+      text-decoration-line: var(--av-link-underline-prose, underline);
     }
   }
 

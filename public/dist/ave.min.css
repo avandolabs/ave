@@ -75,6 +75,7 @@ color-mix(in oklch, var(--av-color-primary-on-light), black 22%),
 color-mix(in oklch, var(--av-color-primary-on-dark), white 22%));
 --av-link-underline:       none;
 --av-link-underline-hover: underline;
+--av-link-underline-prose: underline;
 --av-link-underline-style-hover: solid;
 --av-link-thickness-hover:       1px;
 --av-link-mark:                  transparent;
@@ -1750,14 +1751,17 @@ margin-block-end: 0;
 }
 .links-plain {
 --av-link-underline: none;
+--av-link-underline-prose: none;
 --av-link-underline-hover: none;
 }
 .links-hover-underline {
 --av-link-underline: none;
+--av-link-underline-prose: none;
 --av-link-underline-hover: underline;
 }
 .links-underline {
 --av-link-underline: underline;
+--av-link-underline-prose: underline;
 --av-link-underline-hover: underline;
 }
 .badge {
@@ -1867,9 +1871,8 @@ margin-block: var(--av-space-md);
 & hr {
 margin-block: var(--av-space-xl);
 }
-& a {
-text-decoration: underline;
-text-underline-offset: .2em;
+& a:not(:hover) {
+text-decoration-line: var(--av-link-underline-prose, underline);
 }
 }
 .prose--sm {

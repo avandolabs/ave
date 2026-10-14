@@ -319,6 +319,10 @@
        Regel zu folgen — und damit ist es erreichbar. */
     --av-link-underline:       none;
     --av-link-underline-hover: underline;
+    /* Links im Fliesstext (.prose) sind in Ruhe unterstrichen — Lesbarkeit.
+       Effekte mit eigener Ruheform (Marker, Strich wächst) stellen das ab,
+       sonst liegen Strich und Streifen übereinander. */
+    --av-link-underline-prose: underline;
 
     /* Hover-Effekt der Textlinks (Studio: „Beim Überfahren"). Neun Token statt
        einer Liste von Varianten, damit jede Kombination aus den Bausteinen
