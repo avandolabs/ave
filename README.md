@@ -125,7 +125,7 @@ Ein Datenbank-Backup vor jedem der beiden Schritte ist ohnehin Pflicht.
 ## Das Design Studio
 
 Farben, Schriften, Radien, Schatten und Kopfzeile lassen sich mit dem
-kostenpflichtigen Zusatz **[Avando AVE Design Studio](https://ave-theme.avando-labs.de)**
+kostenpflichtigen Zusatz **[Avando AVE Design Studio](https://ave.avandolabs.com)**
 (`avando/ave-editor`) im Backend einstellen, mit Vorschau, sechzehn Vorlagen,
 Kontrastprüfung und Versionsverlauf.
 

@@ -2,8 +2,8 @@
 
 **Fassung 1.0 · Stand 1. September 2026**
 
-Lizenzgeber: **Dipl.-Ing. (FH) Ulrich Braun (Avando Labs)** (nachfolgend „Lizenzgeber“), ladungsfähige Anschrift im Impressum unter **avando-labs.de/impressum**
-Kontakt: **themes@avando-labs.de** · **avando-labs.de**
+Lizenzgeber: **Dipl.-Ing. (FH) Ulrich Braun (Avando Labs)** (nachfolgend „Lizenzgeber“), ladungsfähige Anschrift im Impressum unter **avandolabs.com/impressum**
+Kontakt: **themes@avandolabs.com** · **avandolabs.com**
 
 > **Kurzfassung** (nicht Vertragsbestandteil, sondern Lesehilfe — im Zweifel gilt
 > der Text der §§):
@@ -123,7 +123,7 @@ Voraussetzungen entfallen. Der Widerruf erfolgt in Textform mit einer Frist von
 (1) Die Software gibt den Hinweis selbst aus. Er steht am Ende jeder Seite und
 lautet:
 
-> Built with the free [Avando AVE theme for Contao](https://avando-labs.de)
+> Built with the free [Avando AVE theme for Contao](https://avandolabs.com)
 
 Der Hinweis wird vom Seitenlayout der Software erzeugt
 (`bundle/contao/templates/twig/page/layout.html.twig`, Block `.ave-credit`) und
@@ -322,7 +322,7 @@ wirtschaftlichen Zweck am nächsten kommt.
 ## Kontakt
 
 Fragen zur Lizenz, Bestellung einer kommerziellen Lizenz, Anfragen zu
-Mehrfach- oder Agenturlizenzen: **themes@avando-labs.de**
+Mehrfach- oder Agenturlizenzen: **themes@avandolabs.com**
 
 ---
 

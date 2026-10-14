@@ -9,17 +9,17 @@
         "theme",
         "avando"
     ],
-    "homepage": "https://ave-theme.avando-labs.de",
+    "homepage": "https://ave.avandolabs.com",
     "authors": [
         {
             "name": "Ulrich Braun",
-            "email": "themes@avando-labs.de",
-            "homepage": "https://avando-labs.de"
+            "email": "themes@avandolabs.com",
+            "homepage": "https://avandolabs.com"
         }
     ],
     "support": {
-        "email": "themes@avando-labs.de",
-        "docs": "https://ave-theme.avando-labs.de/docs/"
+        "email": "themes@avandolabs.com",
+        "docs": "https://ave.avandolabs.com/docs/"
     },
     "require": {
         "php": "^8.3",
