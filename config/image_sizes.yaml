@@ -46,6 +46,18 @@ contao:
                     jpg: [webp, jpg]
                     png: [webp, png]
 
+            # ── Standbild unter einem Hintergrundvideo (mod_article) ────────
+            # Füllt die ganze Sektion (object-fit: cover), daher 100vw und
+            # Breitenstufen statt Dichten: das Handy holt 640 px, nicht 1920.
+            section_video_poster:
+                width: 1920
+                resize_mode: proportional
+                densities: '640w, 1280w'
+                sizes: '100vw'
+                formats:
+                    jpg: [webp, jpg]
+                    png: [webp, png]
+
             # ── Content elements ────────────────────────────────────────────
             content_wide:
                 width: 1280

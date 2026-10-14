@@ -436,6 +436,23 @@
     margin-block-start: var(--av-space-xs);
   }
 
+  /* Platz für den Burger, BEVOR navigation.js läuft. Unter 768 px schaltet
+     das Skript ohnehin immer auf .is-compact (MQ in navigation.js); bis dahin
+     stand die volle Leiste im Kopf, 30 px hoch, danach der 44-px-Knopf — der
+     Kopf wuchs, die ganze Seite rutschte nach unten. Gemessen am 14.10.2026
+     (Lighthouse, Handy): Layout-Verschiebung 0,136, Grenze für „gut" 0,1.
+     Nur mit .ave-js (setzt das Inline-Skript im Kopf, layout.html.twig): ohne
+     JavaScript gibt es keinen Burger, dann bleibt die Leiste sichtbar. */
+  @media (max-width: 768px) {
+    :root.ave-js .mod_navigation:not(.is-compact):has(> .level_1) {
+      min-block-size: 2.75rem;
+      min-inline-size: 2.75rem;
+    }
+    :root.ave-js .mod_navigation:not(.is-compact) > .level_1 {
+      display: none;
+    }
+  }
+
   /* ── Burger: injected by navigation.js, mobile only ────────────── */
   .av-nav-burger {
     display: none;
@@ -499,6 +516,12 @@
      Navigation. Der Burger entsteht ohnehin per JS, es geht also nichts
      verloren, was ohne JS funktioniert haette. */
   .mod_navigation.is-compact {
+    /* Flex statt Block: als Block stand der Burger in einer Textzeile, die
+       Unterlänge des Zeilenkastens machte die Navigation 51 statt 44 px hoch.
+       Mit Flex ist sie genau so hoch wie der Knopf — dieselbe Höhe, die unten
+       vor dem Skript reserviert wird. */
+    & { display: flex; align-items: center; }
+
     .av-nav-burger { display: inline-flex; }
 
     & > .level_1 { display: none; }

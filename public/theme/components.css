@@ -1057,6 +1057,20 @@
   opacity: 1;
 }
 
+/* Tippflaeche 24 x 24 px (WCAG 2.5.8) bei unveraendertem 8-px-Punkt: der
+   Innenabstand vergroessert die Flaeche, background-clip haelt die Farbe auf
+   dem Punkt. Gemessen am 14.10.2026 (Lighthouse): 8 x 8 px, zu klein. Der
+   Abstand zwischen den Punkten steckt jetzt im Innenabstand, daher Luecke 0. */
+.content-swiper .swiper.swiper {
+  --swiper-pagination-bullet-horizontal-gap: 0;
+}
+
+.content-swiper .swiper.swiper .swiper-pagination-bullet {
+  box-sizing: content-box;
+  padding: calc((1.5rem - var(--swiper-pagination-bullet-size)) / 2);
+  background-clip: content-box;
+}
+
 /* ═══ Swipe (aelteres Inhaltselement „Slider-Anfang/Ende") ════════════ */
 
 .slider-control.slider-control {

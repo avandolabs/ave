@@ -1554,6 +1554,24 @@
     background-position: center;
   }
 
+  /* Das Standbild als eigenes Bild unter dem Video (mod_article): lädt lazy
+     und in passender Breite, anders als ein poster-Attribut. <picture> und
+     <img> bekommen beide die volle Fläche — ohne WebP-Quellen gibt Contao nur
+     das <img> aus, ohne <picture> drumherum. */
+  .section-video__poster,
+  .section-video__poster-img {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+  }
+
+  .section-video__poster-img {
+    object-fit: cover;
+  }
+
   :is(.bg-video-dark, .bg-video-light, .bg-video-brand,
       .bg-video-secondary, .bg-video-gradient).has-bg-video::after {
     content: '';
@@ -1569,7 +1587,7 @@
      diese Regel ist mit (0,2,0) spezifischer als seine eigene Klasse, `bottom`
      und `right` wirkten dann als Verschiebung aus dem Textfluss statt als
      Verankerung, und er landete oben links (gemessen: -16,207). */
-  .has-bg-video > *:not(.section-video, .section-video__toggle) {
+  .has-bg-video > *:not(.section-video, .section-video__poster, .section-video__poster-img, .section-video__toggle) {
     position: relative;
     z-index: 2;
   }

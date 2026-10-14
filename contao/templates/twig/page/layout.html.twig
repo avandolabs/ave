@@ -24,64 +24,82 @@
             <link rel="preload" as="font" type="font/woff2" crossorigin href="/{{ schrift }}">
         {% endfor %}
     {% endadd %}
-    {% add 'avandoave-open-props' to stylesheets %}
-        <link rel="stylesheet" href="{{ ave_asset('bundles/avandoave/open-props/open-props.min.css') }}">
-        <link rel="stylesheet" href="{{ ave_asset('bundles/avandoave/open-props/normalize-layer.css') }}">
-    {% endadd %}
-    {# Eine Datei statt neun, wenn `ave:css:build` gelaufen ist. Gemessen am
-       06.08.2026: neun Anfragen von 101 ms bis 149 ms, erster Inhalt bei 196 ms;
-       47% des Inhalts sind Begründungsprosa, die nach gzip 60,2 KB statt 18,0 KB
-       kostet. Fehlt die gebaute Datei, kommen die Quellen — dann liest man im
-       Browser-Werkzeug die Kommentare mit. #}
-    {% if ave_css_built() %}
+    {# Alles in EINER Datei (dist/ave.min.css), wenn `ave:css:build` gelaufen ist
+       und das Projekt weder theme.css noch view-transitions.css durch eine
+       eigene Datei ersetzt hat. Gemessen am 14.10.2026 (Lighthouse, Handy):
+       sechs blockierende Bundle-Stylesheets plus ein @import, das erst nach
+       normalize-layer.css entdeckt wird. Sonst wie bisher einzeln. #}
+    {% if ave_css_bundle_built() and not ave_theme_css_exists('theme.css') and not ave_theme_css_exists('view-transitions.css') %}
         {% add 'avandoave-theme' to stylesheets %}
-            <link rel="stylesheet" href="{{ ave_asset('bundles/avandoave/dist/theme.min.css') }}">
+            <link rel="stylesheet" href="{{ ave_asset('bundles/avandoave/dist/ave.min.css') }}">
         {% endadd %}
     {% else %}
-        {% add 'avandoave-theme' to stylesheets %}
-            <link rel="stylesheet" href="{{ ave_asset('bundles/avandoave/theme/tokens.css') }}">
-            <link rel="stylesheet" href="{{ ave_asset('bundles/avandoave/theme/base.css') }}">
-            <link rel="stylesheet" href="{{ ave_asset('bundles/avandoave/theme/layout.css') }}">
+        {% add 'avandoave-open-props' to stylesheets %}
+            <link rel="stylesheet" href="{{ ave_asset('bundles/avandoave/open-props/open-props.min.css') }}">
+            <link rel="stylesheet" href="{{ ave_asset('bundles/avandoave/open-props/normalize-layer.css') }}">
         {% endadd %}
-        {% add 'avandoave-typography' to stylesheets %}
-            <link rel="stylesheet" href="{{ ave_asset('bundles/avandoave/theme/typography.css') }}">
+        {# Eine Datei statt neun, wenn `ave:css:build` gelaufen ist. Gemessen am
+           06.08.2026: neun Anfragen von 101 ms bis 149 ms, erster Inhalt bei 196 ms;
+           47% des Inhalts sind Begründungsprosa, die nach gzip 60,2 KB statt 18,0 KB
+           kostet. Fehlt die gebaute Datei, kommen die Quellen — dann liest man im
+           Browser-Werkzeug die Kommentare mit. #}
+        {% if ave_css_built() %}
+            {% add 'avandoave-theme' to stylesheets %}
+                <link rel="stylesheet" href="{{ ave_asset('bundles/avandoave/dist/theme.min.css') }}">
+            {% endadd %}
+        {% else %}
+            {% add 'avandoave-theme' to stylesheets %}
+                <link rel="stylesheet" href="{{ ave_asset('bundles/avandoave/theme/tokens.css') }}">
+                <link rel="stylesheet" href="{{ ave_asset('bundles/avandoave/theme/base.css') }}">
+                <link rel="stylesheet" href="{{ ave_asset('bundles/avandoave/theme/layout.css') }}">
+            {% endadd %}
+            {% add 'avandoave-typography' to stylesheets %}
+                <link rel="stylesheet" href="{{ ave_asset('bundles/avandoave/theme/typography.css') }}">
+            {% endadd %}
+            {% add 'avandoave-forms' to stylesheets %}
+                <link rel="stylesheet" href="{{ ave_asset('bundles/avandoave/theme/forms.css') }}">
+            {% endadd %}
+            {% add 'avandoave-components' to stylesheets %}
+                <link rel="stylesheet" href="{{ ave_asset('bundles/avandoave/theme/components.css') }}">
+            {% endadd %}
+            {% add 'avandoave-navigation' to stylesheets %}
+                <link rel="stylesheet" href="{{ ave_asset('bundles/avandoave/theme/navigation.css') }}">
+            {% endadd %}
+            {% add 'avandoave-icons' to stylesheets %}
+                <link rel="stylesheet" href="{{ ave_asset('bundles/avandoave/theme/icons.css') }}">
+            {% endadd %}
+            {% add 'avandoave-animations' to stylesheets %}
+                <link rel="stylesheet" href="{{ ave_asset('bundles/avandoave/theme/animations.css') }}">
+            {% endadd %}
+        {% endif %}
+        {# theme.css (Starter-Bausteine: Header, Footer, Hero, Akkordeon …) und
+           view-transitions.css bringt das Bundle unter bundles/avandoave/starter/
+           mit, damit eine Installation ohne weitere Dateien vollständig aussieht.
+           Eine gleichnamige Datei in files/theme/CSS/ ersetzt die mitgelieferte —
+           zum Anpassen dorthin kopieren, zum Abschalten eine leere Datei anlegen.
+           theme-vars.css und custom.css gibt es nur in files/: die erste schreibt
+           das Design Studio (Pro-Modul), die zweite gehört dem Projekt. Jede wird
+           nur verlinkt, wenn sie existiert, so 404t keine Installation.
+           asset() statt führendem Slash, damit Unterverzeichnis-Installationen
+           auflösen. #}
+        {% add 'avandoave-theme-components' to stylesheets %}
+            <link rel="stylesheet" href="{{ ave_asset(ave_theme_css_exists('theme.css') ? 'files/theme/CSS/theme.css' : 'bundles/avandoave/starter/theme.css') }}">
         {% endadd %}
-        {% add 'avandoave-forms' to stylesheets %}
-            <link rel="stylesheet" href="{{ ave_asset('bundles/avandoave/theme/forms.css') }}">
-        {% endadd %}
-        {% add 'avandoave-components' to stylesheets %}
-            <link rel="stylesheet" href="{{ ave_asset('bundles/avandoave/theme/components.css') }}">
-        {% endadd %}
-        {% add 'avandoave-navigation' to stylesheets %}
-            <link rel="stylesheet" href="{{ ave_asset('bundles/avandoave/theme/navigation.css') }}">
-        {% endadd %}
-        {% add 'avandoave-icons' to stylesheets %}
-            <link rel="stylesheet" href="{{ ave_asset('bundles/avandoave/theme/icons.css') }}">
-        {% endadd %}
-        {% add 'avandoave-animations' to stylesheets %}
-            <link rel="stylesheet" href="{{ ave_asset('bundles/avandoave/theme/animations.css') }}">
+        {# Page cross-fade (pure CSS). #}
+        {% add 'avandoave-view-transitions' to stylesheets %}
+            <link rel="stylesheet" href="{{ ave_asset(ave_theme_css_exists('view-transitions.css') ? 'files/theme/CSS/view-transitions.css' : 'bundles/avandoave/starter/view-transitions.css') }}">
         {% endadd %}
     {% endif %}
-    {# theme.css (Starter-Bausteine: Header, Footer, Hero, Akkordeon …) und
-       view-transitions.css bringt das Bundle unter bundles/avandoave/starter/
-       mit, damit eine Installation ohne weitere Dateien vollständig aussieht.
-       Eine gleichnamige Datei in files/theme/CSS/ ersetzt die mitgelieferte —
-       zum Anpassen dorthin kopieren, zum Abschalten eine leere Datei anlegen.
-       theme-vars.css und custom.css gibt es nur in files/: die erste schreibt
-       das Design Studio (Pro-Modul), die zweite gehört dem Projekt. Jede wird
-       nur verlinkt, wenn sie existiert, so 404t keine Installation.
-       asset() statt führendem Slash, damit Unterverzeichnis-Installationen
-       auflösen. #}
-    {% add 'avandoave-theme-components' to stylesheets %}
-        <link rel="stylesheet" href="{{ ave_asset(ave_theme_css_exists('theme.css') ? 'files/theme/CSS/theme.css' : 'bundles/avandoave/starter/theme.css') }}">
-    {% endadd %}
-    {# Page cross-fade (pure CSS). #}
-    {% add 'avandoave-view-transitions' to stylesheets %}
-        <link rel="stylesheet" href="{{ ave_asset(ave_theme_css_exists('view-transitions.css') ? 'files/theme/CSS/view-transitions.css' : 'bundles/avandoave/starter/view-transitions.css') }}">
-    {% endadd %}
     {# Generated theme variables. Loads BEFORE custom.css so hand-written
-       overrides still win the cascade. #}
-    {% if ave_theme_css_exists('theme-vars.css') %}
+       overrides still win the cascade. Klein genug, um direkt im Kopf zu
+       stehen (ave_theme_vars_inline() sagt, wann das gefahrlos geht); id und
+       data-href braucht das Design Studio für Vorschau und Neuladen. #}
+    {% set _ave_vars_inline = ave_theme_vars_inline() %}
+    {% if _ave_vars_inline is not null %}
+        {% add 'avandoave-theme-vars' to stylesheets %}
+            <style id="ave-theme-vars" data-href="{{ ave_asset('files/theme/CSS/theme-vars.css') }}"{{ attrs().setIfExists('nonce', csp_nonce('style-src')) }}>{{ _ave_vars_inline|raw }}</style>
+        {% endadd %}
+    {% elseif ave_theme_css_exists('theme-vars.css') %}
         {% add 'avandoave-theme-vars' to stylesheets %}
             <link rel="stylesheet" href="{{ ave_asset('files/theme/CSS/theme-vars.css') }}">
         {% endadd %}
@@ -100,9 +118,13 @@
 
       Setzt die Klasse auf <html>; theme-switch.js arbeitet spaeter auf <body>,
       und beide Haken liest tokens.css ueber color-scheme.
+
+      Dazu `ave-js`: sagt dem CSS, dass die Skripte gleich laufen werden. Damit
+      reserviert navigation.css auf dem Handy schon vor navigation.js den Platz
+      fuer den Burger, statt die Seite danach nach unten zu schieben.
     #}
     {% add 'avandoave-theme-boot' to head %}
-        <script{{ attrs().setIfExists('nonce', csp_nonce('script-src')) }}>try{var t=localStorage.getItem('ave-theme');if(t==='light'||t==='dark'){document.documentElement.classList.add(t)}}catch(e){}</script>
+        <script{{ attrs().setIfExists('nonce', csp_nonce('script-src')) }}>document.documentElement.classList.add('ave-js');try{var t=localStorage.getItem('ave-theme');if(t==='light'||t==='dark'){document.documentElement.classList.add(t)}}catch(e){}</script>
     {% endadd %}
     {% add 'avandoave-js' to body %}
         <script src="{{ ave_asset('bundles/avandoave/theme/onepage.js') }}" defer></script>

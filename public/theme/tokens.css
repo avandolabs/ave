@@ -248,8 +248,13 @@
        verlaufenden Flaeche gibt es keinen einzelnen Hintergrund zum Hinmischen,
        dort verblasst er stattdessen nach transparent (--av-muted-strength
        weiter unten benutzt genau das). Vorher rechnete das Design Studio beide
-       Ausdruecke selbst aus, in PHP und in ave-editor.js. */
-    --av-muted-fraction:   55%;
+       Ausdruecke selbst aus, in PHP und in ave-editor.js.
+
+       65 % seit Core 1.2 (vorher 55 %): 55 % ergab #7f7b7c, auf Weiss 4,18:1,
+       auf den getoenten Flaechen (#f2f3f4) 3,76:1 — unter WCAG AA (4,5:1).
+       Gemessen am 14.10.2026 auf der Demo: 60 % 4,38:1, 65 % 5,08:1.
+       Der Studio-Regler geht in Fuenferschritten, daher 65 und nicht 62. */
+    --av-muted-fraction:   65%;
     --av-color-text-muted: color-mix(in oklch, var(--av-color-text) var(--av-muted-fraction), var(--av-color-surface));
 
     /* @token --av-focus  Fokusring  Farbe des Tastatur-Fokusrings
@@ -271,8 +276,8 @@
        fand, konnte nur die Farbe ändern — was auch den normalen Text traf.
 
        Derselbe Regler wie --av-muted-fraction, plus 17 Punkte. Der Aufschlag ist
-       nicht willkürlich: er reproduziert das frühere Standardpaar (55 / 72)
-       exakt, ein unangetastetes Theme rendert also bytegleich. Und er gleicht
+       nicht willkürlich: er reproduzierte das frühere Standardpaar (55 / 72)
+       exakt (heute 65 / 82, siehe oben). Und er gleicht
        echten Spielraum aus — eine farbige Leiste hat weniger Kontrast zu
        verschenken als eine Seitenfläche, ihr Nebentext muss also kräftiger
        bleiben. min() deckelt bei 100 %, sonst wird aus „ganz kräftig" wieder

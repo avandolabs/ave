@@ -39,7 +39,8 @@ Contao Manager bzw. `composer update avando/ave`.
   laufen über Contaos eigene Bildverarbeitung, in drei Größen, verzögert erzeugt.
 - **Element-Stile am Inhaltselement** — Karte, Glas, Schatten, Rahmen,
   Button-Varianten, Bildfilter, Zoom.
-- **Ein Stylesheet.** `dist/theme.min.css`, 19 KB gzip. Kein Tailwind, kein
+- **Ein Stylesheet.** `dist/ave.min.css` (Open Props, Reset, Theme, Starter),
+  34 KB gzip. Kein Tailwind, kein
   Bootstrap, keine Utility-Wolke — die Klassen heißen `layout-columns-3` und
   `space-box-md`, nicht `md:grid-cols-3 py-8`.
 - **Native Bausteine.** Akkordeon ist `<details>`, Dialog ist `<dialog>`,
@@ -168,7 +169,7 @@ Fremdbestandteile und Schriftlizenzen: [`THIRD-PARTY.md`](THIRD-PARTY.md).
 ```bash
 composer install
 vendor/bin/phpunit          # Tests laufen gegen das umgebende Projekt
-php bin/console ave:css:build   # theme/*.css → dist/theme.min.css
+php bin/console ave:css:build   # → dist/theme.min.css und dist/ave.min.css
 ```
 
 Der Testbestand ist zum größeren Teil **Konsistenzprüfung**, nicht

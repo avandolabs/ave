@@ -21,6 +21,11 @@
 
   const motionOK = window.matchMedia('(prefers-reduced-motion: no-preference)').matches;
 
+  /* Datensparmodus (Chrome/Android: „Lite“, Header Save-Data) gilt wie eine
+     Entscheidung gegen das Abspielen: ein Hintergrundvideo sind schnell
+     mehrere Megabyte. Der Knopf startet es trotzdem auf Wunsch. */
+  const saveData = !!(navigator.connection && navigator.connection.saveData);
+
   SECTIONS.forEach((section) => {
     const video = section.querySelector('.section-video');
     const toggle = section.querySelector('[data-ave-video-toggle]');
@@ -34,7 +39,7 @@
     /* Vom Nutzer angehalten. Getrennt vom blossen "laeuft gerade nicht" —
        nur so weiss der Beobachter unten, dass er beim Zurueckscrollen NICHT
        wieder starten darf. Eine Entscheidung wiegt schwerer als Sichtbarkeit. */
-    let pausedByUser = !motionOK;
+    let pausedByUser = !motionOK || saveData;
 
     function zeige(paused) {
       section.classList.toggle('is-video-paused', paused);
@@ -52,8 +57,14 @@
       }
     }
 
+    /* Gestartet wird erst, wenn die Sektion ins Bild kommt (Beobachter
+       unten) — nicht beim Laden. preload="none" nuetzt nichts, wenn play()
+       sofort laeuft: gemessen am 14.10.2026 holte die Demo-Startseite so
+       4,6 MB Video fuer eine Sektion weit unterhalb des ersten Bildschirms,
+       90 % des gesamten Seitengewichts. Ohne IntersectionObserver wie bisher
+       sofort. */
     zeige(pausedByUser);
-    if (!pausedByUser) spiele();
+    if (!pausedByUser && !('IntersectionObserver' in window)) spiele();
 
     toggle.addEventListener('click', () => {
       pausedByUser = !video.paused;

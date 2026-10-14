@@ -25,7 +25,7 @@ All available CSS classes and custom properties. Reference for theme work, AI ag
 | `--av-color-surface-3` | gray-2 |
 | `--av-color-border` | gray-3 |
 | `--av-color-text` | gray-9 |
-| `--av-color-text-muted` | aus `text` ↦ `surface` abgeleitet (Default 55% Textfarbe); Editor (Typo-Palette): „Gedämpfter Text" — höher = kräftiger |
+| `--av-color-text-muted` | aus `text` ↦ `surface` abgeleitet (Default 65% Textfarbe, vorher 55% — unter WCAG AA); Editor (Typo-Palette): „Gedämpfter Text" — höher = kräftiger |
 | `--av-color-success` | green-6 |
 | `--av-color-warning` | yellow-5 |
 | `--av-color-error` | red-6 |

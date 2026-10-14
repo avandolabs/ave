@@ -31,6 +31,16 @@ final class ThemeVarsExtension extends AbstractExtension
 
     private ?bool $built = null;
 
+    private ?bool $bundleBuilt = null;
+
+    /**
+     * Größte theme-vars.css, die noch in den Kopf geschrieben wird. Die vom
+     * Studio erzeugte liegt bei 0,3 bis 3 KB; mit eingebetteten Schriftlisten
+     * oder Handarbeit kann sie wachsen, und ab einer gewissen Größe ist eine
+     * zwischengespeicherte Datei billiger als dieselben Bytes in jeder Seite.
+     */
+    private const INLINE_MAX = 16384;
+
     public function __construct(
         #[Autowire('%kernel.project_dir%')]
         private readonly string $projectDir,
@@ -46,6 +56,8 @@ final class ThemeVarsExtension extends AbstractExtension
             new TwigFunction('ave_theme_vars_exists', $this->themeVarsExists(...)),
             new TwigFunction('ave_theme_font_files', $this->themeFontFiles(...)),
             new TwigFunction('ave_css_built', $this->cssBuilt(...)),
+            new TwigFunction('ave_css_bundle_built', $this->cssBundleBuilt(...)),
+            new TwigFunction('ave_theme_vars_inline', $this->themeVarsInline(...)),
         ];
     }
 
@@ -122,6 +134,68 @@ final class ThemeVarsExtension extends AbstractExtension
     public function cssBuilt(): bool
     {
         return $this->built ??= is_file(\dirname(__DIR__, 2).'/public/dist/theme.min.css');
+    }
+
+    /** Liegt die All-in-one-Datei ave.min.css vor (`ave:css:build`)? */
+    public function cssBundleBuilt(): bool
+    {
+        return $this->bundleBuilt ??= is_file(\dirname(__DIR__, 2).'/public/dist/ave.min.css');
+    }
+
+    /**
+     * Der Inhalt von theme-vars.css, wenn er gefahrlos als <style> in den Kopf
+     * darf — sonst null, und das Layout verlinkt die Datei wie bisher.
+     *
+     * Warum einbetten: Die Datei ist winzig (Studio-Grundstand 0,3 KB), blockiert
+     * als eigenes Stylesheet aber trotzdem das erste Zeichnen und kostet eine
+     * Anfrage. Gemessen am 14.10.2026 auf der Demo: eines von neun blockierenden
+     * Stylesheets.
+     *
+     * Nicht eingebettet wird,
+     *  - was größer als INLINE_MAX ist,
+     *  - was `</` enthält (könnte das <style>-Element schließen),
+     *  - was ein relatives url() enthält: das löste die Datei gegen
+     *    files/theme/CSS/ auf, eingebettet aber gegen die Seiten-URL. Das
+     *    Studio schreibt Schriftpfade absolut (/files/theme/fonts/…).
+     *  - wenn ein Design Studio installiert ist, das den eingebetteten Block
+     *    noch nicht kennt: Es schaltet für die Vorschau `link[href*=theme-vars]`
+     *    ab und lädt ihn nach dem Speichern neu. Ab Studio 1.1 trägt es dafür
+     *    die Konstante THEME_VARS_INLINE.
+     */
+    public function themeVarsInline(): ?string
+    {
+        if (!$this->themeVarsExists()) {
+            return null;
+        }
+
+        $studio = 'Avando\\AveEditor\\AvandoAveEditorBundle';
+
+        if (class_exists($studio) && !\defined($studio.'::THEME_VARS_INLINE')) {
+            return null;
+        }
+
+        $file = $this->projectDir.'/'.self::CSS_DIR.'theme-vars.css';
+        $size = @filesize($file);
+
+        if (false === $size || $size > self::INLINE_MAX) {
+            return null;
+        }
+
+        $css = (string) file_get_contents($file);
+
+        if (str_contains($css, '</')) {
+            return null;
+        }
+
+        preg_match_all('/url\(\s*([\'"]?)([^\'")]*)\1\s*\)/i', $css, $m);
+
+        foreach ($m[2] as $url) {
+            if (!preg_match('#^(/|data:|https?:|\#)#i', trim($url))) {
+                return null;
+            }
+        }
+
+        return trim($css);
     }
 
     public function themeVarsExists(): bool

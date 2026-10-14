@@ -47,9 +47,13 @@ classes `html.light` / `html.dark` (set by the footer switch,
 switches dark mode off for that token — write `light-dark(<light>, <dark>)`.
 
 Do not install Tailwind, Bootstrap, or any utility-first framework.
-CSS budget: the whole theme is **one** stylesheet, `dist/theme.min.css` —
-121 KB raw, **21 KB gzipped** (measured 09.10.2026, `ave:css:build` prints it
-on every run), plus Open Props (7.5 KB gzip) and the layered reset (2.3 KB).
+CSS budget: the whole theme is **one** stylesheet, `dist/ave.min.css` —
+Open Props, the layered reset, the nine theme sources and the starter files,
+187 KB raw, **34 KB gzipped** (measured 14.10.2026, `ave:css:build` prints it
+on every run). If a project replaces `theme.css` or `view-transitions.css`
+in files/, the layout falls back to `dist/theme.min.css` (theme only) plus
+the single files. `theme-vars.css` is inlined as `<style id="ave-theme-vars">`
+when small and safe (`ave_theme_vars_inline()`).
 There is no separate critical path, so measure the one file instead of
 budgeting a thing that does not exist.
 
@@ -90,6 +94,7 @@ Order in which the layout loads the theme (later wins):
 | File | Owner | Notes |
 |------|-------|-------|
 | `bundles/avandoave/open-props/*` | bundle | values only, plus the layered reset |
+| `bundles/avandoave/dist/ave.min.css` | bundle | everything below in one file (built by `ave:css:build`) |
 | `bundles/avandoave/dist/theme.min.css` | bundle | all theme CSS inside `@layer av.*` |
 | `files/theme/CSS/theme.css`, `view-transitions.css` | project | optional; fall back to `bundles/avandoave/starter/` |
 | `files/theme/CSS/theme-vars.css` | Design Studio | generated — **never edit by hand**, the Studio overwrites it |
@@ -214,8 +219,15 @@ To set a background image programmatically, store the binary UUID of the `tl_fil
 When `section_bg` starts with `bg-video`, `mod_article.html.twig` renders a
 `<video class=“section-video“ muted loop playsinline preload=“none“>` (no
 `autoplay` — `public/theme/video-bg.js` starts it) plus a pause button
-(`data-ave-video-toggle`), and adds `has-bg-video`. The poster is used both as
-`poster` and as CSS background, so the section never stays empty.
+(`data-ave-video-toggle`), and adds `has-bg-video`. The poster is a separate
+`<picture class="section-video__poster">` underneath (image size
+`_section_video_poster`, WebP, lazy unless it is the first section), not a
+`poster` attribute — that one loads eagerly even far down the page. The video
+starts only when the section scrolls into view, never with Save-Data.
+
+The first article in the main column preloads its background image
+(`<link rel="preload" fetchpriority="high">`, one per breakpoint), because a
+CSS-variable background is otherwise discovered only after all stylesheets.
 
 ### Where to look up valid preset values
 
@@ -258,7 +270,7 @@ contao/languages/de|en/tl_article.php, tl_content.php → human labels
 │           ├── content_element/
 │           └── frontend_module/
 ├── public/                                ← assets:install → public/bundles/avandoave/
-│   ├── dist/theme.min.css                 ← what the frontend actually loads
+│   ├── dist/ave.min.css                   ← what the frontend actually loads
 │   ├── theme/                             ← the 9 CSS sources + 6 JS files
 │   ├── starter/                           ← fallback theme.css + view-transitions.css
 │   ├── open-props/                        ← vendored Open Props 1.7.23

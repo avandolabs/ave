@@ -61,6 +61,12 @@ final class FileUrlExtension extends AbstractExtension
             return '';
         }
 
-        return '/'.$model->path;
+        // Mit Stempel aus der Änderungszeit, als `version` — dann speichert die
+        // .htaccess der Managed Edition (Contao 6) die Datei ein Jahr zwischen.
+        // Ohne ihn lud die Demo ihr 4,6-MB-Video bei jedem Besuch neu
+        // (gemessen am 14.10.2026, Lighthouse: Cache-Lebensdauer 0).
+        $mtime = @filemtime($this->projectDir.'/'.$model->path);
+
+        return '/'.$model->path.(false === $mtime ? '' : '?version='.dechex($mtime));
     }
 }

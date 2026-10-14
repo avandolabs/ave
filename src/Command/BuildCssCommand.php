@@ -35,7 +35,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 #[AsCommand(
     name: 'ave:css:build',
-    description: 'Fasst die Theme-Stylesheets zu bundle/public/theme/theme.min.css zusammen',
+    description: 'Fasst die Theme-Stylesheets zu dist/theme.min.css und dist/ave.min.css zusammen',
 )]
 class BuildCssCommand extends Command
 {
@@ -69,6 +69,38 @@ class BuildCssCommand extends Command
 
     public const OUTPUT = 'theme.min.css';
 
+    /**
+     * Alles, was eine Seite ohne eigene Starter-Dateien braucht, in EINER
+     * Datei: Open Props, normalize, die neun Theme-Quellen, Starter-Bausteine
+     * und Seitenübergang. Gemessen am 14.10.2026 (Lighthouse, Handy): sechs
+     * blockierende Stylesheets aus dem Bundle, dazu ein @import in
+     * normalize-layer.css, das erst nach dessen Laden entdeckt wird — eine
+     * dritte Stufe in der Kette.
+     *
+     * theme.min.css bleibt daneben bestehen: Ersetzt ein Projekt theme.css oder
+     * view-transitions.css durch eine eigene Datei in files/, kann das Layout
+     * die Starter-Teile nicht mitbündeln und fällt auf die Einzeldateien zurück.
+     */
+    public const BUNDLE = 'ave.min.css';
+
+    /**
+     * Teile vor den Theme-Quellen, relativ zu public/. normalize.min.css wird
+     * in @layer av.normalize gehüllt — dasselbe, was normalize-layer.css per
+     * @import … layer() tut, nur ohne die zusätzliche Anfrage.
+     *
+     * @var list<string>
+     */
+    public const BUNDLE_BEFORE = [
+        'open-props/open-props.min.css',
+        'open-props/normalize.min.css',
+    ];
+
+    /** @var list<string> Teile nach den Theme-Quellen, relativ zu public/. */
+    public const BUNDLE_AFTER = [
+        'starter/theme.css',
+        'starter/view-transitions.css',
+    ];
+
     private readonly string $themeDir;
 
     /**
@@ -93,15 +125,19 @@ class BuildCssCommand extends Command
         $io = new SymfonyStyle($input, $output);
         $gebaut = self::build($this->themeDir);
         $ziel = self::outputPath($this->themeDir);
+        $buendel = self::buildBundle($this->themeDir);
+        $buendelZiel = self::bundlePath($this->themeDir);
 
         if ($input->getOption('check')) {
-            if (!is_file($ziel) || file_get_contents($ziel) !== $gebaut) {
-                $io->error('theme.min.css ist nicht aktuell — `ave:css:build` ausführen.');
+            foreach ([$ziel => $gebaut, $buendelZiel => $buendel] as $datei => $soll) {
+                if (!is_file($datei) || file_get_contents($datei) !== $soll) {
+                    $io->error(basename($datei).' ist nicht aktuell — `ave:css:build` ausführen.');
 
-                return Command::FAILURE;
+                    return Command::FAILURE;
+                }
             }
 
-            $io->success('theme.min.css ist aktuell.');
+            $io->success('theme.min.css und ave.min.css sind aktuell.');
 
             return Command::SUCCESS;
         }
@@ -114,6 +150,7 @@ class BuildCssCommand extends Command
 
         @mkdir(\dirname($ziel), 0o775, true);
         file_put_contents($ziel, $gebaut);
+        file_put_contents($buendelZiel, $buendel);
 
         $io->success(\sprintf(
             '%d Dateien → %s: %s statt %s (gzip %s statt %s)',
@@ -123,6 +160,13 @@ class BuildCssCommand extends Command
             $this->kb($roh),
             $this->kb(\strlen((string) gzencode($gebaut, 9))),
             $this->kb($roh > 0 ? \strlen((string) gzencode($this->raw($this->themeDir), 9)) : 0),
+        ));
+
+        $io->success(\sprintf(
+            '%s: %s (gzip %s) — Open Props, normalize, Theme und Starter in einer Datei',
+            self::BUNDLE,
+            $this->kb(\strlen($buendel)),
+            $this->kb(\strlen((string) gzencode($buendel, 9))),
         ));
 
         return Command::SUCCESS;
@@ -146,6 +190,39 @@ class BuildCssCommand extends Command
 
         foreach (self::SOURCES as $name) {
             $teile[] = self::strip((string) file_get_contents($themeDir.'/'.$name));
+        }
+
+        return rtrim(implode("\n", $teile))."\n";
+    }
+
+    public static function bundlePath(string $themeDir): string
+    {
+        return \dirname($themeDir).'/'.self::OUTPUT_DIR.'/'.self::BUNDLE;
+    }
+
+    /**
+     * ave.min.css aus denselben Quellen, in der Reihenfolge, in der das Layout
+     * sie bisher einzeln verlinkt hat. Die Reihenfolge der @layer-Ebenen bleibt
+     * dabei gleich: av.normalize erscheint wie vorher als erste Ebene, noch vor
+     * der Liste in tokens.css.
+     */
+    public static function buildBundle(string $themeDir): string
+    {
+        $public = \dirname($themeDir);
+        $teile = ["/* Avando AVE — Open Props, normalize, Theme und Starter in einer Datei.\n"
+            ." * Automatisch erzeugt von `ave:css:build`; nicht von Hand bearbeiten. */\n"];
+
+        foreach (self::BUNDLE_BEFORE as $datei) {
+            $css = self::strip((string) file_get_contents($public.'/'.$datei));
+            $teile[] = str_ends_with($datei, '/normalize.min.css') ? "@layer av.normalize {\n".$css."\n}" : $css;
+        }
+
+        foreach (self::SOURCES as $name) {
+            $teile[] = self::strip((string) file_get_contents($themeDir.'/'.$name));
+        }
+
+        foreach (self::BUNDLE_AFTER as $datei) {
+            $teile[] = self::strip((string) file_get_contents($public.'/'.$datei));
         }
 
         return rtrim(implode("\n", $teile))."\n";

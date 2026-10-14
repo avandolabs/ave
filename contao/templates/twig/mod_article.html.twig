@@ -16,6 +16,10 @@
    When no-container is set the section IS the direct CE parent — keep everything on it. #}
 {%- set _containerClasses = _allClasses|split(' ')|filter(c => c starts with 'layout-' or c starts with 'align-items-' or c starts with 'align-content-' or c starts with 'av-y-' or c == 'align-all-center')|join(' ') -%}
 {%- set _sectionClasses = _noContainer ? _allClasses : (_allClasses|split(' ')|filter(c => not (c starts with 'layout-') and not (c starts with 'align-items-') and not (c starts with 'align-content-') and not (c starts with 'av-y-') and c != 'align-all-center')|join(' ')) -%}
+{#- Erste Sektion im Hauptbereich: ihr Bild ist fast immer das größte beim
+    Laden (LCP) und wird vorgeladen bzw. nicht lazy geladen
+    (FirstSectionExtension). -#}
+{%- set _isFirst = (column|default == 'main') and ave_first_in_column('main') -%}
 {%- set _bgImageStyle = '' -%}
 {%- set _bgImageClass = '' -%}
 {%- if (section_bg|default) starts with 'bg-image' and section_bg_image|default -%}
@@ -25,19 +29,32 @@
     {%- if _bg_sm -%}
         {%- set _bgImageClass = 'has-bg-image' -%}
         {%- set _bgImageStyle = '--section-bg-sm: url(' ~ _bg_sm.image.img.src ~ '); --section-bg-md: url(' ~ _bg_md.image.img.src ~ '); --section-bg-lg: url(' ~ _bg_lg.image.img.src ~ ')' -%}
+        {#- Vorladen mit denselben Grenzen wie .has-bg-image in layout.css
+            (768 / 1200 px), damit jedes Gerät genau EIN Bild holt — das, das
+            es auch zeichnet. -#}
+        {%- if _isFirst -%}
+            {% add 'avandoave-lcp-image' to stylesheets %}
+                <link rel="preload" as="image" fetchpriority="high" href="{{ _bg_sm.image.img.src }}" media="(max-width: 767.98px)">
+                <link rel="preload" as="image" fetchpriority="high" href="{{ _bg_md.image.img.src }}" media="(min-width: 768px) and (max-width: 1199.98px)">
+                <link rel="preload" as="image" fetchpriority="high" href="{{ _bg_lg.image.img.src }}" media="(min-width: 1200px)">
+            {% endadd %}
+        {%- endif -%}
     {%- endif -%}
 {%- endif -%}
-{#- Hintergrundvideo. Das Standbild wird als poster UND als background des
-    <video> gesetzt: poster deckt das Laden ab, der background den Fall, dass
-    die Quelle gar nicht spielt. Ohne autoplay-Attribut — video-bg.js startet,
+{#- Hintergrundvideo. Das Standbild liegt als eigenes <picture> UNTER dem
+    <video> (nicht als poster-Attribut): ein poster lädt der Browser sofort,
+    auch weit unten auf der Seite — gemessen am 14.10.2026 136 KB JPG, die auf
+    dem Handy niemand sah. Das <img> lädt lazy, in WebP und in der Breite,
+    die das Gerät braucht (Bildgröße section_video_poster). Es trägt auch, wenn
+    die Quelle gar nicht spielt; ohne Bild bleibt das Video bis zum ersten
+    Einzelbild durchsichtig. Ohne autoplay-Attribut — video-bg.js startet,
     und nur wenn prefers-reduced-motion nicht widerspricht. -#}
 {%- set _bgVideoClass = '' -%}
 {%- set _videoSrc = '' -%}
-{%- set _posterSrc = '' -%}
+{%- set _poster = null -%}
 {%- if (section_bg|default) starts with 'bg-video' -%}
     {%- if section_bg_video_poster|default -%}
-        {%- set _poster = figure(section_bg_video_poster, [1920, 0, 'proportional']) -%}
-        {%- if _poster -%}{%- set _posterSrc = _poster.image.img.src -%}{%- endif -%}
+        {%- set _poster = figure(section_bg_video_poster, '_section_video_poster') -%}
     {%- endif -%}
     {%- if section_bg_video|default -%}
         {%- set _videoSrc = ave_file_url(section_bg_video) -%}
@@ -85,9 +102,20 @@
                 haben soll; playsinline, damit iOS es nicht in den Vollbild-
                 Player reisst. preload="none": ohne autoplay wird ohnehin erst
                 auf Zuruf geladen, das spart Daten auf Mobilfunk. -#}
+            {%- if _poster -%}
+                {{- include('@Contao/component/_picture.html.twig', {
+                    figure: _poster,
+                    picture_attributes: attrs().addClass('section-video__poster').set('aria-hidden', 'true'),
+                    img_attributes: attrs()
+                        .addClass('section-video__poster-img')
+                        .set('alt', '')
+                        .set('loading', _isFirst ? 'eager' : 'lazy')
+                        .set('decoding', 'async')
+                        .setIfExists('fetchpriority', _isFirst ? 'high' : null),
+                }, with_context = false) -}}
+            {%- endif -%}
             <video class="section-video" muted loop playsinline preload="none"
-                   tabindex="-1" aria-hidden="true"
-                   {% if _posterSrc %}poster="{{ _posterSrc }}" style="background-image:url({{ _posterSrc }})"{% endif %}>
+                   tabindex="-1" aria-hidden="true">
                 <source src="{{ _videoSrc }}">
             </video>
             <button type="button" class="section-video__toggle" data-ave-video-toggle

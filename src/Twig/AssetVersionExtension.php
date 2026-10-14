@@ -29,6 +29,12 @@ use Twig\TwigFunction;
  * The Contao Managed Edition already registers an mtime version strategy for
  * the default package, so asset() returns `…?v=<mtime>`. Then the URL is kept
  * as is — a second stamp would only duplicate the first.
+ *
+ * Unter files/ heißt der Parameter `version` statt `v`. Die .htaccess der
+ * Managed Edition (ab Contao 6) speichert files/ nur mit `?version=` ein Jahr
+ * zwischen, alles andere dort gar nicht. Gemessen am 14.10.2026 auf der Demo:
+ * custom.css und theme-vars.css kamen mit `?v=` ohne Cache-Control — jeder
+ * Seitenaufruf fragte neu nach.
  */
 final class AssetVersionExtension extends AbstractExtension
 {
@@ -51,7 +57,17 @@ final class AssetVersionExtension extends AbstractExtension
 
     public function asset(string $path): string
     {
-        return $this->cache[$path] ??= $this->build($path);
+        return $this->cache[$path] ??= self::filesParameter($path, $this->build($path));
+    }
+
+    /** `?v=` → `?version=` für Dateien unter files/ (siehe Klassenkommentar). */
+    public static function filesParameter(string $path, string $url): string
+    {
+        if (!str_starts_with(ltrim($path, '/'), 'files/')) {
+            return $url;
+        }
+
+        return (string) preg_replace('/([?&])v=/', '$1version=', $url, 1);
     }
 
     private function build(string $path): string

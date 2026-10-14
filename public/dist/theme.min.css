@@ -58,7 +58,7 @@ oklch(from var(--av-color-surface) 0.428 c h));
 --av-card-bg-3: var(--indigo-5);
 --av-card-bg-4: var(--indigo-8);
 --av-color-text:       light-dark(var(--gray-9), var(--gray-1));
---av-muted-fraction:   55%;
+--av-muted-fraction:   65%;
 --av-color-text-muted: color-mix(in oklch, var(--av-color-text) var(--av-muted-fraction), var(--av-color-surface));
 --av-focus: light-dark(
 oklch(from var(--av-color-primary) min(l, 0.6) c h),
@@ -1470,6 +1470,18 @@ object-fit: cover;
 background-size: cover;
 background-position: center;
 }
+.section-video__poster,
+.section-video__poster-img {
+position: absolute;
+inset: 0;
+z-index: 0;
+display: block;
+inline-size: 100%;
+block-size: 100%;
+}
+.section-video__poster-img {
+object-fit: cover;
+}
 :is(.bg-video-dark, .bg-video-light, .bg-video-brand,
 .bg-video-secondary, .bg-video-gradient).has-bg-video::after {
 content: '';
@@ -1479,7 +1491,7 @@ z-index: 1;
 pointer-events: none;
 background: var(--av-bg-overlay);
 }
-.has-bg-video > *:not(.section-video, .section-video__toggle) {
+.has-bg-video > *:not(.section-video, .section-video__poster, .section-video__poster-img, .section-video__toggle) {
 position: relative;
 z-index: 2;
 }
@@ -2753,6 +2765,14 @@ background-color: var(--av-color-surface-2);
 transform: none;
 opacity: 1;
 }
+.content-swiper .swiper.swiper {
+--swiper-pagination-bullet-horizontal-gap: 0;
+}
+.content-swiper .swiper.swiper .swiper-pagination-bullet {
+box-sizing: content-box;
+padding: calc((1.5rem - var(--swiper-pagination-bullet-size)) / 2);
+background-clip: content-box;
+}
 .slider-control.slider-control {
 block-size: auto;
 display: flex;
@@ -3114,6 +3134,15 @@ padding-block-start: var(--av-space-md);
 border-block-start: 1px solid var(--av-nav-divider, var(--av-color-border));
 margin-block-start: var(--av-space-xs);
 }
+@media (max-width: 768px) {
+:root.ave-js .mod_navigation:not(.is-compact):has(> .level_1) {
+min-block-size: 2.75rem;
+min-inline-size: 2.75rem;
+}
+:root.ave-js .mod_navigation:not(.is-compact) > .level_1 {
+display: none;
+}
+}
 .av-nav-burger {
 display: none;
 position: relative;
@@ -3160,6 +3189,7 @@ from { opacity: 0; transform: translateY(-4px); }
 to   { opacity: 1; transform: none; }
 }
 .mod_navigation.is-compact {
+& { display: flex; align-items: center; }
 .av-nav-burger { display: inline-flex; }
 & > .level_1 { display: none; }
 & > .level_1 > li.submenu {
