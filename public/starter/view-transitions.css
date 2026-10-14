@@ -15,7 +15,15 @@
  * instantly; disabled under prefers-reduced-motion.
  */
 
-@view-transition { navigation: auto; }
+/* Das Einschalten (`@view-transition { navigation: auto; }`) steht NICHT hier,
+   sondern kommt vom Inline-Skript in page/layout.html.twig — und zwar nur, wenn
+   die Seite von einer Seite derselben Domain kommt, plus nach `load` für den
+   nächsten Klick. Stand es hier, hielt Chrome im Lighthouse-Lauf das erste
+   Zeichnen zurück, obwohl es gar keine Vorgängerseite gab: gemessen am
+   14.10.2026 (Lighthouse 13.5, Handy) erster Inhalt bei 2,4 s statt 0,34 s,
+   Speed Index 4,2 s. Wer von außen kommt (Suche, Link), hat ohnehin keinen
+   Übergang zu sehen. Eine eigene Kopie in files/theme/CSS/ schreibt die Regel
+   wieder selbst hinein, dann gilt das alte Verhalten. */
 
 /* Cross-fade with a hair of zoom (directionless). A pure opacity fade between
    similar pages is nearly invisible, so the incoming content also scales up a

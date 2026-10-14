@@ -122,9 +122,16 @@
       Dazu `ave-js`: sagt dem CSS, dass die Skripte gleich laufen werden. Damit
       reserviert navigation.css auf dem Handy schon vor navigation.js den Platz
       fuer den Burger, statt die Seite danach nach unten zu schieben.
+
+      Und der Seitenuebergang: `@view-transition` wird nur eingeschaltet, wenn
+      die vorige Seite dieselbe Domain hatte (sofort, vor dem ersten Zeichnen)
+      und sonst nach `load` fuer den naechsten Klick. Begruendung in
+      starter/view-transitions.css. Nur fuer die mitgelieferte Datei — eine
+      eigene in files/ entscheidet selbst, eine leere schaltet ab.
     #}
+    {% set _ave_vt = not ave_theme_css_exists('view-transitions.css') %}
     {% add 'avandoave-theme-boot' to head %}
-        <script{{ attrs().setIfExists('nonce', csp_nonce('script-src')) }}>document.documentElement.classList.add('ave-js');try{var t=localStorage.getItem('ave-theme');if(t==='light'||t==='dark'){document.documentElement.classList.add(t)}}catch(e){}</script>
+        <script{{ attrs().setIfExists('nonce', csp_nonce('script-src')) }}>document.documentElement.classList.add('ave-js');try{var t=localStorage.getItem('ave-theme');if(t==='light'||t==='dark'){document.documentElement.classList.add(t)}}catch(e){}{% if _ave_vt %}(function(d){function v(){if(d.getElementById('ave-vt'))return;var s=d.createElement('style');s.id='ave-vt';{% if csp_nonce('style-src') %}s.nonce='{{ csp_nonce('style-src')|e('js') }}';{% endif %}s.textContent='@view-transition{navigation:auto}';d.head.appendChild(s)}try{if(d.referrer&&new URL(d.referrer).origin===location.origin)v()}catch(e){}addEventListener('load',v)})(document);{% endif %}</script>
     {% endadd %}
     {% add 'avandoave-js' to body %}
         <script src="{{ ave_asset('bundles/avandoave/theme/onepage.js') }}" defer></script>

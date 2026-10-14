@@ -4375,7 +4375,6 @@ color: var(--av-color-text-muted);
 grid-column: 1 / -1;
 }
 }
-@view-transition { navigation: auto; }
 @keyframes av-vt-out { to   { opacity: 0; } }
 @keyframes av-vt-in  { from { opacity: 0; transform: scale(var(--av-page-transition-scale, .98)); } }
 ::view-transition-old(root) {
