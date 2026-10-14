@@ -1,0 +1,13 @@
+{#
+  AVE-Fassung von picture_default: Bilder laden lazy, wenn die Bildgröße
+  nichts anderes sagt. Dieses ältere Template nutzen Contaos image.html.twig
+  und damit die News- und Event-Listen (news_av_list, event_av_list …) —
+  dieselbe Lücke wie in component/_figure, siehe Begründung dort.
+
+  KEIN {% extends %}: das Core-Template hat keine Blöcke. Es wird unverändert
+  eingebunden, nur img.loading bekommt eine Vorgabe. Über den Namensraum
+  adressiert, weil es in Contao 5.7 unter templates/twig/, in 6 unter
+  templates/ liegt.
+#}
+{%- set img = img|default({})|merge({loading: img.loading|default('lazy')}) -%}
+{{- include('@Contao_ContaoCoreBundle/picture_default.html.twig') -}}

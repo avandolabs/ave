@@ -56,7 +56,10 @@
             {% endif %}
 
             {% if addImage %}
-                {{ include('@Contao/image.html.twig') }}
+                {#- Das Beitragsbild steht oben und ist meist das größte Element
+                    beim Laden (LCP) — also NICHT lazy, anders als die Vorgabe in
+                    picture_default. -#}
+                {{ include('@Contao/image.html.twig', {picture: picture|merge({img: picture.img|merge({loading: 'eager'})})}) }}
             {% endif %}
 
             {% if addBefore %}

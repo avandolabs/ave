@@ -17,6 +17,18 @@
 {% use "@Contao_ContaoCoreBundle/component/_figure.html.twig" with media as ave_core_media %}
 
 {% block media %}
+    {#- Lazy, wenn nichts anderes gesagt ist. Contao setzt loading nur, wenn die
+        Bildgröße es verlangt — frei eingegebene Maße (150×150 zuschneiden …)
+        und Bilder ohne Größe laden sofort, auch weit unten. Gemessen am
+        14.10.2026 auf der Demo-Startseite (Lighthouse, Handy): sieben Bilder
+        unterhalb des ersten Bildschirms luden parallel zum Hintergrundbild
+        oben und nahmen ihm die Bandbreite — LCP 2,4 s, ohne sie 1,7 s.
+        Ein loading aus der Bildgröße (img.loading) oder vom Aufrufer
+        (img_attributes) gewinnt. Das größte Bild oben ist bei AVE ein
+        Sektions-Hintergrund und wird ohnehin vorgeladen (mod_article). -#}
+    {%- set img_attributes = attrs()
+        .setIfExists('loading', figure.image.img.loading|default ? null : 'lazy')
+        .mergeWith(img_attributes|default) -%}
     {{- block('ave_core_media') -}}
     {{- include('@Contao/component/_ai_label.html.twig', {ai_label: ave_ai_label(figure|default)}, with_context = false) -}}
     {#- Maschinenlesbar: digitalSourceType im schema.org-Eintrag des Bildes.
