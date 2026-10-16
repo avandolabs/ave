@@ -199,9 +199,14 @@
 
     /* Messen und beobachten. Beim Wechsel zwischen Leiste und Panel bleibt
        sonst ein halb geoeffnetes Untermenue stehen, das im anderen Zustand
-       niemand mehr schliessen kann. */
-    var war = nav.classList.contains('is-compact');
+       niemand mehr schliessen kann.
+       `war` erst NACH der ersten Messung lesen: beobachte() setzt .is-compact
+       sofort, bevor der Observer haengt. Vorher gelesen stand `war` auf Mobil
+       auf false, der erste Burger-Tipp (is-open → Klassenwechsel) sah dann
+       einen vermeintlichen Wechsel zu kompakt und schloss das Menue gleich
+       wieder — erst der zweite Tipp oeffnete es. */
     var anwenden = beobachte(nav, level1);
+    var war = nav.classList.contains('is-compact');
 
     new MutationObserver(function () {
       var jetzt = nav.classList.contains('is-compact');
