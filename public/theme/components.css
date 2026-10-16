@@ -523,27 +523,27 @@
   }
 
   .alert--info {
-    background: oklch(from var(--av-color-info) l c h / 12%);
-    border-color: oklch(from var(--av-color-info) l c h / 30%);
+    background: color-mix(in srgb, var(--av-color-info) 12%, transparent);
+    border-color: color-mix(in srgb, var(--av-color-info) 30%, transparent);
     color: var(--av-color-info-text);
   }
 
   .alert--success,
   p.confirm {
-    background: oklch(from var(--av-color-success) l c h / 12%);
-    border-color: oklch(from var(--av-color-success) l c h / 30%);
+    background: color-mix(in srgb, var(--av-color-success) 12%, transparent);
+    border-color: color-mix(in srgb, var(--av-color-success) 30%, transparent);
     color: var(--av-color-success-text);
   }
 
   .alert--warning {
-    background: oklch(from var(--av-color-warning) l c h / 12%);
-    border-color: oklch(from var(--av-color-warning) l c h / 30%);
+    background: color-mix(in srgb, var(--av-color-warning) 12%, transparent);
+    border-color: color-mix(in srgb, var(--av-color-warning) 30%, transparent);
     color: var(--av-color-warning-text);
   }
 
   .alert--error {
-    background: oklch(from var(--av-color-error) l c h / 12%);
-    border-color: oklch(from var(--av-color-error) l c h / 30%);
+    background: color-mix(in srgb, var(--av-color-error) 12%, transparent);
+    border-color: color-mix(in srgb, var(--av-color-error) 30%, transparent);
     color: var(--av-color-error-text);
   }
 

@@ -123,6 +123,10 @@
       reserviert navigation.css auf dem Handy schon vor navigation.js den Platz
       fuer den Burger, statt die Seite danach nach unten zu schieben.
 
+      Und alte Browser: ohne light-dark() oder relative Farben laedt es
+      legacy-colors.js nach (Begruendung dort und am Ende von tokens.css).
+      Nur dann — moderne Browser sollen dafuer keine Anfrage stellen.
+
       Und der Seitenuebergang: `@view-transition` wird nur eingeschaltet, wenn
       die vorige Seite dieselbe Domain hatte (sofort, vor dem ersten Zeichnen)
       und sonst nach `load` fuer den naechsten Klick. Begruendung in
@@ -131,7 +135,7 @@
     #}
     {% set _ave_vt = not ave_theme_css_exists('view-transitions.css') %}
     {% add 'avandoave-theme-boot' to head %}
-        <script{{ attrs().setIfExists('nonce', csp_nonce('script-src')) }}>document.documentElement.classList.add('ave-js');try{var t=localStorage.getItem('ave-theme');if(t==='light'||t==='dark'){document.documentElement.classList.add(t)}}catch(e){}{% if _ave_vt %}(function(d){function v(){if(d.getElementById('ave-vt'))return;var s=d.createElement('style');s.id='ave-vt';{% if csp_nonce('style-src') %}s.nonce='{{ csp_nonce('style-src')|e('js') }}';{% endif %}s.textContent='@view-transition{navigation:auto}';d.head.appendChild(s)}try{if(d.referrer&&new URL(d.referrer).origin===location.origin)v()}catch(e){}addEventListener('load',v)})(document);{% endif %}</script>
+        <script{{ attrs().setIfExists('nonce', csp_nonce('script-src')) }}>document.documentElement.classList.add('ave-js');try{var t=localStorage.getItem('ave-theme');if(t==='light'||t==='dark'){document.documentElement.classList.add(t)}}catch(e){}try{if(!(CSS.supports('color','light-dark(#000,#fff)')&&CSS.supports('color','oklch(from red l c h)'))){var l=document.createElement('script');l.src='{{ ave_asset('bundles/avandoave/theme/legacy-colors.js')|e('js') }}';l.defer=true;{% if csp_nonce('script-src') %}l.nonce='{{ csp_nonce('script-src')|e('js') }}';{% endif %}document.head.appendChild(l)}}catch(e){}{% if _ave_vt %}(function(d){function v(){if(d.getElementById('ave-vt'))return;var s=d.createElement('style');s.id='ave-vt';{% if csp_nonce('style-src') %}s.nonce='{{ csp_nonce('style-src')|e('js') }}';{% endif %}s.textContent='@view-transition{navigation:auto}';d.head.appendChild(s)}try{if(d.referrer&&new URL(d.referrer).origin===location.origin)v()}catch(e){}addEventListener('load',v)})(document);{% endif %}</script>
     {% endadd %}
     {% add 'avandoave-js' to body %}
         <script src="{{ ave_asset('bundles/avandoave/theme/onepage.js') }}" defer></script>

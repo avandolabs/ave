@@ -452,4 +452,29 @@
     }
   }
 
+  /* Ersatz für Browser ohne light-dark() oder relative Farben (siehe Ende
+     von tokens.css). Überschriften, Absätze und Listen mischen ihre Farbe
+     oben aus currentColor — das kann Chrome 115 in color-mix() noch nicht
+     auflösen und macht durchsichtige Schrift daraus. Gesehen am 16.10.2026
+     im HeyTap-Browser: helle Sektionen ohne eigene Sektionsfarbe zeigten
+     nur noch ihre Knöpfe. Dort steht statt currentColor die Textfarbe, die
+     jede Sektion ohnehin setzt; Gleiches für den Unterstrich der Links.
+     --av-color-heading fehlt bei den Überschriften absichtlich: Vorgabe ist
+     currentColor (dasselbe Problem), und eine eigene Überschriftenfarbe setzt
+     nur das Studio — mit light-dark(), in diesen Browsern also ungültig. */
+  @supports not ((color: light-dark(#000, #fff)) and (color: oklch(from red l c h))) {
+    h1, h2, h3, h4, h5, h6 {
+      color: color-mix(in srgb, var(--av-el-color, var(--av-section-color, var(--av-color-text))) var(--av-el-soft, 100%), transparent);
+    }
+
+    p,
+    li {
+      color: color-mix(in srgb, var(--av-el-color, var(--av-section-color, var(--av-color-text))) var(--av-el-soft, 100%), transparent);
+    }
+
+    a {
+      text-decoration-color: color-mix(in srgb, var(--av-link, var(--av-color-primary-text)) 55%, transparent);
+    }
+  }
+
 }

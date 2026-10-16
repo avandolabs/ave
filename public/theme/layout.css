@@ -1039,7 +1039,7 @@
     color: var(--av-color-on-dark-surface);
     --av-section-color:    var(--av-color-on-dark-surface);
     --av-color-text:       var(--av-color-on-dark-surface);
-    --av-color-text-muted: oklch(from var(--av-color-on-dark-surface) l c h / var(--av-muted-strength-inv));
+    --av-color-text-muted: color-mix(in srgb, var(--av-color-on-dark-surface) var(--av-muted-strength-inv), transparent);
     --av-color-surface-2:  oklch(100% 0 0 / 8%);
     --av-card-bg:         var(--av-color-surface-2);
     --av-color-surface-3:  oklch(100% 0 0 / 14%);
@@ -1486,6 +1486,18 @@
                  oklch(  0% 0 0 / calc(48% * var(--av-bg-overlay-scale, 1)))),
       light-dark(oklch(100% 0 0 / calc(90% * var(--av-bg-overlay-scale, 1))),
                  oklch(  0% 0 0 / calc(80% * var(--av-bg-overlay-scale, 1)))));
+  }
+  /* Ohne light-dark() wäre der Schleier ungültig — und mit ihm die ganze
+     background-image-Angabe, also auch das Bild (siehe Ende von tokens.css).
+     Dort wählen die Hell/Dunkel-Schalter den Schleier. */
+  @supports not ((color: light-dark(#000, #fff)) and (color: oklch(from red l c h))) {
+    :is(.bg-image-light, .bg-video-light) {
+      --av-bg-overlay: linear-gradient(to bottom,
+        var(--av-ld-hell, oklch(100% 0 0 / calc(66% * var(--av-bg-overlay-scale, 1))))
+          var(--av-ld-dunkel, oklch(0% 0 0 / calc(48% * var(--av-bg-overlay-scale, 1)))),
+        var(--av-ld-hell, oklch(100% 0 0 / calc(90% * var(--av-bg-overlay-scale, 1))))
+          var(--av-ld-dunkel, oklch(0% 0 0 / calc(80% * var(--av-bg-overlay-scale, 1)))));
+    }
   }
   /* Ausgesprochener Sonderfall: hell bleiben, egal welches Schema. */
   :is(.bg-image-light, .bg-video-light).text-on-light {

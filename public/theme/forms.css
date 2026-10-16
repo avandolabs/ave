@@ -46,7 +46,7 @@
     &:focus {
       outline: none;
       border-color: var(--av-color-primary-text);
-      box-shadow: 0 0 0 3px oklch(from var(--av-color-primary) l c h / 20%);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--av-color-primary) 20%, transparent);
     }
 
     &:disabled {
@@ -182,7 +182,7 @@
       border-color: var(--av-color-error);
 
       &:focus {
-        box-shadow: 0 0 0 3px oklch(from var(--av-color-error) l c h / 20%);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--av-color-error) 20%, transparent);
       }
     }
 
@@ -288,7 +288,7 @@
     &:hover       { background-color: var(--_btn-bg-hover, var(--av-color-primary-dark)); }
     &:focus-visible {
       outline: none;
-      box-shadow: 0 0 0 3px oklch(from var(--av-color-primary) l c h / 30%);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--av-color-primary) 30%, transparent);
     }
   }
 
@@ -301,7 +301,7 @@
     &:hover { background-color: var(--av-color-secondary-dark); }
     &:focus-visible {
       outline: none;
-      box-shadow: 0 0 0 3px oklch(from var(--av-color-secondary) l c h / 30%);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--av-color-secondary) 30%, transparent);
     }
   }
 
@@ -368,10 +368,10 @@
 
   /* Soft — primary at low opacity, fills on hover */
   :is(a.btn--soft, button.btn--soft, :not(a,button).btn--soft > a, :not(a,button).btn--soft > button) {
-    background-color: oklch(from var(--av-color-primary) l c h / 12%);
+    background-color: color-mix(in srgb, var(--av-color-primary) 12%, transparent);
     color: var(--av-color-primary-text);
     border-color: transparent;
-    &:hover { background-color: oklch(from var(--av-color-primary) l c h / 22%); }
+    &:hover { background-color: color-mix(in srgb, var(--av-color-primary) 22%, transparent); }
   }
 
   /* Dark — for use on light sections needing a dark CTA */
@@ -452,6 +452,25 @@
   .widget-submit {
     margin-block-start: var(--av-space-lg);
     align-items: flex-start;
+  }
+
+  /* Ersatz für Browser ohne light-dark() oder relative Farben (siehe Ende
+     von tokens.css): die Felder bekommen ihre Werte über die Hell/Dunkel-
+     Schalter, das dunkle
+     Knopf-Überfahren einen Mischschritt statt des Helligkeitsschritts. Ohne
+     das wäre der Knopf beim Überfahren durchsichtig, mit weißer Schrift. */
+  @supports not ((color: light-dark(#000, #fff)) and (color: oklch(from red l c h))) {
+    input:where(:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="submit"]):not([type="button"]):not([type="reset"])),
+    select,
+    textarea {
+      --av-color-text:       var(--av-ld-hell, var(--gray-9)) var(--av-ld-dunkel, var(--gray-1));
+      --av-color-text-muted: var(--av-ld-hell, var(--gray-6)) var(--av-ld-dunkel, var(--gray-5));
+      --av-color-surface-2:  var(--av-ld-hell, var(--gray-1)) var(--av-ld-dunkel, var(--gray-8));
+    }
+
+    :is(a.btn--dark, button.btn--dark, :not(a,button).btn--dark > a, :not(a,button).btn--dark > button):hover {
+      background-color: color-mix(in oklab, var(--av-color-dark-surface), white 10%);
+    }
   }
 
 }

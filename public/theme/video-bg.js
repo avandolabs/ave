@@ -26,10 +26,26 @@
      mehrere Megabyte. Der Knopf startet es trotzdem auf Wunsch. */
   const saveData = !!(navigator.connection && navigator.connection.saveData);
 
+  /* Browser, die jedes <video> in ihren eigenen Player holen. Der MIUI-
+     Browser (Xiaomi, auch unter HyperOS; ebenso Mint) legt beim Abspielen
+     einen System-Player ueber die Seite — Schleier und Inhalt der Sektion
+     verschwinden darunter, und weder CSS noch playsinline halten ihn auf.
+     Dort bleibt es beim Standbild: Video und Knopf werden entfernt, damit
+     nichts mehr da ist, was der Browser uebernehmen koennte.
+     Erkannt wird hier und nicht im Template: Contaos Seiten-Cache liefert
+     allen Besuchern dasselbe HTML aus. */
+  const kapertVideos = /MiuiBrowser|Mint Browser/i.test(navigator.userAgent);
+
   SECTIONS.forEach((section) => {
     const video = section.querySelector('.section-video');
     const toggle = section.querySelector('[data-ave-video-toggle]');
     if (!video || !toggle) return;
+
+    if (kapertVideos) {
+      video.remove();
+      toggle.remove();
+      return;
+    }
 
     const labels = {
       play: toggle.getAttribute('data-label-play') || 'Video abspielen',

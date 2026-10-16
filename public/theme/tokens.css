@@ -1216,3 +1216,175 @@
   }
 
 }
+
+/* ── Ersatz für Browser ohne light-dark() oder relative Farben ─────────────
+   Das Farbsystem oben steht auf zwei Funktionen: light-dark() (Chrome 123,
+   Safari 17.5, Firefox 120) und relativen Farben `oklch(from …)` (Chrome 122,
+   Safari 18, Firefox 128). Ein älterer Browser verwirft keinen einzelnen
+   Wert, sondern macht jede Eigenschaft ungültig, die eine dieser Variablen
+   benutzt — sie fällt auf ihren Ausgangswert zurück. Gesehen am 16.10.2026
+   im HeyTap-Browser (Oppo/Realme, Chrome 115), nachgemessen in Chrome 115:
+   Text und Logo schwarz, Kopf und Menüpanel durchsichtig, Menülinks ganz
+   unsichtbar (Farbe mit Deckkraft 0), kein Hintergrundbild (der Schleier
+   davor war ungültig und riss das Bild mit). Ebenso betroffen: iPhones mit
+   iOS 16 und 17.0–17.4.
+
+   Hier stehen dieselben Rollen ohne die beiden Funktionen, nur so weit
+   abgeleitet, wie color-mix() reicht (Chrome 111, Safari 16.2): Aufhellen
+   und Abdunkeln ja, Farbton drehen und Kontrast ausrechnen nein. Die
+   Sekundärfarbe ist deshalb die Primärfarbe. Ob auf einer Markenfarbe
+   schwarze oder weisse Schrift steht, rechnet legacy-colors.js aus; ohne
+   Skript ist sie weiss. Das ist schlichter, aber stimmig und lesbar — und
+   die Primärfarbe aus dem Design Studio bleibt erhalten.
+
+   Gemischt wird in oklab, nicht in oklch: Chrome 115 nimmt den Farbton von
+   Schwarz und Weiss als 0° statt als „keinen" und dreht beim Mischen mit —
+   aus #3b5bdb wurde mit 20 % Schwarz ein Violett (Farbton 268° → 286°).
+   oklab hat keinen Farbton, der kippen kann.
+
+   Hell und dunkel: zwei Schalter statt light-dark(). Jeder Wert steht als
+       var(--av-ld-hell, HELL) var(--av-ld-dunkel, DUNKEL)
+   Der gültige Zweig hat seinen Schalter auf `initial` (var() nimmt dann den
+   Ersatzwert dahinter), der andere ist leer und fällt weg. Das läuft in
+   jedem Browser mit Custom Properties. Umgelegt wird an genau den Stellen,
+   die oben color-scheme bestimmen, in derselben Rangfolge:
+     System (prefers-color-scheme)  <  Besucherwahl (html.light / html.dark)
+     <  festes Schema aus dem Studio (Regler, Persona, Vorschau „Dunkel").
+   Das Studio setzt dafür nur color-scheme; welches Schema dabei herauskommt,
+   liest legacy-colors.js und meldet es als data-av-ld an <html>. Das Skript
+   lädt nur in diesen Browsern (Boot-Skript im Layout).
+   Ein Schema, das jemand in custom.css nur per color-scheme festlegt, kennt
+   dieser Ersatz nicht — dort entscheidet weiter das System.
+
+   Gleiche Ebene, spätere Stelle: schlägt die Werte oben, verliert aber gegen
+   theme-vars.css (ungelayert) und custom.css. Dieselbe Bedingung steht für
+   einzelne Bauteile in base.css, forms.css und layout.css. */
+@layer av.tokens {
+  @supports not ((color: light-dark(#000, #fff)) and (color: oklch(from red l c h))) {
+    :root {
+      --av-ld-hell:   initial;
+      --av-ld-dunkel: ;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --av-ld-hell:   ;
+        --av-ld-dunkel: initial;
+      }
+    }
+    html.light {
+      --av-ld-hell:   initial;
+      --av-ld-dunkel: ;
+    }
+    html.dark {
+      --av-ld-hell:   ;
+      --av-ld-dunkel: initial;
+    }
+    /* Festes Schema aus dem Studio (Regler, Persona, Vorschau): meldet
+       legacy-colors.js, weil es nur als color-scheme ankommt. Steht nach
+       html.light/.dark und schlägt sie damit — dieselbe Rangfolge wie oben. */
+    html[data-av-ld="hell"] {
+      --av-ld-hell:   initial;
+      --av-ld-dunkel: ;
+    }
+    html[data-av-ld="dunkel"] {
+      --av-ld-hell:   ;
+      --av-ld-dunkel: initial;
+    }
+    /* Schrift auf der Markenfarbe, ausgerechnet von legacy-colors.js. */
+    html[data-av-auf-primaer="schwarz"]   { --av-color-text-on-primary:   #000; }
+    html[data-av-auf-sekundaer="schwarz"] { --av-color-text-on-secondary: #000; }
+
+    :root {
+      --av-color-primary-on-light:   color-mix(in oklab, var(--av-color-primary), black 20%);
+      --av-color-primary-on-dark:    color-mix(in oklab, var(--av-color-primary), white 40%);
+      --av-color-primary-text:       var(--av-ld-hell, var(--av-color-primary-on-light)) var(--av-ld-dunkel, var(--av-color-primary-on-dark));
+      --av-color-text-on-primary:    #fff;
+
+      --av-color-secondary:          var(--av-color-primary);
+      --av-color-secondary-on-light: color-mix(in oklab, var(--av-color-secondary), black 20%);
+      --av-color-secondary-on-dark:  color-mix(in oklab, var(--av-color-secondary), white 40%);
+      --av-color-secondary-text:     var(--av-ld-hell, var(--av-color-secondary-on-light)) var(--av-ld-dunkel, var(--av-color-secondary-on-dark));
+      --av-color-text-on-secondary:  #fff;
+
+      --av-focus: var(--av-ld-hell, color-mix(in oklab, var(--av-color-primary), black 15%)) var(--av-ld-dunkel, color-mix(in oklab, var(--av-color-primary), white 25%));
+
+      --av-color-success-text: var(--av-ld-hell, color-mix(in oklab, var(--av-color-success), black 35%)) var(--av-ld-dunkel, color-mix(in oklab, var(--av-color-success), white 40%));
+      --av-color-warning-text: var(--av-ld-hell, color-mix(in oklab, var(--av-color-warning), black 50%)) var(--av-ld-dunkel, color-mix(in oklab, var(--av-color-warning), white 30%));
+      --av-color-error-text:   var(--av-ld-hell, color-mix(in oklab, var(--av-color-error), black 25%)) var(--av-ld-dunkel, color-mix(in oklab, var(--av-color-error), white 45%));
+      --av-color-info-text:    var(--av-ld-hell, color-mix(in oklab, var(--av-color-info), black 35%)) var(--av-ld-dunkel, color-mix(in oklab, var(--av-color-info), white 40%));
+
+      --av-color-on-dark-surface: #fff;
+    }
+  }
+}
+
+/* Was das Design Studio selbst als light-dark() oder relative Farbe
+   schreibt — UNGELAYERT und mit doppeltem :root, damit es die Studio-Werte
+   (theme-vars.css, Persona) überstimmt. Dort sind sie in diesen Browsern
+   ungültig, und eine ungültige Fläche ist durchsichtig, also weiß: gesehen am
+   16.10.2026 im HeyTap-Browser mit der Persona NGO im Dunkelmodus — helle
+   Schrift auf weissem Fuß. Betroffen sind 11 von 16 Vorlagen (eigene Fläche),
+   dazu Kopf, Fuß, Menü und Verweise einzelner Vorlagen; gezählt mit
+   VarComputer::compute() über alle Personas.
+
+   Zurückgesetzt wird je FAMILIE, nicht je Wert: das Studio schreibt etwa im
+   Fuß nur Hintergrund oder nur Nebenschrift relativ. Bliebe der Rest stehen,
+   stünde eine Studio-Schrift (weiss für einen farbigen Fuß) auf der Fläche
+   von AVE. Die Familien bekommen deshalb geschlossen die AVE-Vorgaben —
+   bis zum letzten Farbwert: Fehlte der Knopfgrund des Kopfs, stand bei NGO
+   (umgedrehter Knopf, weisser Grund) die zurückgesetzte weisse Knopfschrift
+   auf dem weissen Grund des Studios.
+
+   Eine Persona behält damit in diesen Browsern Primär- und Sekundärfarbe,
+   Schrift, Formen und Abstände; Flächen, Kopf, Fuß und Menü sind die von
+   AVE, hell oder dunkel. Die Hell- und Dunkelstufen der Markenfarben sind
+   ohnehin nur Ableitungen der Marke und stehen hier aus demselben Grund.
+
+   !important, weil das Studio dieselben Werte auch als INLINE-Style an
+   <html> schreibt — in der Schublade beim Einstellen und auf der öffentlichen
+   Demo für jede Persona. Gegen einen Inline-Wert hilft keine Spezifität.
+   Gemessen am 16.10.2026 auf ave-demo: lokal (ohne Besucher-Schublade) war
+   NGO dunkel lesbar, auf der Demo blieb die Fläche ungültig. */
+@supports not ((color: light-dark(#000, #fff)) and (color: oklch(from red l c h))) {
+  :root:root {
+    --av-color-primary-light:   var(--av-ld-hell, color-mix(in oklab, var(--av-color-primary) 16%, white)) var(--av-ld-dunkel, color-mix(in oklab, var(--av-color-primary), black 45%)) !important;
+    --av-color-primary-dark:    var(--av-ld-hell, color-mix(in oklab, var(--av-color-primary), black 22%)) var(--av-ld-dunkel, color-mix(in oklab, var(--av-color-primary), white 45%)) !important;
+    --av-color-secondary-light: var(--av-ld-hell, color-mix(in oklab, var(--av-color-secondary) 16%, white)) var(--av-ld-dunkel, color-mix(in oklab, var(--av-color-secondary), black 45%)) !important;
+    --av-color-secondary-dark:  var(--av-ld-hell, color-mix(in oklab, var(--av-color-secondary), black 22%)) var(--av-ld-dunkel, color-mix(in oklab, var(--av-color-secondary), white 45%)) !important;
+
+    /* Hell: 2 % und 4 % Schwarz senken die Helligkeit um ~0,019 / ~0,040 —
+       dieselbe Leiter wie oben. Dunkel sind die Stufen oben auf 0,345 / 0,428
+       gepinnt; --gray-8 / --gray-7 liegen bei ~0,33 / ~0,42. */
+    --av-color-surface:   var(--av-ld-hell, var(--gray-0)) var(--av-ld-dunkel, var(--gray-9)) !important;
+    --av-color-surface-2: var(--av-ld-hell, color-mix(in oklab, var(--av-color-surface), black 2%)) var(--av-ld-dunkel, var(--gray-8)) !important;
+    --av-color-surface-3: var(--av-ld-hell, color-mix(in oklab, var(--av-color-surface), black 4%)) var(--av-ld-dunkel, var(--gray-7)) !important;
+    --av-color-border:    var(--av-ld-hell, var(--gray-3)) var(--av-ld-dunkel, var(--gray-7)) !important;
+    --av-border:          var(--av-border-width) solid var(--av-color-border) !important;
+    --av-color-text:      var(--av-ld-hell, var(--gray-9)) var(--av-ld-dunkel, var(--gray-1)) !important;
+
+    --av-link:       var(--av-color-primary-text) !important;
+    --av-link-hover: var(--av-ld-hell, color-mix(in oklab, var(--av-color-primary-on-light), black 22%)) var(--av-ld-dunkel, color-mix(in oklab, var(--av-color-primary-on-dark), white 22%)) !important;
+    --av-link-mark:  transparent !important;
+
+    --av-header-bg:        var(--av-color-surface) !important;
+    --av-header-color:     var(--av-color-text) !important;
+    --av-header-accent:    var(--av-color-primary-text) !important;
+    --av-header-btn-bg:     var(--av-color-primary) !important;
+    --av-header-btn-color: var(--av-color-text-on-primary) !important;
+    --av-header-nav:        var(--av-header-color) !important;
+    --av-header-nav-active: var(--av-color-primary) !important;
+
+    --av-footer-bg:     var(--av-color-surface-3) !important;
+    --av-footer-color:  var(--av-color-text) !important;
+    --av-footer-accent: var(--av-color-primary-text) !important;
+    --av-footer-muted:  color-mix(in srgb, var(--av-footer-color) var(--av-muted-strength), transparent) !important;
+    --av-footer-border-color: var(--av-color-border) !important;
+
+    --av-nav-divider:              var(--av-color-border) !important;
+    --av-nav-dropdown-bg:          var(--av-color-surface) !important;
+    --av-nav-dropdown-color:       var(--av-color-text) !important;
+    --av-nav-dropdown-active-color: var(--av-color-primary-text) !important;
+    --av-nav-item-hover-bg:        color-mix(in oklab, var(--av-nav-dropdown-bg), var(--av-nav-dropdown-color) 7%) !important;
+    --av-nav-marker-bg:            transparent !important;
+  }
+}
