@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Vor jedem Commit: keine Secrets in den vorgemerkten Änderungen.
+# Aktiv durch: git config core.hooksPath .githooks (einmal je Klon).
+command -v gitleaks >/dev/null || { echo "✗ gitleaks fehlt — brew install gitleaks" >&2; exit 1; }
+exec gitleaks git --pre-commit --staged --redact --no-banner --exit-code 1
